@@ -6,7 +6,7 @@
 
 ## 0. Session Start
 
-1. Read `docs/agents.md` — master index with stack rules, hard constraints, doc paths.
+1. Read `AGENTS.md` — master index with stack rules, hard constraints, doc paths.
 2. Read `docs/dev-traits/LEARN.md` — past bugs and lessons learned. Check this before writing any non-trivial logic.
 3. Infer your mode from the task, then read the matching guide **before writing any code**:
 
