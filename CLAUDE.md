@@ -119,7 +119,6 @@ Components/        ← promoted here only when used by 2+ pages
 
 ## 4. After Every Task — Session Report (Required)
 
-```
 CHANGES MADE
   For each file changed: what changed and WHY.
 
@@ -131,4 +130,4 @@ CONFLICTS OR INACCURACIES FOUND
 
 FUTURE DEV NOTES
   How changes affect upcoming features. Areas to watch.
-```
+

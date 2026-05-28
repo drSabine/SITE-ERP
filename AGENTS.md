@@ -87,7 +87,7 @@ See [dev-traits/LEARN.md](dev-traits/LEARN.md) for patterns that were added unne
 
 ## End-of-Session Report (required)
 
-```
+
 CHANGES MADE
   [file]: what changed — why
 
@@ -99,4 +99,3 @@ CONFLICTS FOUND
 
 FUTURE DEV NOTES
   implications for upcoming work
-```
