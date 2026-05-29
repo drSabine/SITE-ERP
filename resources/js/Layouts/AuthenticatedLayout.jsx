@@ -1,173 +1,160 @@
-import { ApplicationLogo, Dropdown, NavLink, ResponsiveNavLink } from '@/Components/ui';
 import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import {
+    DashboardIcon, SchoolYearsIcon, UsersIcon, ProgramsIcon,
+    StudentsIcon, AssignmentsIcon, GradesIcon,
+} from '@/Components/ui/Icons';
+
+const ROLE_LABEL = {
+    admin:       'Administrator',
+    coordinator: 'Program Coordinator',
+    teacher:     'Teacher',
+    student:     'Student',
+};
+
+function buildNavSections(role, hasTeachingLoad) {
+    const sections = [
+        {
+            title: null,
+            items: [{ label: 'Dashboard', href: route('dashboard'), match: '/dashboard', Icon: DashboardIcon }],
+        },
+    ];
+
+    if (role === 'admin') {
+        sections.push({
+            title: 'Administration',
+            items: [
+                { label: 'School Years', href: route('admin.school-years.index'), match: '/admin/school-years', Icon: SchoolYearsIcon },
+                { label: 'Users', href: route('admin.users.index'), match: '/admin/users', Icon: UsersIcon },
+                { label: 'Programs', href: route('admin.programs.index'), match: '/admin/programs', Icon: ProgramsIcon },
+            ],
+        });
+    }
+
+    if (role === 'coordinator') {
+        sections.push({
+            title: 'Coordination',
+            items: [
+                { label: 'Students', href: route('coordinator.students.index'), match: '/coordinator/students', Icon: StudentsIcon },
+                { label: 'Assignments', href: route('coordinator.assignments.index'), match: '/coordinator/assignments', Icon: AssignmentsIcon },
+            ],
+        });
+    }
+
+    if (role === 'teacher' || hasTeachingLoad) {
+        sections.push({
+            title: 'Teaching',
+            items: [
+                { label: 'Grades', href: route('teacher.grades.index'), match: '/teacher/grades', Icon: GradesIcon },
+            ],
+        });
+    }
+
+    return sections;
+}
 
 export default function AuthenticatedLayout({ header, children }) {
-    const user = usePage().props.auth.user;
+    const { auth, hasTeachingLoad = false } = usePage().props;
+    const user = auth.user;
+    const role = user.role;
 
-    const [showingNavigationDropdown, setShowingNavigationDropdown] =
-        useState(false);
+    const [currentTime, setCurrentTime] = useState('');
+    const [currentDate, setCurrentDate] = useState('');
+
+    useEffect(() => {
+        function tick() {
+            const now = new Date();
+            setCurrentTime(now.toLocaleTimeString('en-PH', { timeZone: 'Asia/Manila', hour12: true }));
+            setCurrentDate(now.toLocaleDateString('en-PH', { timeZone: 'Asia/Manila', weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }));
+        }
+        tick();
+        const interval = setInterval(tick, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const navSections = buildNavSections(role, hasTeachingLoad);
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <nav className="border-b border-gray-100 bg-white">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 justify-between">
-                        <div className="flex">
-                            <div className="flex shrink-0 items-center">
-                                <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
-                                </Link>
-                            </div>
-
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink
-                                    href={route('dashboard')}
-                                    active={route().current('dashboard')}
-                                >
-                                    Dashboard
-                                </NavLink>
-                            </div>
-                        </div>
-
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            <div className="relative ms-3">
-                                <Dropdown>
-                                    <Dropdown.Trigger>
-                                        <span className="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
-                                            >
-                                                {user.name}
-
-                                                <svg
-                                                    className="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </Dropdown.Trigger>
-
-                                    <Dropdown.Content>
-                                        <Dropdown.Link
-                                            href={route('profile.edit')}
-                                        >
-                                            Profile
-                                        </Dropdown.Link>
-                                        <Dropdown.Link
-                                            href={route('logout')}
-                                            method="post"
-                                            as="button"
-                                        >
-                                            Log Out
-                                        </Dropdown.Link>
-                                    </Dropdown.Content>
-                                </Dropdown>
-                            </div>
-                        </div>
-
-                        <div className="-me-2 flex items-center sm:hidden">
-                            <button
-                                onClick={() =>
-                                    setShowingNavigationDropdown(
-                                        (previousState) => !previousState,
-                                    )
-                                }
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
-                            >
-                                <svg
-                                    className="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        className={
-                                            !showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        className={
-                                            showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
+        <div className="flex min-h-screen bg-gray-50">
+            <aside className="sticky top-0 flex h-screen w-72 shrink-0 flex-col bg-emerald-900">
+                <div className="shrink-0 border-b border-emerald-700 bg-emerald-950 px-5 py-6">
+                    <div className="flex flex-col items-center text-center">
+                        <img
+                            src="/images/SPUP-final-logo.png"
+                            alt="SPUP"
+                            className="h-14 w-14 object-contain"
+                        />
+                        <div className="mt-3 min-w-0">
+                            <p className="text-[13px] font-medium leading-snug text-white" style={{ fontFamily: 'OldEnglish' }}>
+                                St. Paul University Philippines
+                            </p>
+                            <p className="mt-2 text-sm font-semibold leading-none tracking-[0.35em] text-emerald-300">
+                                SITE
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                <div
-                    className={
-                        (showingNavigationDropdown ? 'block' : 'hidden') +
-                        ' sm:hidden'
-                    }
-                >
-                    <div className="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            href={route('dashboard')}
-                            active={route().current('dashboard')}
-                        >
-                            Dashboard
-                        </ResponsiveNavLink>
-                    </div>
-
-                    <div className="border-t border-gray-200 pb-1 pt-4">
-                        <div className="px-4">
-                            <div className="text-base font-medium text-gray-800">
-                                {user.name}
-                            </div>
-                            <div className="text-sm font-medium text-gray-500">
-                                {user.email}
-                            </div>
+                <nav className="flex-1 overflow-y-auto px-2 py-3">
+                    {navSections.map(section => (
+                        <div key={section.title ?? '_main'} className="mb-4">
+                            {section.title && (
+                                <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-yellow-400 opacity-70">
+                                    {section.title}
+                                </p>
+                            )}
+                            {section.items.map(item => {
+                                const isActive = currentPath.startsWith(item.match);
+                                return (
+                                    <Link
+                                        key={item.match}
+                                        href={item.href}
+                                        className={`mb-0.5 flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${
+                                            isActive
+                                                ? 'bg-emerald-700 text-white'
+                                                : 'text-emerald-100 hover:bg-emerald-800 hover:text-white'
+                                        }`}
+                                    >
+                                        {item.Icon && <item.Icon className="h-[18px] w-[18px] shrink-0 opacity-80" />}
+                                        <span>{item.label}</span>
+                                    </Link>
+                                );
+                            })}
                         </div>
+                    ))}
+                </nav>
 
-                        <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('profile.edit')}>
-                                Profile
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                method="post"
-                                href={route('logout')}
-                                as="button"
-                            >
-                                Log Out
-                            </ResponsiveNavLink>
-                        </div>
-                    </div>
+                <div className="shrink-0 border-t border-emerald-700 bg-emerald-950 px-5 py-4">
+                    <p className="truncate text-xs font-semibold text-white">{user.name}</p>
+                    <p className="truncate text-[10px] text-emerald-400">{user.email}</p>
+                    {hasTeachingLoad && role !== 'teacher' && (
+                        <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-widest text-yellow-400">+ Teaching Load</p>
+                    )}
+                    <Link
+                        href={route('logout')}
+                        method="post"
+                        as="button"
+                        className="mt-2.5 block w-full border border-emerald-700 px-3 py-1.5 text-left text-[10px] font-semibold uppercase tracking-widest text-emerald-300 transition-colors hover:bg-emerald-800 hover:text-white"
+                    >
+                        Sign Out
+                    </Link>
                 </div>
-            </nav>
+            </aside>
 
-            {header && (
-                <header className="bg-white shadow">
-                    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                        {header}
+            <div className="flex min-w-0 flex-1 flex-col">
+                <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6 shadow-sm">
+                    <p className="text-base font-semibold text-gray-800">{header ?? 'Dashboard'}</p>
+                    <div className="text-right">
+                        <p className="text-sm font-semibold text-gray-700">{currentTime}</p>
+                        <p className="text-xs text-gray-400">{currentDate} · Philippine Time</p>
                     </div>
                 </header>
-            )}
 
-            <main>{children}</main>
+                <main className="flex-1">
+                    {children}
+                </main>
+            </div>
         </div>
     );
 }

@@ -7,6 +7,8 @@ use App\Http\Controllers\Teacher;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+Route::redirect('/', '/login');
+
 // Dashboard — role-aware, single route
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
@@ -31,10 +33,11 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     Route::post('academic-terms/{academicTerm}/activate', [Admin\AcademicTermController::class, 'activate'])->name('academic-terms.activate');
     Route::post('academic-terms/{academicTerm}/finalize', [Admin\AcademicTermController::class, 'finalize'])->name('academic-terms.finalize');
 
-    // Users / Staff
+    // Users / Accounts
     Route::get('users', [Admin\UserController::class, 'index'])->name('users.index');
     Route::post('users', [Admin\UserController::class, 'store'])->name('users.store');
     Route::put('users/{user}', [Admin\UserController::class, 'update'])->name('users.update');
+    Route::patch('users/{user}/reactivate', [Admin\UserController::class, 'reactivate'])->name('users.reactivate');
     Route::delete('users/{user}', [Admin\UserController::class, 'destroy'])->name('users.destroy');
 
     // Programs
@@ -82,7 +85,7 @@ Route::prefix('coordinator')->middleware(['auth', 'role:admin,coordinator'])->na
 // ─────────────────────────────────────────────────────────────
 // Teacher routes
 // ─────────────────────────────────────────────────────────────
-Route::prefix('teacher')->middleware(['auth', 'role:teacher'])->name('teacher.')->group(function () {
+Route::prefix('teacher')->middleware(['auth', 'role:admin,coordinator,teacher'])->name('teacher.')->group(function () {
     Route::get('grades', [Teacher\GradeController::class, 'index'])->name('grades.index');
     Route::get('grades/{teacherAssignment}', [Teacher\GradeController::class, 'show'])->name('grades.show');
     Route::post('grades', [Teacher\GradeController::class, 'store'])->name('grades.store');

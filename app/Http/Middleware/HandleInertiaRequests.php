@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AcademicTerm;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -29,11 +30,23 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
+        $hasTeachingLoad = false;
+        if ($user && in_array($user->role, ['admin', 'coordinator', 'teacher'])) {
+            $activeTerm = AcademicTerm::active()->first(['id']);
+            if ($activeTerm) {
+                $hasTeachingLoad = $user->teacherAssignments()
+                    ->where('academic_term_id', $activeTerm->id)
+                    ->exists();
+            }
+        }
+
         return [
             ...parent::share($request),
-            'auth' => [
-                'user' => $request->user(),
-            ],
+            'auth'            => ['user' => $user],
+            'hasTeachingLoad' => $hasTeachingLoad,
+            'appEnv'          => config('app.env'),
         ];
     }
 }

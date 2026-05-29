@@ -1,4 +1,4 @@
-import { Modal, InputLabel, TextInput, InputError, PrimaryButton, SecondaryButton } from '@/Components/ui';
+import { Modal, InputField, PrimaryButton, SecondaryButton } from '@/Components/ui';
 import { useForm } from '@inertiajs/react';
 import { useEffect } from 'react';
 
@@ -37,44 +37,34 @@ export default function SchoolYearFormModal({ show, editTarget, onClose }) {
                 </h3>
 
                 <div className="mt-4 space-y-4">
-                    <div>
-                        <InputLabel htmlFor="sy-name" value="Name (e.g. 2025-2026)" />
-                        <TextInput
-                            id="sy-name"
-                            className="mt-1 block w-full"
-                            value={data.name}
-                            onChange={event => setData('name', event.target.value)}
-                            maxLength={20}
+                    <InputField
+                        label="School Year"
+                        id="sy-name"
+                        value={data.name}
+                        onChange={event => setData('name', event.target.value)}
+                        maxLength={20}
+                        error={errors.name}
+                        required
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                        <InputField
+                            label="Start Date"
+                            id="sy-start"
+                            type="date"
+                            value={data.start_date}
+                            onChange={event => setData('start_date', event.target.value)}
+                            error={errors.start_date}
                             required
                         />
-                        <InputError message={errors.name} className="mt-1" />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <InputLabel htmlFor="sy-start" value="Start Date" />
-                            <TextInput
-                                id="sy-start"
-                                type="date"
-                                className="mt-1 block w-full"
-                                value={data.start_date}
-                                onChange={event => setData('start_date', event.target.value)}
-                                required
-                            />
-                            <InputError message={errors.start_date} className="mt-1" />
-                        </div>
-                        <div>
-                            <InputLabel htmlFor="sy-end" value="End Date" />
-                            <TextInput
-                                id="sy-end"
-                                type="date"
-                                className="mt-1 block w-full"
-                                value={data.end_date}
-                                onChange={event => setData('end_date', event.target.value)}
-                                required
-                            />
-                            <InputError message={errors.end_date} className="mt-1" />
-                        </div>
+                        <InputField
+                            label="End Date"
+                            id="sy-end"
+                            type="date"
+                            value={data.end_date}
+                            onChange={event => setData('end_date', event.target.value)}
+                            error={errors.end_date}
+                            required
+                        />
                     </div>
                 </div>
 
