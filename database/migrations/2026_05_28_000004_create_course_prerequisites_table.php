@@ -17,9 +17,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('course_id')->constrained('courses')->onDelete('cascade');
             $table->foreignId('prerequisite_id')->constrained('courses')->onDelete('cascade');
+            $table->enum('type', ['prerequisite', 'co_requisite'])->default('prerequisite');
             $table->timestamps();
 
-            $table->unique(['course_id', 'prerequisite_id']);
+            $table->unique(['course_id', 'prerequisite_id', 'type']);
         });
 
         Schema::enableForeignKeyConstraints();
