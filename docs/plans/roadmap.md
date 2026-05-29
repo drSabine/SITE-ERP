@@ -7,14 +7,9 @@
 
 ## In Progress
 
-- Admin frontend — School Years + Academic Terms page (modal CRUD, axios term load)
+- Coordinator frontend — Students list + enrollment modal
 
 ## Planned
-
-### Admin
-- Users/Staff CRUD page
-- Programs CRUD page
-- Courses CRUD page (with prerequisite wiring)
 
 ### Coordinator
 - Students list + profile page (search, filter, paginate)
@@ -41,3 +36,11 @@
 - 60 Routes (all verified, zero errors)
 - `docs/system-design.md`
 - Grading simplification: removed term_periods + grades tables, flat one-grade-per-course model
+- Login page redesign (SPUP branding, split layout, dev quick-login, forgot password tip modal)
+- Dynamic role-aware sidebar with emerald branding, live Philippine time header
+- Admin — School Years + Academic Terms page (modal CRUD, expand/collapse, confirm modals)
+- Admin - User accounts CRUD page (modal, paginated, user profile inline)
+- Admin — Programs CRUD page (modal, Manage Courses link per row)
+- Admin — Courses CRUD page (grouped by year level + semester, back-link to Programs)
+- Reusable UI primitives: `InputField`, `DetailField`, `formatDate`, `formatDateRange`
+- Design system: no-rounded-edges rule enforced on all structural elements

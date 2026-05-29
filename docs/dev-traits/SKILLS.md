@@ -57,6 +57,23 @@
 
 ---
 
+## Dashboard Components (`resources/js/Components/Dashboard/`)
+
+> Shared components and section builders for the unified dashboard.
+> **Import via barrel:** `import { buildAdminSections, buildTeachingSections, ... } from '@/Components/Dashboard'`
+> **Rule:** To add a new role's dashboard cards, add `buildXxxSections()` to `dashboardSections.js`. Never create a new Dashboard page for a role.
+
+| Export | Type | Purpose |
+|---|---|---|
+| `buildAdminSections()` | Function | Card section descriptors for the admin role |
+| `buildCoordinatorSections()` | Function | Card section descriptors for the coordinator role |
+| `buildTeachingSections({ hasActiveTerm })` | Function | Teaching cards — used by teacher role AND admin/coordinator with a teaching load |
+| `buildStudentSections()` | Function | Student academics cards |
+
+`WelcomeHeader` and `ActionCard` are inlined inside `Pages/Dashboard.jsx` (both under 30 lines, single use).
+
+---
+
 ## Auth Components (`resources/js/Components/Auth/`)
 
 > Auth-flow components used on the login screen.
