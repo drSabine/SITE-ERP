@@ -1,15 +1,18 @@
 # LEARN.md — Institutional Memory
 
 > Bugs caught, patterns learned, decisions made. Read every session.
-> **Last updated:** [date]
+> **Last updated:** 2026-05-29
 
 ---
 
 ## 1. Architecture Decisions
 
-- Modal-first CRUD — no separate Create/Edit pages. All mutations happen in modals.
-- Services layer mandatory — no business logic in controllers.
-- Co-located hooks — every page component has a matching `use<Component>.jsx` hook in the same directory.
+- **Modal-first CRUD** — no separate Create/Edit pages. All mutations happen in modals.
+- **Services layer mandatory** — no business logic in controllers. Every non-trivial action lives in `app/Services/`.
+- **Two-team split** — Team Enrollments owns student/enrollment data; Team Grading Input owns grade submission and finalization. Shared boundary: `enrollment_courses` table. See `CLAUDE.md §2.3`.
+- **Flat grading model** — one `final_grade` per `enrollment_course` per semester. No Prelim/Midterm/Finals breakdown. Teachers submit one grade. Coordinator finalizes the term which locks statuses.
+- **`academic_terms` is the semester wrapper** — `school_years → academic_terms (semester: first|second|summer)`. There is no separate semesters table. `AcademicTerm` is the semester unit.
+- **Co-located state** — page component holds its own state and handlers inline. No split `useX.js` hook files unless logic is reused across 2+ pages.
 
 ---
 

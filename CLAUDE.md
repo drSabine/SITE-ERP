@@ -1,101 +1,134 @@
 # CLAUDE.md
 
-> Auto-loaded every session. Read in full before any action.
+> For Claude models. Auto-loaded every session. Read in full before any action.
+> See `AGENTS.md` for the identical ruleset used by other AI models.
 
 ---
 
 ## 0. Session Start
 
-1. Read `AGENTS.md` — master index with stack rules, hard constraints, doc paths.
-2. Read `docs/dev-traits/LEARN.md` — past bugs and lessons learned. Check this before writing any non-trivial logic.
-3. Infer your mode from the task, then read the matching guide **before writing any code**:
+1. Read `docs/dev-traits/LEARN.md` — past bugs and lessons learned. Check before writing any non-trivial logic.
+2. Infer your mode from the task, then read the matching guide **before writing any code**:
 
-| Task feels like... | Read |
-|---|---|
-| Architecture, new feature design, audits | `docs/agent-planning-mode.md` |
-| Bug fix, UI change, adding a field, CRUD | `docs/agent-edit-mode.md` |
-| Something broke, regression, unexpected behavior | `docs/agent-debug-mode.md` |
+| Task | Mode | Read |
+|---|---|---|
+| Bug fix, UI, CRUD, refactor | Edit | `docs/agent-edit-mode.md` |
+| Architecture, new feature design, audits | Planning | `docs/agent-planning-mode.md` |
+| Something broke, regression | Debug | `docs/agent-debug-mode.md` |
 
-4. If the task touches a domain listed in §3 below, read that doc too.
+3. If the task touches a domain listed in §3, read that doc too.
+4. Check §4 (Two-Team Architecture) — if the task touches a shared boundary, read both team sections before writing anything.
+
+---
+
+## 0.1 When Unsure — Ask Before Coding
+
+**Default: ask, not assume.** Stop and ask if:
+
+- Scope is ambiguous — two valid ways to implement it.
+- Request could be destructive or hard to reverse.
+- Missing context about a domain you haven't seen the doc for.
+- User says "improve", "clean up", or "update" without specifying exactly what.
+
+**How to ask:**
+- 2–3 questions maximum per round. Never 6.
+- Each question should have selectable options when the answer is a choice — use `vscode_askQuestions` with an `options` array.
+- Phrase questions as decisions, not open-ended prompts. Bad: "What do you want?" Good: "Should this apply only to active terms or all terms?"
+- Do NOT ask about things you can safely infer from existing code.
 
 ---
 
 ## 1. Hard Rules — Never Violate
 
-1. No separate CRUD pages — modal-first.
-2. No business logic in controllers — `app/Services/` only.
-3. Data fetching: plain `axios.get()` + `useState` in `useEffect`. For search/filter inputs that re-fire quickly, cancel the previous request using the native `AbortController` (`signal:` option on axios). No custom fetch wrapper hooks.
-4. No N+1 queries — `with()` or `whereIn()`.
-5. **Non-production migration rule** — edit existing migration files directly and re-run `php artisan migrate:fresh --seed`. Only create a new migration file when a feature is done and the schema change needs to be tracked. See `docs/notes/backend-rules.md` §Migrations.
-6. Run `npm run build` after every code change.
-7. Run `php artisan optimize:clear` after route, config, or service changes.
-8. **Update ALL affected files** — when a change impacts imports, props, or consumers, fix them all.
-9. **Use model scopes over raw queries.** Prefer `::active()`, `::ordered()`, etc. over inline `where()` / `orderBy()`.
-10. **KISS — Keep It Short and Simple.** React built-ins first: `useState`, `useEffect`, `useReducer`. Extract a custom hook only when logic is reused across 2+ components or the component file becomes unreadable. Never build a custom abstraction for something React already solves.
-11. **Slim every `with()` on index/paginated queries.** Every `with('relation')` must use a `select()` closure. Ship only the columns the frontend reads.
-12. No Tailwind in Blade PDFs — inline CSS only (DOMPDF CSS 2.1).
+### Backend
+1. Lean controllers. Validate → Service → `Inertia::render()` or `redirect()`. Business logic in `app/Services/` only.
+2. No N+1. Use `with()` / `whereIn()`. Slim every `with()` on index/paginated queries — use `select()` closures, ship only columns the frontend reads.
+3. Always paginate (`->paginate(15)->withQueryString()`). No unpaginated `->get()` to the frontend.
+4. Always `$request->validate([...])` first. Never pass `$request->all()` to `create/update`.
+5. Use model scopes over raw queries. `::active()`, `::ordered()` etc. — never raw `where('is_active', true)` or raw `orderBy`. See §5 for the full scope inventory.
+6. **Non-production migration rule:** Edit existing migration files directly and re-run `php artisan migrate:fresh --seed`. Only create a new migration file when the feature is complete and the schema change needs tracking. See `docs/notes/backend-rules.md` §Migrations.
+7. PDFs (DOMPDF): inline CSS only, no Tailwind, no flexbox/grid.
 
-### 1.1 Model Scope Inventory
+### Frontend
+8. Modal-first CRUD. No separate Create/Edit pages.
+9. Reset modal state in `afterLeave`, never in `onClose`.
+10. `useForm` for forms. Plain `axios` for one-shot loads. Cancel with native `AbortController` only when the same effect re-fires from a fast-changing input.
+11. Inertia navigation only — never `window.location`.
+12. No direct mutation. `array.map(...spread)`.
+13. Update ALL affected files when changing imports, props, or consumers.
+14. Icons from `Components/ui/Icons.jsx` — never import from `react-icons/*` directly.
+15. **No abbreviated or single-letter variable names.** Use full descriptive words always:
+    - `error` not `e` or `err`
+    - `event` not `e` or `evt`
+    - `response` not `res`
+    - `request` not `req`
+    - `query` not `q`
+    - Use the full domain word in callbacks: `term` not `t`, `schoolYear` not `sy` in new code
+    - Exception: `index` in `.map((item, index) =>)` and math/coordinate variables (`x`, `y`) are fine.
 
-> Fill this in as scopes are added to models.
+### Build
+16. Run `npm run build` after every code change.
+17. Run `php artisan optimize:clear` after route/config/service changes.
 
-| Model | Scope | Replaces |
-|---|---|---|
-| `User` | `::active()` | `::where('is_active', true)` |
-| _(add more as built)_ | | |
+---
 
-### 1.2 Anti-Overengineering Checklist
+## 1.2 Anti-Overengineering Checklist
 
-Before adding any of these, justify it with a real reproducible bug (not a hypothetical):
+Before adding any of these, justify with a real reproducible bug — not a hypothetical:
 
-- `useRef` flag for "in-flight" / "transitioning" / "already submitted" → the disabled button + `processing` state already covers double-clicks.
-- `AbortController` in `useEffect` → only needed when the effect re-fires from a fast-changing input. One-shot mount loads do not need it.
-- `useMemo` around object destructure or `a + b` → bookkeeping costs more than the work.
+- `useRef` "in-flight" / "transitioning" flags → `disabled={processing}` already covers double-clicks.
+- `AbortController` in `useEffect` → only for effects that re-fire from fast-changing inputs. One-shot mount loads do not need it.
+- `useMemo` around simple expressions → bookkeeping costs more than the work.
 - New custom hook for a single consumer under ~50 lines → inline it.
-- `try/catch` that swallows the error silently → either handle it or let it throw.
+- `try/catch` that silently swallows errors → either handle it or let it throw.
 
 ---
 
-## 2. Project
+## 2. Stack
 
-- **App:** [Project name — fill in]
-- **Stack:** Laravel 11 + Inertia.js + React 18 + Tailwind CSS v3
-- **Auth:** `role` column on `users` — [define roles here, e.g. `admin`, `staff`, `user`]
-- **UI:** [Brand guidelines — fill in]
+- **Framework:** Laravel 11 + Inertia.js + React 18 + Tailwind CSS v3
+- **UI Libraries:** Headless UI, Recharts (charts), `Components/ui/Icons.jsx` (all icons)
+- **Auth:** `users.role` column — [define roles here]
+- **Schema hierarchy:** `school_years → academic_terms` (two levels only). `academic_terms` IS the semester. Current term = `AcademicTerm::active()->first()`.
 
 ---
 
-## 2.1 Frontend Architecture
-
-Files live under `Pages/<Role>/<Feature>/`. Shared sub-components live under `Components/`.
+## 2.1 Frontend Structure
 
 ```
-Pages/Admin/[Feature]/
-  Index.jsx          ← component with its own state and handlers inline
-  [Feature]Modal.jsx ← create/edit modal, state inline
-
-Components/        ← promoted here only when used by 2+ pages
+resources/js/
+  Pages/
+    Admin/Feature/
+      Index.jsx               ← thin: state + handlers + layout only (≤ 100 lines)
+    Coordinator/Feature/ ...
+    Teacher/Feature/ ...
+  Components/
+    ui/
+      index.js                ← barrel: import { StatusBadge, ConfirmModal } from '@/Components/ui'
+      StatusBadge.jsx
+      ConfirmModal.jsx
+      Icons.jsx
+    Admin/
+      SchoolYears/
+        index.js              ← barrel: import { SchoolYearFormModal } from '@/Components/Admin/SchoolYears'
+        SchoolYearFormModal.jsx
+        TermsPanel.jsx
+        utils.js              ← feature constants shared between page + extracted components
+  hooks/                      ← shared custom hooks (2+ consumers only)
+  utils/                      ← pure JS helpers, no React
+  Layouts/
 ```
 
-### Rules
-
-1. **Logic lives in the component** unless it's reused elsewhere OR the file is hard to read. Don't split a component into a `.jsx` + `useComponent.js` pair by default — that's premature.
-2. **Extract a custom hook only when:** logic is shared across 2+ consumers, OR the non-JSX logic in a single file exceeds ~80 lines and makes the JSX hard to find.
-3. **React built-ins cover most cases.** `useState` for local state. `useEffect` for side effects. `useReducer` for forms with many fields. `useContext` for app-wide state (auth, theme). Don't reach for a custom abstraction first.
-4. **File extension:** `.jsx` for components. `.js` for pure logic utilities.
-5. **Import directly.** No barrel `index.js` files unless a folder exports 5+ things that are always imported together.
-
-### 2.2 What React Already Solves
-
-| Problem | Built-in solution |
-|---|---|
-| Modal open/close state | `const [open, setOpen] = useState(false)` |
-| Prevent double-submit | `disabled={processing}` + Inertia's `useForm` `processing` flag |
-| Form state + validation errors | Inertia's `useForm` |
-| One-shot data load on mount | `useEffect(() => { axios.get(...).then(setData) }, [])` |
-| Cancel in-flight request (search input) | Native `AbortController` — `axios({ signal: controller.signal })` |
-| Derived value | `const total = a + b` — no `useMemo` |
-| Silent error suppression | Don't. Surface it or let it throw. |
+**Rules:**
+1. Page files are thin orchestration only — state, handlers, layout render.
+2. **Never create a `components/` folder inside `Pages/`.** No exceptions.
+3. If a component is small enough to inline (< ~30 lines), keep it in the page file. Do not extract single-use small components.
+4. If a component must be extracted (too large to inline), put it in `Components/<Role>/<Feature>/`, never inside `Pages/`.
+5. Every extracted component folder gets an `index.js` barrel. Import via the barrel, never the individual file path.
+6. `Components/ui/` = stateless display primitives. Always import via `import { X } from '@/Components/ui'`.
+7. Promote to a new `Components/` subfolder only when 2+ distinct pages need the same component.
+8. `hooks/` = shared custom hooks (2+ consumers). Never extract for a single consumer.
+9. `utils/` = pure functions and constants. No React. `.js` extension.
 
 ---
 
@@ -105,29 +138,93 @@ Components/        ← promoted here only when used by 2+ pages
 
 | Touching... | Read | What you'll find |
 |---|---|---|
-| Roles, auth, middleware, permissions | `docs/notes/domain-rules.md` §1 | Role definitions, gate rules, who can do what |
-| React state, `useEffect`, forms, modals, hooks | `docs/notes/react-rules.md` | Correct patterns, what NOT to reach for |
-| Eloquent queries, controllers, services, PDFs | `docs/notes/backend-rules.md` | N+1 prevention, pagination pattern, migration rules |
-| Migrations specifically | `docs/notes/backend-rules.md` §Migrations | Non-prod editing strategy, naming conventions |
-| Any security concern, input handling, auth bypass | `docs/dev-traits/SECURITY.md` | OWASP rules, what to always validate |
+| Roles, auth, middleware, permissions | `docs/notes/domain-rules.md` §1 | Role definitions, gate rules |
+| React state, `useEffect`, forms, modals | `docs/notes/react-rules.md` | Correct patterns, anti-patterns |
+| Eloquent queries, controllers, services, PDFs | `docs/notes/backend-rules.md` | N+1 prevention, pagination, migrations |
+| Any security concern, input handling | `docs/dev-traits/SECURITY.md` | OWASP rules, what to always validate |
 | Reusable components or hooks already built | `docs/dev-traits/SKILLS.md` | Don't rebuild what already exists |
-| What's planned but not yet built | `docs/plans/roadmap.md` | Avoid building something that conflicts with planned work |
+| What's planned but not yet built | `docs/plans/roadmap.md` | Avoid conflicts with planned work |
 | BSIT course codes, pre-reqs, units | `docs/curriculum/bsit.md` | Full BSIT curriculum table |
 | BSCE course codes, pre-reqs, units | `docs/curriculum/bsce.md` | Full BSCE curriculum table |
 
 ---
 
-## 4. After Every Task — Session Report (Required)
+## 4. Two-Team Architecture
 
-CHANGES MADE
-  For each file changed: what changed and WHY.
+**Do not merge their domains without cross-checking.**
 
-LEFT UNCHANGED
-  What you decided not to touch and why.
+### Team Enrollments
+Owns: `students`, `enrollments`, `enrollment_courses` (add/remove courses), `academic_terms` (activation).
+Touches: `EnrollmentService`, `Coordinator/*Controller`, `StudentController`, `EnrollmentController`, `EnrollmentCourseController`, `Student`/`Enrollment`/`EnrollmentCourse` models.
 
-CONFLICTS OR INACCURACIES FOUND
-  Anything wrong in codebase or docs, even if out of scope.
+### Team Grading Input
+Owns: `enrollment_courses.final_grade`, `enrollment_courses.status`, `teacher_assignments`, grade finalization.
+Touches: `GradeService`, `Teacher/GradeController`, `Admin/AcademicTermController::finalize`, `TeacherAssignment` model.
 
-FUTURE DEV NOTES
-  How changes affect upcoming features. Areas to watch.
+### Cross-Team Shared Files
+| Shared file | Enrollment reads | Grading reads |
+|---|---|---|
+| `enrollment_courses` table | status, course_id, enrollment_id | final_grade, status |
+| `EnrollmentCourse` model | `addCourse`, `removeCourse`, `scopeActive` | `inputGrade`, `overrideGrade` |
+| `routes/web.php` | coordinator.* routes | teacher.* + admin.academic-terms.finalize |
 
+**Rule:** If you edit a shared file, check impact on the OTHER team's code before committing.
+
+---
+
+## 5. Model Scope Inventory
+
+> Use these. Never write raw `where('is_active', true)` or raw `orderBy`.
+
+| Model | Scope | Replaces |
+|---|---|---|
+| `User` | `::active()` | `::where('is_active', true)` |
+| `User` | `::teachers()` | `::where('role', 'teacher')` |
+| `User` | `::coordinators()` | `::where('role', 'coordinator')` |
+| `Program` | `::active()` | `::where('is_active', true)` |
+| `Course` | `::active()` | `::where('is_active', true)` |
+| `Course` | `::forSemester($year, $type)` | inline year_level + semester_type where |
+| `SchoolYear` | `::active()` | `::where('is_active', true)` |
+| `SchoolYear` | `::ordered()` | `::orderByDesc('start_date')` |
+| `AcademicTerm` | `::active()` | `::where('is_active', true)` |
+| `Student` | `::active()` | `::where('status', 'active')` |
+| `Student` | `::ordered()` | `::orderBy('last_name')` |
+| `Enrollment` | `::active()` | `::where('status', 'enrolled')` |
+| `EnrollmentCourse` | `::active()` | `::where('status', 'active')` |
+| `EnrollmentCourse` | `::passed()` | `::where('status', 'passed')` |
+| `EnrollmentCourse` | `::withInc()` | `::where('status', 'inc')` |
+
+---
+
+## 6. Living Documentation — Update When You Learn Something
+
+Only update docs when something actually happened — not on every routine task.
+
+| What happened | Which doc | Section |
+|---|---|---|
+| Fixed a real bug caused by a pattern | `docs/dev-traits/LEARN.md` | §2 Past Bugs |
+| Removed an over-engineered abstraction | `docs/dev-traits/LEARN.md` | §3 Over-engineering Caught |
+| Non-obvious schema decision made | `docs/dev-traits/LEARN.md` | §4 Schema & Migration Notes |
+| Architecture decision locked in | `docs/dev-traits/LEARN.md` | §1 Architecture Decisions |
+| Built a reusable component or hook | `docs/dev-traits/SKILLS.md` | relevant section |
+| Security gap noticed or new rule applied | `docs/dev-traits/SECURITY.md` | Rules list |
+
+---
+
+## 7. Session Report (REQUIRED — DO NOT SKIP)
+
+> Every response that changes code or docs must end with this. Non-negotiable.
+
+**CHANGES MADE**
+  `[file path]`: [what changed] : [why]
+  (list every file touched)
+
+**LEFT UNCHANGED**
+  [what] : [why not touched]
+
+**CONFLICTS OR INACCURACIES FOUND**
+  [doc/code claims X, but reality is Y] : or "None found."
+
+**FUTURE DEV NOTES**
+  [what the next developer or team needs to know]
+  [cross-team impact if applicable]

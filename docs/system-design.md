@@ -9,7 +9,7 @@
 
 | Role | Who | What they can do |
 |---|---|---|
-| `admin` | Dean / Secretary | Create/manage School Years, Terms, Periods. Manage all users. Full visibility. |
+| `admin` | Dean / Secretary | Create/manage School Years, Academic Terms. Finalize terms. Manage all users. Full visibility. |
 | `coordinator` | Program Coordinator | Manage students, enrollments, course loads, teacher assignments. See INC deficiency list. |
 | `teacher` | Faculty | Input grades for their assigned courses only. |
 
@@ -29,12 +29,11 @@ programs (BSIT, BSCE)
 
 school_years  [e.g. "2025-2026"]
   └─ academic_terms  (first | second | summer)
-       └─ term_periods  (preliminary | midterm | finals)
 
 students  (program_id, year_level = coordinator-maintained)
   └─ enrollments → academic_term  [unique: one enrollment per student per term]
        └─ enrollment_courses → course  [the student's load for that term]
-            └─ grades → term_period   [one grade row per period per course]
+            └─ final_grade  decimal(3,2) nullable  [one grade per course per semester, stored directly on this row]
 
 teacher_assignments  (teacher_id → course_id → academic_term_id)  [unique: one teacher per course per term]
 ```
@@ -62,14 +61,13 @@ any course to any student at any time.
 `EnrollmentService::addCourse()` sums current active enrollment_course units and throws a `ValidationException`
 if adding the new course would exceed 26. This can be overridden by simply bypassing the service (not exposed in UI).
 
-### 5. Grading per term period
-- Teacher inputs a grade for each period (Prelim, Midterm, Finals) → written to `grades` table.
-- `enrollment_course.final_grade` is computed by `GradeService::computeFinalGrade()`.
-- **Formula:** Prelim 30% + Midterm 30% + Finals 40%, rounded to nearest valid grade step.
-- **Valid grade steps:** 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00 (passing) · 5.00 (failed).
-- If ANY period grade is null when finalized → `status = 'inc'`, `final_grade = null`.
-- Coordinator triggers "Finalize Term" to run computation for all enrollment_courses in that academic_term.
-- Coordinator can manually override `final_grade` post-finalization (for INC resolution).
+### 5. Flat grading — one grade per course per semester
+- Teacher inputs one final grade directly on `enrollment_courses.final_grade` for each student in their assigned course.
+- **No periods.** No Prelim / Midterm / Finals breakdown. The `term_periods` and `grades` tables do not exist.
+- **Valid grade values:** 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00 (passing) · 5.00 (failed) · `null` = INC (shown red).
+- Grade is held in `enrollment_courses.final_grade`. Status stays `active` until the term is finalized.
+- **Finalize term** (admin action): locks all active rows — `null` → `inc`, ≤ 3.00 → `passed`, 5.00 → `failed`. Term `is_active` → false.
+- Coordinator can override `final_grade` at any time (INC resolution or correction).
 
 ### 6. Dropping
 - **Drop a course:** `EnrollmentCourse::status = 'dropped'`. Only coordinator does this.
@@ -96,7 +94,7 @@ $missing  = $required->diff($passed);  // empty = eligible
 |---|---|---|
 | Manage School Years | `Admin\SchoolYearController` | admin |
 | Manage Semesters (Academic Terms) | `Admin\AcademicTermController` | admin |
-| Manage Grading Periods | `Admin\TermPeriodController` | admin |
+| Finalize Academic Term | `Admin\AcademicTermController` (finalize action) | admin |
 | Manage Staff Accounts | `Admin\UserController` | admin |
 | Manage Programs | `Admin\ProgramController` | admin |
 | Manage Courses | `Admin\CourseController` | admin |
@@ -115,7 +113,7 @@ $missing  = $required->diff($passed);  // empty = eligible
 |---|---|
 | `SchoolYearService` | Create SY + default terms, activate/deactivate |
 | `EnrollmentService` | Enroll student, load curriculum, add/remove courses, 26-unit cap |
-| `GradeService` | Input period grade, compute final_grade, finalize term |
+| `GradeService` | Input/override `final_grade` on enrollment_course, finalize term (locks statuses) |
 
 ---
 
