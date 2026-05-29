@@ -10,10 +10,9 @@ return new class extends Migration
     {
         Schema::disableForeignKeyConstraints();
 
-        Schema::create('staff_profiles', function (Blueprint $table) {
+        Schema::create('user_profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->unique()->constrained('users')->onDelete('cascade');
-            $table->string('employee_id', 50)->unique();
             $table->string('first_name', 100);
             $table->string('middle_name', 100)->nullable();
             $table->string('last_name', 100);
@@ -22,8 +21,8 @@ return new class extends Migration
             $table->date('birthdate')->nullable();
             $table->text('address')->nullable();
             $table->string('contact_number', 30)->nullable();
-            $table->string('specialization', 191)->nullable(); // e.g., "Software Engineering"
-            $table->string('degree', 191)->nullable();         // e.g., "MIT", "MSCS"
+            $table->string('specialization', 191)->nullable();
+            $table->string('degree', 191)->nullable();
             $table->softDeletes();
             $table->timestamps();
         });
@@ -34,7 +33,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::dropIfExists('staff_profiles');
+        Schema::dropIfExists('user_profiles');
         Schema::enableForeignKeyConstraints();
     }
 };

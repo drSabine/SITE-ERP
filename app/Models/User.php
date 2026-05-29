@@ -44,9 +44,9 @@ class User extends Authenticatable
     }
 
     // Relationships
-    public function staffProfile(): HasOne
+    public function userProfile(): HasOne
     {
-        return $this->hasOne(StaffProfile::class);
+        return $this->hasOne(UserProfile::class);
     }
 
     public function teacherAssignments(): HasMany

@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class StaffProfile extends Model
+class UserProfile extends Model
 {
     use SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'employee_id', 'first_name', 'middle_name', 'last_name',
+        'user_id', 'first_name', 'middle_name', 'last_name',
         'suffix', 'sex', 'birthdate', 'address', 'contact_number',
         'specialization', 'degree',
     ];

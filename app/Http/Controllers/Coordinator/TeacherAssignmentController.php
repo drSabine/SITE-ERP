@@ -25,12 +25,12 @@ class TeacherAssignmentController extends Controller
             'term'        => $term,
             'assignments' => TeacherAssignment::where('academic_term_id', $term->id)
                 ->with([
-                    'teacher' => fn($q) => $q->select('id', 'name')->with(['staffProfile:user_id,first_name,last_name']),
+                    'teacher' => fn($query) => $query->select('id', 'name')->with(['userProfile:user_id,first_name,last_name']),
                     'course:id,course_code,title,units',
                 ])
                 ->get(['id', 'teacher_id', 'course_id', 'academic_term_id']),
             'teachers'    => User::teachers()->active()
-                ->with(['staffProfile:user_id,first_name,last_name'])
+                ->with(['userProfile:user_id,first_name,last_name'])
                 ->get(['id', 'name']),
             'courses'     => Course::active()->get(['id', 'course_code', 'title', 'units']),
         ]);

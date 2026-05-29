@@ -9,11 +9,14 @@
 
 | Role | Who | What they can do |
 |---|---|---|
-| `admin` | Dean / Secretary | Create/manage School Years, Academic Terms. Finalize terms. Manage all users. Full visibility. |
-| `coordinator` | Program Coordinator | Manage students, enrollments, course loads, teacher assignments. See INC deficiency list. |
+| `admin` | Dean / Secretary | Create/manage School Years, Academic Terms. Finalize terms. Manage all users. Full visibility. Can also carry a teaching load. |
+| `coordinator` | Program Coordinator | Manage students, enrollments, course loads, teacher assignments. See INC deficiency list. Can also carry a teaching load. |
 | `teacher` | Faculty | Input grades for their assigned courses only. |
+| `student` | Student | Portal access — view enrollment and grades. (Portal in progress.) |
 
 Route guards: `middleware('role:admin')`, `middleware('role:admin,coordinator')`, `middleware('role:teacher')`.
+
+> **Teaching load**: Any user (admin, coordinator, teacher) with a `teacher_assignments` row for the active term will see the Teaching section on the dashboard. Role stays the same — teaching is additive.
 
 ---
 
@@ -21,7 +24,7 @@ Route guards: `middleware('role:admin')`, `middleware('role:admin,coordinator')`
 
 ```
 users
-  └─ staff_profiles (employee metadata)
+  └─ user_profiles (shared account profile metadata)
 
 programs (BSIT, BSCE)
   └─ courses (year_level + semester_type = reference only, not an enrollment gate)
@@ -88,6 +91,25 @@ $missing  = $required->diff($passed);  // empty = eligible
 
 ---
 
+## Frontend Pages (built)
+
+| Page | File | Notes |
+|---|---|---|
+| Login | `Pages/Auth/Login.jsx` | Split layout, SPUP branding, dev quick-login panel, forgot password tip modal |
+| Dashboard | `Pages/Dashboard.jsx` | Single page for all roles, dynamic sections via shared props |
+| School Years | `Pages/Admin/SchoolYears/Index.jsx` | Table + expand → TermsPanel, CRUD modals, confirm modals |
+| Users | `Pages/Admin/Users/Index.jsx` | Paginated table, user profile inline, deactivate confirm |
+| Programs | `Pages/Admin/Programs/Index.jsx` | Table with Manage Courses link, CRUD modal |
+| Courses | `Pages/Admin/Courses/Index.jsx` | Grouped by year level + semester, back-link to Programs, CRUD + delete confirm |
+
+**UI Primitives** (`Components/ui/`):
+`InputField`, `DetailField`, `Modal`, `ConfirmModal`, `PrimaryButton`, `SecondaryButton`, `StatusBadge`, `TextInput`, `InputLabel`, `InputError`
+
+**Utilities** (`utils/format.js`):
+`formatDate(dateString)`, `formatDateRange(start, end)` — locale `en-PH`, UTC timezone
+
+---
+
 ## Feature → Controller Map
 
 | Feature | Controller | Role |
@@ -95,7 +117,7 @@ $missing  = $required->diff($passed);  // empty = eligible
 | Manage School Years | `Admin\SchoolYearController` | admin |
 | Manage Semesters (Academic Terms) | `Admin\AcademicTermController` | admin |
 | Finalize Academic Term | `Admin\AcademicTermController` (finalize action) | admin |
-| Manage Staff Accounts | `Admin\UserController` | admin |
+| Manage User Accounts | `Admin\UserController` | admin |
 | Manage Programs | `Admin\ProgramController` | admin |
 | Manage Courses | `Admin\CourseController` | admin |
 | Dashboard | `DashboardController` | all |
@@ -146,4 +168,18 @@ Controller: `Admin\ReportController` (build when needed — not yet implemented)
 - BSCE curriculum seeder
 - PDF enrollment report
 - Prerequisite soft-warning UI (table exists, seeder deferred)
-- Student portal / self-service
+- Student portal / self-service (placeholder exists at `/dashboard` for role=student)
+
+---
+
+## Dev Accounts (seeded via `UserSeeder`)
+
+| Role | Email | Password |
+|---|---|---|
+| admin | marifelgrace.kummer@site.spup | password |
+| coordinator | rucelj.pugeda@site.spup | password |
+| teacher | justinevince.tan@site.spup | password |
+| student | alyssamae.soriano@site.spup | password |
+
+Sample student record: Alyssa Mae Soriano, 2025-0001, BSIT Year 1.
+Dev login panel visible on `/login` when `appEnv !== 'production'` (shared via `HandleInertiaRequests`).
