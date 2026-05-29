@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\AcademicTerm;
 use App\Models\EnrollmentCourse;
 use App\Models\TeacherAssignment;
-use App\Models\TermPeriod;
 use App\Services\GradeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +17,7 @@ class GradeController extends Controller
     public function __construct(private GradeService $gradeService) {}
 
     /**
-     * List the teacher's course assignments for the active academic term.
+     * List the teacher''s course assignments for the active academic term.
      */
     public function index(): Response
     {
@@ -39,8 +38,8 @@ class GradeController extends Controller
     }
 
     /**
-     * Grade sheet: all students for a specific teacher assignment.
-     * Shows each student's grade per term period (Prelim, Midterm, Finals).
+     * Grade sheet: all enrolled students for a specific teacher assignment.
+     * Each row shows the student and their current final_grade (null = not yet graded).
      */
     public function show(TeacherAssignment $teacherAssignment): Response
     {
@@ -50,11 +49,6 @@ class GradeController extends Controller
             'You are not assigned to this course.'
         );
 
-        $termPeriods = TermPeriod::where('academic_term_id', $teacherAssignment->academic_term_id)
-            ->orderByRaw("FIELD(period, 'preliminary', 'midterm', 'finals')")
-            ->get(['id', 'academic_term_id', 'period', 'is_active']);
-
-        // All enrollment_courses for this course in this term
         $enrollmentCourses = EnrollmentCourse::whereHas(
             'enrollment',
             fn($q) => $q->where('academic_term_id', $teacherAssignment->academic_term_id)
@@ -64,44 +58,40 @@ class GradeController extends Controller
         ->whereIn('status', ['active', 'inc'])
         ->with([
             'enrollment' => fn($q) => $q->select('id', 'student_id')
-                ->with(['student:id,student_number,first_name,last_name']),
-            'grades:id,enrollment_course_id,term_period_id,grade',
+                ->with(['student' => fn($q) => $q->select('id', 'student_number', 'first_name', 'last_name')]),
         ])
         ->get(['id', 'enrollment_id', 'course_id', 'final_grade', 'status']);
 
         return Inertia::render('Teacher/Grades/Show', [
             'assignment'        => $teacherAssignment->load(['course:id,course_code,title', 'academicTerm:id,semester']),
-            'termPeriods'       => $termPeriods,
             'enrollmentCourses' => $enrollmentCourses,
+            'validGrades'       => GradeService::VALID_GRADES,
         ]);
     }
 
     /**
-     * Input or update a single grade for (enrollment_course, term_period).
+     * Input or update the grade for a single enrollment_course.
+     * Teacher submits: enrollment_course_id + grade (or null for INC).
      */
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'enrollment_course_id' => 'required|exists:enrollment_courses,id',
-            'term_period_id'       => 'required|exists:term_periods,id',
             'grade'                => ['nullable', 'numeric', 'in:' . implode(',', GradeService::VALID_GRADES)],
         ]);
 
-        // Verify teacher owns this course for this term
-        $ec     = EnrollmentCourse::with('enrollment')->findOrFail($data['enrollment_course_id']);
-        $period = TermPeriod::findOrFail($data['term_period_id']);
+        $ec = EnrollmentCourse::with('enrollment')->findOrFail($data['enrollment_course_id']);
 
+        // Verify teacher is assigned to this course for this term.
         $assigned = TeacherAssignment::where('teacher_id', auth()->id())
             ->where('course_id', $ec->course_id)
             ->where('academic_term_id', $ec->enrollment->academic_term_id)
             ->exists();
 
         abort_if(! $assigned, 403, 'You are not assigned to this course.');
-        abort_if(! $period->is_active, 422, 'This grading period is not currently open.');
 
         $this->gradeService->inputGrade(
             $ec,
-            $period,
             isset($data['grade']) ? (float) $data['grade'] : null
         );
 

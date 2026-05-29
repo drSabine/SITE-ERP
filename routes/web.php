@@ -29,12 +29,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     Route::post('school-years/{schoolYear}/academic-terms', [Admin\AcademicTermController::class, 'store'])->name('academic-terms.store');
     Route::put('academic-terms/{academicTerm}', [Admin\AcademicTermController::class, 'update'])->name('academic-terms.update');
     Route::post('academic-terms/{academicTerm}/activate', [Admin\AcademicTermController::class, 'activate'])->name('academic-terms.activate');
-
-    // Term Periods
-    Route::put('term-periods/{termPeriod}', [Admin\TermPeriodController::class, 'update'])->name('term-periods.update');
-    Route::post('term-periods/{termPeriod}/activate', [Admin\TermPeriodController::class, 'activate'])->name('term-periods.activate');
-    Route::post('term-periods/{termPeriod}/deactivate', [Admin\TermPeriodController::class, 'deactivate'])->name('term-periods.deactivate');
-    Route::post('term-periods/{termPeriod}/finalize-term', [Admin\TermPeriodController::class, 'finalizeTerm'])->name('term-periods.finalize-term');
+    Route::post('academic-terms/{academicTerm}/finalize', [Admin\AcademicTermController::class, 'finalize'])->name('academic-terms.finalize');
 
     // Users / Staff
     Route::get('users', [Admin\UserController::class, 'index'])->name('users.index');
@@ -101,4 +96,3 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
-

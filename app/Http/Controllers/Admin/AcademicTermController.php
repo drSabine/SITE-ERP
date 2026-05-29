@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicTerm;
 use App\Models\SchoolYear;
+use App\Services\GradeService;
 use App\Services\SchoolYearService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,10 @@ use Inertia\Response;
 
 class AcademicTermController extends Controller
 {
-    public function __construct(private SchoolYearService $service) {}
+    public function __construct(
+        private SchoolYearService $service,
+        private GradeService $gradeService,
+    ) {}
 
     // Returns terms for a given school year — used by the SchoolYears page via axios
     public function index(Request $request): \Illuminate\Http\JsonResponse
@@ -21,7 +25,6 @@ class AcademicTermController extends Controller
         $request->validate(['school_year_id' => 'required|exists:school_years,id']);
 
         $terms = AcademicTerm::where('school_year_id', $request->school_year_id)
-            ->with(['termPeriods' => fn($q) => $q->select('id', 'academic_term_id', 'period', 'is_active', 'start_date', 'end_date')])
             ->get(['id', 'school_year_id', 'semester', 'is_active', 'start_date', 'end_date']);
 
         return response()->json($terms);
@@ -55,6 +58,16 @@ class AcademicTermController extends Controller
     public function activate(AcademicTerm $academicTerm): RedirectResponse
     {
         $this->service->activateTerm($academicTerm);
+        return back();
+    }
+
+    /**
+     * Finalize an academic term — locks all active enrollment_course statuses
+     * to passed / failed / inc and marks the term as inactive.
+     */
+    public function finalize(AcademicTerm $academicTerm): RedirectResponse
+    {
+        $this->gradeService->finalizeTerm($academicTerm);
         return back();
     }
 }

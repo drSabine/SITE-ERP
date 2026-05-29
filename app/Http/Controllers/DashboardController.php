@@ -34,7 +34,7 @@ class DashboardController extends Controller
     private function adminData(): array
     {
         $activeTerm = AcademicTerm::active()
-            ->with(['schoolYear:id,name', 'termPeriods' => fn($q) => $q->active()->select('id', 'academic_term_id', 'period')])
+            ->with(['schoolYear:id,name'])
             ->first(['id', 'school_year_id', 'semester', 'is_active']);
 
         return [

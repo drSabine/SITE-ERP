@@ -40,15 +40,18 @@ class EnrollmentCourseController extends Controller
     }
 
     /**
-     * Override final_grade manually (INC resolution).
+     * Override final_grade manually (INC resolution or correction).
      */
     public function overrideGrade(Request $request, EnrollmentCourse $enrollmentCourse): RedirectResponse
     {
         $data = $request->validate([
-            'final_grade' => 'required|numeric|in:' . implode(',', GradeService::VALID_GRADES),
+            'final_grade' => ['nullable', 'numeric', 'in:' . implode(',', GradeService::VALID_GRADES)],
         ]);
 
-        $this->gradeService->overrideFinalGrade($enrollmentCourse, (float) $data['final_grade']);
+        $this->gradeService->overrideGrade(
+            $enrollmentCourse,
+            isset($data['final_grade']) ? (float) $data['final_grade'] : null
+        );
 
         return back();
     }

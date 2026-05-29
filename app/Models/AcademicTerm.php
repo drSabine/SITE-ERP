@@ -29,11 +29,6 @@ class AcademicTerm extends Model
         return $this->belongsTo(SchoolYear::class);
     }
 
-    public function termPeriods(): HasMany
-    {
-        return $this->hasMany(TermPeriod::class);
-    }
-
     public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class);
