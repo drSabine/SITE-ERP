@@ -1,7 +1,4 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
+import { InputError, InputLabel, PrimaryButton, TextInput } from '@/Components/ui';
 import { Transition } from '@headlessui/react';
 import { useForm } from '@inertiajs/react';
 import { useRef } from 'react';
@@ -24,8 +21,8 @@ export default function UpdatePasswordForm({ className = '' }) {
         password_confirmation: '',
     });
 
-    const updatePassword = (e) => {
-        e.preventDefault();
+    const updatePassword = (event) => {
+        event.preventDefault();
 
         put(route('password.update'), {
             preserveScroll: true,
@@ -68,8 +65,8 @@ export default function UpdatePasswordForm({ className = '' }) {
                         id="current_password"
                         ref={currentPasswordInput}
                         value={data.current_password}
-                        onChange={(e) =>
-                            setData('current_password', e.target.value)
+                        onChange={(event) =>
+                            setData('current_password', event.target.value)
                         }
                         type="password"
                         className="mt-1 block w-full"
@@ -89,7 +86,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                         id="password"
                         ref={passwordInput}
                         value={data.password}
-                        onChange={(e) => setData('password', e.target.value)}
+                        onChange={(event) => setData('password', event.target.value)}
                         type="password"
                         className="mt-1 block w-full"
                         autoComplete="new-password"
@@ -107,8 +104,8 @@ export default function UpdatePasswordForm({ className = '' }) {
                     <TextInput
                         id="password_confirmation"
                         value={data.password_confirmation}
-                        onChange={(e) =>
-                            setData('password_confirmation', e.target.value)
+                        onChange={(event) =>
+                            setData('password_confirmation', event.target.value)
                         }
                         type="password"
                         className="mt-1 block w-full"

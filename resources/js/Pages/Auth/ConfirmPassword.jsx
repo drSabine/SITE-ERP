@@ -1,7 +1,4 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
+import { InputError, InputLabel, PrimaryButton, TextInput } from '@/Components/ui';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm } from '@inertiajs/react';
 
@@ -10,8 +7,8 @@ export default function ConfirmPassword() {
         password: '',
     });
 
-    const submit = (e) => {
-        e.preventDefault();
+    const submit = (event) => {
+        event.preventDefault();
 
         post(route('password.confirm'), {
             onFinish: () => reset('password'),
@@ -38,7 +35,7 @@ export default function ConfirmPassword() {
                         value={data.password}
                         className="mt-1 block w-full"
                         isFocused={true}
-                        onChange={(e) => setData('password', e.target.value)}
+                        onChange={(event) => setData('password', event.target.value)}
                     />
 
                     <InputError message={errors.password} className="mt-2" />

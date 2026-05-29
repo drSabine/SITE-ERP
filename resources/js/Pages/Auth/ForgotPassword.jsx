@@ -1,6 +1,4 @@
-import InputError from '@/Components/InputError';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
+import { InputError, PrimaryButton, TextInput } from '@/Components/ui';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm } from '@inertiajs/react';
 
@@ -9,8 +7,8 @@ export default function ForgotPassword({ status }) {
         email: '',
     });
 
-    const submit = (e) => {
-        e.preventDefault();
+    const submit = (event) => {
+        event.preventDefault();
 
         post(route('password.email'));
     };
@@ -39,7 +37,7 @@ export default function ForgotPassword({ status }) {
                     value={data.email}
                     className="mt-1 block w-full"
                     isFocused={true}
-                    onChange={(e) => setData('email', e.target.value)}
+                    onChange={(event) => setData('email', event.target.value)}
                 />
 
                 <InputError message={errors.email} className="mt-2" />

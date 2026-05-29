@@ -1,9 +1,4 @@
-import DangerButton from '@/Components/DangerButton';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import Modal from '@/Components/Modal';
-import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
+import { DangerButton, InputError, InputLabel, Modal, SecondaryButton, TextInput } from '@/Components/ui';
 import { useForm } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
@@ -27,8 +22,8 @@ export default function DeleteUserForm({ className = '' }) {
         setConfirmingUserDeletion(true);
     };
 
-    const deleteUser = (e) => {
-        e.preventDefault();
+    const deleteUser = (event) => {
+        event.preventDefault();
 
         destroy(route('profile.destroy'), {
             preserveScroll: true,
@@ -90,8 +85,8 @@ export default function DeleteUserForm({ className = '' }) {
                             name="password"
                             ref={passwordInput}
                             value={data.password}
-                            onChange={(e) =>
-                                setData('password', e.target.value)
+                            onChange={(event) =>
+                                setData('password', event.target.value)
                             }
                             className="mt-1 block w-3/4"
                             isFocused

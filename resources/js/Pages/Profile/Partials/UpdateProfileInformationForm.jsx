@@ -1,7 +1,4 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
+import { InputError, InputLabel, PrimaryButton, TextInput } from '@/Components/ui';
 import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 
@@ -18,8 +15,8 @@ export default function UpdateProfileInformation({
             email: user.email,
         });
 
-    const submit = (e) => {
-        e.preventDefault();
+    const submit = (event) => {
+        event.preventDefault();
 
         patch(route('profile.update'));
     };
@@ -44,7 +41,7 @@ export default function UpdateProfileInformation({
                         id="name"
                         className="mt-1 block w-full"
                         value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
+                        onChange={(event) => setData('name', event.target.value)}
                         required
                         isFocused
                         autoComplete="name"
@@ -61,7 +58,7 @@ export default function UpdateProfileInformation({
                         type="email"
                         className="mt-1 block w-full"
                         value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
+                        onChange={(event) => setData('email', event.target.value)}
                         required
                         autoComplete="username"
                     />
