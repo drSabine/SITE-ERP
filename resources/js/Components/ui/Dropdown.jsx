@@ -1,37 +1,33 @@
 import { Transition } from '@headlessui/react';
 import { Link } from '@inertiajs/react';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 const DropDownContext = createContext();
 
 const Dropdown = ({ children }) => {
     const [open, setOpen] = useState(false);
+    const triggerRef = useRef(null);
+    const dropdownRef = useRef(null);
 
     const toggleOpen = () => {
         setOpen((previousState) => !previousState);
     };
 
+    const close = () => setOpen(false);
+
     return (
-        <DropDownContext.Provider value={{ open, setOpen, toggleOpen }}>
+        <DropDownContext.Provider value={{ open, setOpen, toggleOpen, close, triggerRef, dropdownRef }}>
             <div className="relative">{children}</div>
         </DropDownContext.Provider>
     );
 };
 
 const Trigger = ({ children }) => {
-    const { open, setOpen, toggleOpen } = useContext(DropDownContext);
+    const { open, setOpen, toggleOpen, triggerRef } = useContext(DropDownContext);
 
     return (
-        <>
-            <div onClick={toggleOpen}>{children}</div>
-
-            {open && (
-                <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setOpen(false)}
-                ></div>
-            )}
-        </>
+        <div ref={triggerRef} onClick={toggleOpen}>{children}</div>
     );
 };
 
@@ -41,24 +37,56 @@ const Content = ({
     contentClasses = 'py-1 bg-white',
     children,
 }) => {
-    const { open, setOpen } = useContext(DropDownContext);
+    const { open, setOpen, close, triggerRef, dropdownRef } = useContext(DropDownContext);
+    const [position, setPosition] = useState({ top: 0, left: 0 });
 
-    let alignmentClasses = 'origin-top';
+    const updatePosition = () => {
+        if (triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect();
+            const dropdownWidth = width === '40' ? 160 : 192; // w-40 = 160px, w-48 = 192px
 
-    if (align === 'left') {
-        alignmentClasses = 'ltr:origin-top-left rtl:origin-top-right start-0';
-    } else if (align === 'right') {
-        alignmentClasses = 'ltr:origin-top-right rtl:origin-top-left end-0';
-    }
+            let left = rect.left;
+            if (align === 'right') {
+                left = rect.right - dropdownWidth;
+            } else if (align === 'center') {
+                left = rect.left + (rect.width / 2) - (dropdownWidth / 2);
+            }
+
+            setPosition({
+                top: rect.bottom + 4,
+                left: Math.max(8, Math.min(left, window.innerWidth - dropdownWidth - 8)),
+            });
+        }
+    };
+
+    useEffect(() => {
+        if (open) {
+            updatePosition();
+            window.addEventListener('scroll', updatePosition, true);
+            window.addEventListener('resize', updatePosition);
+            return () => {
+                window.removeEventListener('scroll', updatePosition, true);
+                window.removeEventListener('resize', updatePosition);
+            };
+        }
+    }, [open, align, width, triggerRef]);
 
     let widthClasses = '';
 
-    if (width === '48') {
+    if (width === '40') {
+        widthClasses = 'w-40';
+    } else if (width === '48') {
         widthClasses = 'w-48';
     }
 
-    return (
+    if (!open) return null;
+
+    return createPortal(
         <>
+            <div
+                className="fixed inset-0 z-40"
+                onClick={close}
+            />
             <Transition
                 show={open}
                 enter="transition ease-out duration-200"
@@ -69,8 +97,10 @@ const Content = ({
                 leaveTo="opacity-0 scale-95"
             >
                 <div
-                    className={`absolute z-50 mt-2 rounded-md shadow-lg ${alignmentClasses} ${widthClasses}`}
-                    onClick={() => setOpen(false)}
+                    ref={dropdownRef}
+                    className={`fixed z-50 rounded-md shadow-lg ${widthClasses}`}
+                    style={{ top: position.top, left: position.left }}
+                    onClick={(e) => e.stopPropagation()}
                 >
                     <div
                         className={
@@ -82,7 +112,8 @@ const Content = ({
                     </div>
                 </div>
             </Transition>
-        </>
+        </>,
+        document.body
     );
 };
 

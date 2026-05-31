@@ -167,4 +167,15 @@ class StudentController extends Controller
 
         return back();
     }
+
+    public function destroy(Student $student): RedirectResponse
+    {
+        if ($student->enrollments()->exists()) {
+            return back()->with('error', 'Cannot delete student with enrollment records.');
+        }
+
+        $student->delete();
+
+        return back()->with('success', 'Student deleted successfully.');
+    }
 }

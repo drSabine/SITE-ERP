@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { StatusBadge, DataTable } from '@/Components/ui';
+import { StatusBadge, ConfirmModal, DataTable } from '@/Components/ui';
 import { EnrollmentFilters, SchoolYearTermPicker } from '@/Components/Coordinator/Enrollments';
 import {
     PagePanel,
@@ -15,6 +15,7 @@ export default function Index({ enrollments, schoolYears, programs, selectedTerm
     const [programId, setProgramId] = useState(filters.program_id ?? '');
     const [yearLevel, setYearLevel] = useState(filters.year_level ?? '');
     const [status, setStatus] = useState(filters.status ?? '');
+    const [confirm, setConfirm] = useState(null);
 
     const allTerms = schoolYears.flatMap(schoolYear =>
         (schoolYear.academic_terms ?? []).map(term => ({ ...term, school_year: schoolYear }))
@@ -71,6 +72,17 @@ export default function Index({ enrollments, schoolYears, programs, selectedTerm
         const value = event.target.value;
         setStatus(value);
         navigate({ status: value });
+    }
+
+    function requestDropEnrollment(enrollment) {
+        setConfirm({
+            title: 'Drop Enrollment',
+            message: <>Drop <strong>{formatStudentName(enrollment.student, { includeSuffix: false })}</strong> from this term? This action cannot be undone.</>,
+            confirmLabel: 'Drop',
+            onConfirm: () => router.post(route('coordinator.enrollments.drop', enrollment.id), {}, {
+                onSuccess: () => setConfirm(null),
+            }),
+        });
     }
 
     const columns = [
@@ -165,18 +177,37 @@ export default function Index({ enrollments, schoolYears, programs, selectedTerm
                                 pagination={enrollments}
                                 emptyMessage="No enrollments found for this term."
                                 actions={row => (
-                                    <Link
-                                        href={`${route('coordinator.students.index')}?search=${row.student?.student_number ?? ''}`}
-                                        className="text-sm font-medium text-emerald-700 hover:text-emerald-900"
-                                    >
-                                        View Student
-                                    </Link>
+                                    <>
+                                        <Link
+                                            href={`${route('coordinator.students.index')}?search=${row.student?.student_number ?? ''}`}
+                                            className="text-sm font-medium text-emerald-700 hover:text-emerald-900"
+                                        >
+                                            View Student
+                                        </Link>
+                                        {row.status === 'enrolled' && (
+                                            <button
+                                                onClick={() => requestDropEnrollment(row)}
+                                                className="text-sm font-medium text-red-500 hover:text-red-700"
+                                            >
+                                                Drop
+                                            </button>
+                                        )}
+                                    </>
                                 )}
                             />
                         )}
                     </PagePanel>
                 </div>
             </div>
+
+            <ConfirmModal
+                show={confirm !== null}
+                title={confirm?.title}
+                message={confirm?.message}
+                confirmLabel={confirm?.confirmLabel}
+                onConfirm={confirm?.onConfirm}
+                onClose={() => setConfirm(null)}
+            />
         </AuthenticatedLayout>
     );
 }

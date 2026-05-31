@@ -1,5 +1,6 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { ConfirmModal } from '@/Components/ui';
 import {
     DashboardIcon,
     SchoolYearsIcon,
@@ -67,6 +68,18 @@ export default function AuthenticatedLayout({ header, children }) {
 
     const [currentTime, setCurrentTime] = useState('');
     const [currentDate, setCurrentDate] = useState('');
+    const [confirm, setConfirm] = useState(null);
+
+    function handleSignOut() {
+        setConfirm({
+            title: 'Sign Out',
+            message: <>Are you sure you want to sign out?</>,
+            confirmLabel: 'Sign Out',
+            onConfirm: () => router.post(route('logout'), {}, {
+                onFinish: () => setConfirm(null),
+            }),
+        });
+    }
 
     useEffect(() => {
         function tick() {
@@ -147,14 +160,12 @@ export default function AuthenticatedLayout({ header, children }) {
                     {hasTeachingLoad && role !== 'teacher' && (
                         <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-widest text-yellow-400">+ Teaching Load</p>
                     )}
-                    <Link
-                        href={route('logout')}
-                        method="post"
-                        as="button"
+                    <button
+                        onClick={handleSignOut}
                         className="mt-2.5 block w-full border border-emerald-700 px-3 py-1.5 text-left text-[10px] font-semibold uppercase tracking-widest text-emerald-300 transition-colors hover:bg-emerald-800 hover:text-white"
                     >
                         Sign Out
-                    </Link>
+                    </button>
                 </div>
             </aside>
 
@@ -171,6 +182,15 @@ export default function AuthenticatedLayout({ header, children }) {
                     {children}
                 </main>
             </div>
+
+            <ConfirmModal
+                show={confirm !== null}
+                title={confirm?.title}
+                message={confirm?.message}
+                confirmLabel={confirm?.confirmLabel}
+                onConfirm={confirm?.onConfirm}
+                onClose={() => setConfirm(null)}
+            />
         </div>
     );
 }
