@@ -74,6 +74,7 @@ export default function StudentDrawer({
     onEnrollClick,
     onManageClick,
     onEditClick,
+    onDeleteClick,
 }) {
     const schoolYearGroups = groupEnrollmentsBySchoolYear(student?.enrollments);
 
@@ -226,6 +227,15 @@ export default function StudentDrawer({
                                                     >
                                                         Edit Profile
                                                     </button>
+                                                    {(student.enrollments ?? []).length === 0 && onDeleteClick && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => onDeleteClick(student)}
+                                                            className="border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
 

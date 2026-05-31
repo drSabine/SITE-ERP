@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useForm, router } from '@inertiajs/react';
-import { Modal, PrimaryButton, SecondaryButton, StatusBadge, InputLabel, InputError, DataTable } from '@/Components/ui';
+import { Modal, PrimaryButton, SecondaryButton, StatusBadge, InputLabel, InputError, DataTable, ConfirmModal } from '@/Components/ui';
 import { MAX_ENROLLMENT_UNITS, getSemesterLabel, getYearLabel } from '@/Components/Coordinator/Shared';
 
 export default function CourseManagerModal({ show, student, enrollment, availableCourses, onClose, onActionDone }) {
     const [loadingAction, setLoadingAction] = useState(null);
+    const [confirm, setConfirm] = useState(null);
 
     const addForm = useForm({ enrollment_id: enrollment?.id ?? '', course_id: '' });
 
@@ -72,12 +73,23 @@ export default function CourseManagerModal({ show, student, enrollment, availabl
     }
 
     function handleRemoveCourse(enrollmentCourseId) {
-        setLoadingAction(`remove-${enrollmentCourseId}`);
-        router.delete(route('coordinator.enrollment-courses.destroy', enrollmentCourseId), {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => onActionDone(),
-            onFinish: () => setLoadingAction(null),
+        const enrollmentCourse = activeCourses.find(ec => ec.id === enrollmentCourseId);
+        setConfirm({
+            title: 'Remove Course',
+            message: <>Remove <strong>{enrollmentCourse?.course?.course_code} - {enrollmentCourse?.course?.title}</strong> from this enrollment? This action cannot be undone.</>,
+            confirmLabel: 'Remove',
+            onConfirm: () => {
+                setLoadingAction(`remove-${enrollmentCourseId}`);
+                router.delete(route('coordinator.enrollment-courses.destroy', enrollmentCourseId), {
+                    preserveState: true,
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setConfirm(null);
+                        onActionDone();
+                    },
+                    onFinish: () => setLoadingAction(null),
+                });
+            },
         });
     }
 
@@ -198,6 +210,15 @@ export default function CourseManagerModal({ show, student, enrollment, availabl
             <div className="flex justify-end border-t border-gray-200 px-6 py-4">
                 <SecondaryButton type="button" onClick={onClose}>Close</SecondaryButton>
             </div>
+
+            <ConfirmModal
+                show={confirm !== null}
+                title={confirm?.title}
+                message={confirm?.message}
+                confirmLabel={confirm?.confirmLabel}
+                onConfirm={confirm?.onConfirm}
+                onClose={() => setConfirm(null)}
+            />
         </Modal>
     );
 }

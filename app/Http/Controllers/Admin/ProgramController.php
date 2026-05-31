@@ -44,4 +44,15 @@ class ProgramController extends Controller
 
         return back();
     }
+
+    public function destroy(Program $program): RedirectResponse
+    {
+        if ($program->courses()->exists()) {
+            return back()->with('error', 'Cannot delete program with courses.');
+        }
+
+        $program->delete();
+
+        return back()->with('success', 'Program deleted successfully.');
+    }
 }

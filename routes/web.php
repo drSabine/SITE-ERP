@@ -25,6 +25,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     Route::put('school-years/{schoolYear}', [Admin\SchoolYearController::class, 'update'])->name('school-years.update');
     Route::post('school-years/{schoolYear}/activate', [Admin\SchoolYearController::class, 'activate'])->name('school-years.activate');
     Route::post('school-years/{schoolYear}/finalize', [Admin\SchoolYearController::class, 'finalize'])->name('school-years.finalize');
+    Route::delete('school-years/{schoolYear}', [Admin\SchoolYearController::class, 'destroy'])->name('school-years.destroy');
 
     // Academic Terms (JSON endpoint for axios — no Inertia page)
     Route::get('academic-terms', [Admin\AcademicTermController::class, 'index'])->name('academic-terms.index');
@@ -44,6 +45,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     Route::get('programs', [Admin\ProgramController::class, 'index'])->name('programs.index');
     Route::post('programs', [Admin\ProgramController::class, 'store'])->name('programs.store');
     Route::put('programs/{program}', [Admin\ProgramController::class, 'update'])->name('programs.update');
+    Route::delete('programs/{program}', [Admin\ProgramController::class, 'destroy'])->name('programs.destroy');
 
     // Courses (nested under programs conceptually but flat route for simplicity)
     Route::get('courses', [Admin\CourseController::class, 'index'])->name('courses.index');
@@ -63,6 +65,7 @@ Route::prefix('coordinator')->middleware(['auth', 'role:admin,coordinator'])->na
     Route::get('students/{student}', [Coordinator\StudentController::class, 'show'])->name('students.show');
     Route::post('students', [Coordinator\StudentController::class, 'store'])->name('students.store');
     Route::put('students/{student}', [Coordinator\StudentController::class, 'update'])->name('students.update');
+    Route::delete('students/{student}', [Coordinator\StudentController::class, 'destroy'])->name('students.destroy');
 
     // Enrollments
     Route::get('enrollments', [Coordinator\EnrollmentController::class, 'index'])->name('enrollments.index');

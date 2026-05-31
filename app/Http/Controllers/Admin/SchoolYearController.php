@@ -60,4 +60,23 @@ class SchoolYearController extends Controller
         $this->service->finalize($schoolYear);
         return back();
     }
+
+    public function destroy(SchoolYear $schoolYear): RedirectResponse
+    {
+        if ($schoolYear->is_active) {
+            return back()->with('error', 'Cannot delete active school year.');
+        }
+
+        if ($schoolYear->status === 'finalized') {
+            return back()->with('error', 'Cannot delete finalized school year.');
+        }
+
+        if ($schoolYear->academicTerms()->exists()) {
+            return back()->with('error', 'Cannot delete school year with academic terms.');
+        }
+
+        $schoolYear->delete();
+
+        return back()->with('success', 'School year deleted successfully.');
+    }
 }

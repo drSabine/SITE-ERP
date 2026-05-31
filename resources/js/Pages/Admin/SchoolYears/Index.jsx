@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { formatDateRange } from '@/utils/format';
-import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, PagePanel } from '@/Components/ui';
+import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, PagePanel, Dropdown } from '@/Components/ui';
 import { SchoolYearFormModal, TermsPanel, SEMESTER_LABELS } from '@/Components/Admin/SchoolYears';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
@@ -64,6 +64,17 @@ export default function Index({ schoolYears }) {
         });
     }
 
+    function requestDeleteSY(sy) {
+        setConfirm({
+            title: 'Delete School Year',
+            message: <>Delete <strong>{sy.name}</strong>? This action cannot be undone.</>,
+            confirmLabel: 'Delete',
+            onConfirm: () => router.delete(route('admin.school-years.destroy', sy.id), {
+                onSuccess: () => setConfirm(null),
+            }),
+        });
+    }
+
     return (
         <AuthenticatedLayout header="School Years">
             <Head title="School Years" />
@@ -91,20 +102,53 @@ export default function Index({ schoolYears }) {
                                     : <TermsPanel sy={sy} terms={terms} onActivate={activateTerm} onAddSummer={() => addSummerTerm(sy)} />
                             )}
                             actions={sy => (
-                                <>
-                                    <button onClick={() => toggleExpand(sy)} className="text-sm font-medium text-emerald-700 hover:text-emerald-900">
-                                        {expandedSY === sy.id ? 'Hide Terms' : 'View Terms'}
-                                    </button>
-                                    {sy.status !== 'finalized' && (
-                                        <button onClick={() => openEdit(sy)} className="text-sm font-medium text-gray-500 hover:text-gray-700">Edit</button>
-                                    )}
-                                    {!sy.is_active && sy.status !== 'finalized' && (
-                                        <button onClick={() => activateSY(sy)} className="text-sm font-medium text-emerald-600 hover:text-emerald-800">Activate</button>
-                                    )}
-                                    {sy.status !== 'finalized' && (
-                                        <button onClick={() => requestFinalizeSY(sy)} className="text-sm font-medium text-red-500 hover:text-red-700">Finalize</button>
-                                    )}
-                                </>
+                                <Dropdown>
+                                    <Dropdown.Trigger>
+                                        <button className="text-sm font-medium text-gray-500 hover:text-gray-700">
+                                            Actions
+                                        </button>
+                                    </Dropdown.Trigger>
+                                    <Dropdown.Content width="40" align="right">
+                                        <button
+                                            onClick={() => toggleExpand(sy)}
+                                            className="block w-full px-4 py-2 text-start text-sm text-emerald-700 hover:bg-emerald-50"
+                                        >
+                                            {expandedSY === sy.id ? 'Hide Terms' : 'View Terms'}
+                                        </button>
+                                        {sy.status !== 'finalized' && (
+                                            <button
+                                                onClick={() => openEdit(sy)}
+                                                className="block w-full px-4 py-2 text-start text-sm text-gray-700 hover:bg-gray-100"
+                                            >
+                                                Edit
+                                            </button>
+                                        )}
+                                        {!sy.is_active && sy.status !== 'finalized' && (
+                                            <button
+                                                onClick={() => activateSY(sy)}
+                                                className="block w-full px-4 py-2 text-start text-sm text-emerald-700 hover:bg-emerald-50"
+                                            >
+                                                Activate
+                                            </button>
+                                        )}
+                                        {sy.status !== 'finalized' && (
+                                            <button
+                                                onClick={() => requestFinalizeSY(sy)}
+                                                className="block w-full px-4 py-2 text-start text-sm text-red-600 hover:bg-red-50"
+                                            >
+                                                Finalize
+                                            </button>
+                                        )}
+                                        {!sy.is_active && sy.status !== 'finalized' && !sy.academic_terms_count && (
+                                            <button
+                                                onClick={() => requestDeleteSY(sy)}
+                                                className="block w-full px-4 py-2 text-start text-sm text-red-600 hover:bg-red-50"
+                                            >
+                                                Delete
+                                            </button>
+                                        )}
+                                    </Dropdown.Content>
+                                </Dropdown>
                             )}
                         />
                     </PagePanel>

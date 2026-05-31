@@ -1,15 +1,27 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { PrimaryButton, StatusBadge, DataTable, PagePanel } from '@/Components/ui';
+import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, PagePanel } from '@/Components/ui';
 import { ProgramFormModal } from '@/Components/Admin/Programs';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function Index({ programs }) {
     const [showForm, setShowForm]     = useState(false);
     const [editTarget, setEditTarget] = useState(null);
+    const [confirm, setConfirm]       = useState(null);
 
     function openCreate() { setEditTarget(null); setShowForm(true); }
     function openEdit(program) { setEditTarget(program); setShowForm(true); }
+
+    function requestDelete(program) {
+        setConfirm({
+            title: 'Delete Program',
+            message: <>Delete <strong>{program.code} - {program.name}</strong>? This cannot be undone.</>,
+            confirmLabel: 'Delete',
+            onConfirm: () => router.delete(route('admin.programs.destroy', program.id), {
+                onSuccess: () => setConfirm(null),
+            }),
+        });
+    }
 
     const columns = [
         { key: 'code',         label: 'Code',         className: 'font-mono font-semibold text-emerald-800' },
@@ -39,6 +51,9 @@ export default function Index({ programs }) {
                                         Manage Courses
                                     </Link>
                                     <button onClick={() => openEdit(program)} className="text-sm font-medium text-emerald-700 hover:text-emerald-900">Edit</button>
+                                    {!program.courses_count && (
+                                        <button onClick={() => requestDelete(program)} className="text-sm font-medium text-red-500 hover:text-red-700">Delete</button>
+                                    )}
                                 </>
                             )}
                         />
@@ -47,6 +62,15 @@ export default function Index({ programs }) {
             </div>
 
             <ProgramFormModal show={showForm} editTarget={editTarget} onClose={() => setShowForm(false)} />
+
+            <ConfirmModal
+                show={confirm !== null}
+                title={confirm?.title}
+                message={confirm?.message}
+                confirmLabel={confirm?.confirmLabel}
+                onConfirm={confirm?.onConfirm}
+                onClose={() => setConfirm(null)}
+            />
         </AuthenticatedLayout>
     );
 }

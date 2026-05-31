@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { PrimaryButton, StatusBadge, DataTable } from '@/Components/ui';
+import { PrimaryButton, StatusBadge, ConfirmModal, DataTable } from '@/Components/ui';
 import { StudentFormModal, StudentDrawer, EnrollmentModal, CourseManagerModal, StudentFilters } from '@/Components/Coordinator/Students';
 import { PagePanel, SegmentedTabs, YEAR_TABS, formatStudentName, getYearLabel } from '@/Components/Coordinator/Shared';
 
@@ -22,6 +22,7 @@ export default function Index({ students, programs, activeSchoolYear, schoolYear
     const [showEnrollModal, setShowEnrollModal] = useState(false);
     const [showCourseManager, setShowCourseManager] = useState(false);
     const [managingEnrollmentId, setManagingEnrollmentId] = useState(null);
+    const [confirm, setConfirm] = useState(null);
 
     useEffect(() => {
         if (!selectedStudentId) {
@@ -80,6 +81,22 @@ export default function Index({ students, programs, activeSchoolYear, schoolYear
         setShowEnrollModal(false);
         setShowCourseManager(false);
         setManagingEnrollmentId(null);
+    }
+
+    function requestDeleteStudent(student) {
+        setConfirm({
+            title: 'Delete Student',
+            message: <>Delete <strong>{formatStudentName(student, { middleInitial: true })}</strong>? This action cannot be undone.</>,
+            confirmLabel: 'Delete',
+            onConfirm: () => router.delete(route('coordinator.students.destroy', student.id), {
+                onSuccess: () => {
+                    setConfirm(null);
+                    if (selectedStudentId === student.id) {
+                        closeDrawer();
+                    }
+                },
+            }),
+        });
     }
 
     const managingEnrollment = managingEnrollmentId && drawerData
@@ -225,6 +242,7 @@ export default function Index({ students, programs, activeSchoolYear, schoolYear
                     setStudentFormTarget(student);
                     setShowStudentForm(true);
                 }}
+                onDeleteClick={requestDeleteStudent}
             />
 
             <EnrollmentModal
@@ -248,6 +266,15 @@ export default function Index({ students, programs, activeSchoolYear, schoolYear
                 availableCourses={drawerData?.availableCourses ?? []}
                 onClose={() => setShowCourseManager(false)}
                 onActionDone={refetchDrawerStudent}
+            />
+
+            <ConfirmModal
+                show={confirm !== null}
+                title={confirm?.title}
+                message={confirm?.message}
+                confirmLabel={confirm?.confirmLabel}
+                onConfirm={confirm?.onConfirm}
+                onClose={() => setConfirm(null)}
             />
         </AuthenticatedLayout>
     );

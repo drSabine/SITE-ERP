@@ -84,8 +84,19 @@ export default function Index({ program, courses }) {
                     />
 
                     {courses.length === 0 ? (
-                        <div className="border border-gray-200 bg-white px-5 py-10 text-center text-sm text-gray-400 shadow-sm">
-                            No courses yet for {program.name}. Add the first one.
+                        <div className="border border-gray-200 bg-white px-5 py-16 text-center shadow-sm">
+                            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
+                                <svg className="h-8 w-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                            </div>
+                            <h3 className="text-base font-semibold text-gray-900">No courses yet</h3>
+                            <p className="mt-1 text-sm text-gray-500">
+                                Get started by adding the first course to {program.name}.
+                            </p>
+                            <div className="mt-4">
+                                <PrimaryButton onClick={openCreate}>+ Add Course</PrimaryButton>
+                            </div>
                         </div>
                     ) : (
                         <div className="space-y-4">
