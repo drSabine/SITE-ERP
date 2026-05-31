@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, CardHeader, SearchBar } from '@/Components/ui';
+import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, SearchBar, PagePanel, SegmentedTabs } from '@/Components/ui';
 import { UserFormModal } from '@/Components/Admin/Users';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -94,33 +94,16 @@ export default function Index({ users, filters = {} }) {
 
             <div className="py-8">
                 <div className="mx-auto max-w-6xl px-6">
-                    <div className="border border-gray-200 bg-white shadow-sm">
-                        <CardHeader
-                            title="User Accounts"
-                            description="Administrators, coordinators, teachers, and students."
-                            action={<PrimaryButton onClick={openCreate}>+ New Account</PrimaryButton>}
+                    <PagePanel
+                        title="User Accounts"
+                        description="Administrators, coordinators, teachers, and students."
+                        action={<PrimaryButton onClick={openCreate}>+ New Account</PrimaryButton>}
+                    >
+                        <SegmentedTabs
+                            options={TABLE_FILTERS}
+                            value={TABLE_FILTERS.find(f => f.role === role && f.status === status)?.value ?? 'all'}
+                            onChange={tabValue => handleTableFilter(TABLE_FILTERS.find(f => f.value === tabValue))}
                         />
-
-                        <div className="flex gap-0 border-b border-gray-200">
-                            {TABLE_FILTERS.map(filter => {
-                                const isActive = role === filter.role && status === filter.status;
-
-                                return (
-                                    <button
-                                        key={filter.value}
-                                        type="button"
-                                        onClick={() => handleTableFilter(filter)}
-                                        className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-widest transition-colors ${
-                                            isActive
-                                                ? 'border-b-2 border-emerald-600 bg-white text-emerald-700'
-                                                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                                        }`}
-                                    >
-                                        {filter.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
 
                         <div className="border-b border-gray-100 px-6 py-3">
                             <SearchBar
@@ -151,7 +134,7 @@ export default function Index({ users, filters = {} }) {
                                 </>
                             )}
                         />
-                    </div>
+                    </PagePanel>
                 </div>
             </div>
 

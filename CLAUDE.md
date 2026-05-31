@@ -52,12 +52,32 @@ utils/format.js                   ← formatDate(), formatDateRange()
 - Never create `components/` inside `Pages/`
 - Components < ~30 lines → inline in page file
 - Every extracted folder has `index.js` barrel
+- **Never create 1-line `.jsx` re-export shim files.** When a component moves to `ui/`, update the barrel `index.js` to re-export it directly: `export { X } from '@/Components/ui'` — no intermediate file needed.
 
 **ui/ exports:** ApplicationLogo, Checkbox, DangerButton, Dropdown, InputError, InputLabel,
 Modal, NavLink, PrimaryButton, SecondaryButton, TextInput, StatusBadge, ConfirmModal, Icons,
-InputField, DetailField, DataTable
+InputField, DetailField, DataTable, CardHeader, Pagination, SearchBar, SegmentedTabs, PagePanel
+
+**PagePanel** — standard page card wrapper: `<PagePanel title description action className>children</PagePanel>`. Replaces raw `<div className="border border-gray-200 bg-white shadow-sm"><CardHeader .../></div>`. Supports optional `className` for extra classes (e.g. `mb-6`).
+
+**SegmentedTabs** — tab-filter bar: `<SegmentedTabs options={[{value,label}]} value onChange grow />`. Replaces inline tab-button loops. Used by admin (Users) and coordinator (Students) pages.
+
+**DataTable props:** `compact` (bool, default false) — use inside modals for tighter padding (px-4 py-2.5 cells). Standard page tables use default.
+
+**StatusBadge variants:** `active` `inactive` `enrolled` `not_enrolled` `finalized` `passed` `failed` `dropped` `inc`
+- `enrolled` = emerald (enrollment record status OR "student is enrolled in active S.Y.")
+- `not_enrolled` = amber ("student has no enrollment in active S.Y.")
+- NEVER use inline `<span>` for status/enrollment state — always use `<StatusBadge>`
+
+**Reuse rules:**
+- ALL tables → `DataTable` (never raw `<table><thead><th>...</th>` markup)
+- ALL status/enrollment indicators → `StatusBadge`
+- ALL action buttons in table rows → raw `className="text-sm font-medium text-emerald-700 hover:text-emerald-900"` (this is the standard)
+- Danger row actions → `className="text-sm font-medium text-red-500 hover:text-red-700"`
+- `student_number` column standard → `className: 'font-mono text-xs text-gray-500'` everywhere
 
 **Admin component folders:** `SchoolYears/`, `Users/`, `Programs/`, `Courses/`
+**Coordinator component folders:** `Students/`, `Enrollments/`, `Shared/`
 **Admin sidebar nav:** Dashboard, School Years, Users, Programs. Courses via Programs → Manage Courses.
 
 ---

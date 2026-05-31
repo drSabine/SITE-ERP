@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { PrimaryButton, StatusBadge, DataTable, CardHeader } from '@/Components/ui';
+import { PrimaryButton, StatusBadge, DataTable, PagePanel } from '@/Components/ui';
 import { ProgramFormModal } from '@/Components/Admin/Programs';
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
@@ -24,14 +24,11 @@ export default function Index({ programs }) {
 
             <div className="py-8">
                 <div className="mx-auto max-w-6xl px-6">
-                    <div className="border border-gray-200 bg-white shadow-sm">
-
-                        <CardHeader
-                            title="Programs"
-                            description="Manage degree programs and their course catalogs."
-                            action={<PrimaryButton onClick={openCreate}>+ New Program</PrimaryButton>}
-                        />
-
+                    <PagePanel
+                        title="Programs"
+                        description="Manage degree programs and their course catalogs."
+                        action={<PrimaryButton onClick={openCreate}>+ New Program</PrimaryButton>}
+                    >
                         <DataTable
                             columns={columns}
                             rows={programs}
@@ -45,8 +42,7 @@ export default function Index({ programs }) {
                                 </>
                             )}
                         />
-
-                    </div>
+                    </PagePanel>
                 </div>
             </div>
 

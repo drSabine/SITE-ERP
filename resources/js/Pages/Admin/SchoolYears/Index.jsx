@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { formatDateRange } from '@/utils/format';
-import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, CardHeader } from '@/Components/ui';
+import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, PagePanel } from '@/Components/ui';
 import { SchoolYearFormModal, TermsPanel, SEMESTER_LABELS } from '@/Components/Admin/SchoolYears';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
@@ -70,48 +70,44 @@ export default function Index({ schoolYears }) {
 
             <div className="py-8">
                 <div className="mx-auto max-w-6xl px-6">
-                    <div className="border border-gray-200 bg-white shadow-sm">
-
-                        <CardHeader
-                            title="School Years"
-                            description="Manage academic years and their semesters."
-                            action={<PrimaryButton onClick={openCreate}>+ New School Year</PrimaryButton>}
-                        />
-
+                    <PagePanel
+                        title="School Years"
+                        description="Manage academic years and their semesters."
+                        action={<PrimaryButton onClick={openCreate}>+ New School Year</PrimaryButton>}
+                    >
                         <DataTable
-                columns={[
-                    { key: 'name',                label: 'Year',     className: 'font-semibold text-gray-900' },
-                    { key: 'duration',            label: 'Duration', render: sy => formatDateRange(sy.start_date, sy.end_date), className: 'text-gray-500' },
-                    { key: 'status',              label: 'Status',   render: sy => <StatusBadge status={syStatus(sy)} /> },
-                    { key: 'academic_terms_count', label: 'Terms',   className: 'text-gray-500' },
-                ]}
-                rows={schoolYears}
-                emptyMessage="No school years yet. Create one to get started."
-                expandedRowId={expandedSY}
-                renderExpandedRow={sy => (
-                    loadingTerms
-                        ? <p className="text-sm text-gray-400">Loading...</p>
-                        : <TermsPanel sy={sy} terms={terms} onActivate={activateTerm} onAddSummer={() => addSummerTerm(sy)} />
-                )}
-                actions={sy => (
-                    <>
-                        <button onClick={() => toggleExpand(sy)} className="text-sm font-medium text-emerald-700 hover:text-emerald-900">
-                            {expandedSY === sy.id ? 'Hide Terms' : 'View Terms'}
-                        </button>
-                        {sy.status !== 'finalized' && (
-                            <button onClick={() => openEdit(sy)} className="text-sm font-medium text-gray-500 hover:text-gray-700">Edit</button>
-                        )}
-                        {!sy.is_active && sy.status !== 'finalized' && (
-                            <button onClick={() => activateSY(sy)} className="text-sm font-medium text-emerald-600 hover:text-emerald-800">Activate</button>
-                        )}
-                        {sy.status !== 'finalized' && (
-                            <button onClick={() => requestFinalizeSY(sy)} className="text-sm font-medium text-red-500 hover:text-red-700">Finalize</button>
-                        )}
-                    </>
-                )}
-            />
-
-                    </div>
+                            columns={[
+                                { key: 'name',                 label: 'Year',     className: 'font-semibold text-gray-900' },
+                                { key: 'duration',             label: 'Duration', render: sy => formatDateRange(sy.start_date, sy.end_date), className: 'text-gray-500' },
+                                { key: 'status',               label: 'Status',   render: sy => <StatusBadge status={syStatus(sy)} /> },
+                                { key: 'academic_terms_count', label: 'Terms',    className: 'text-gray-500' },
+                            ]}
+                            rows={schoolYears}
+                            emptyMessage="No school years yet. Create one to get started."
+                            expandedRowId={expandedSY}
+                            renderExpandedRow={sy => (
+                                loadingTerms
+                                    ? <p className="text-sm text-gray-400">Loading...</p>
+                                    : <TermsPanel sy={sy} terms={terms} onActivate={activateTerm} onAddSummer={() => addSummerTerm(sy)} />
+                            )}
+                            actions={sy => (
+                                <>
+                                    <button onClick={() => toggleExpand(sy)} className="text-sm font-medium text-emerald-700 hover:text-emerald-900">
+                                        {expandedSY === sy.id ? 'Hide Terms' : 'View Terms'}
+                                    </button>
+                                    {sy.status !== 'finalized' && (
+                                        <button onClick={() => openEdit(sy)} className="text-sm font-medium text-gray-500 hover:text-gray-700">Edit</button>
+                                    )}
+                                    {!sy.is_active && sy.status !== 'finalized' && (
+                                        <button onClick={() => activateSY(sy)} className="text-sm font-medium text-emerald-600 hover:text-emerald-800">Activate</button>
+                                    )}
+                                    {sy.status !== 'finalized' && (
+                                        <button onClick={() => requestFinalizeSY(sy)} className="text-sm font-medium text-red-500 hover:text-red-700">Finalize</button>
+                                    )}
+                                </>
+                            )}
+                        />
+                    </PagePanel>
                 </div>
             </div>
 

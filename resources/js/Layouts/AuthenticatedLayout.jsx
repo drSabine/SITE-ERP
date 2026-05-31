@@ -1,15 +1,21 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import {
-    DashboardIcon, SchoolYearsIcon, UsersIcon, ProgramsIcon,
-    StudentsIcon, AssignmentsIcon, GradesIcon,
+    DashboardIcon,
+    SchoolYearsIcon,
+    UsersIcon,
+    ProgramsIcon,
+    StudentsIcon,
+    EnrollmentsIcon,
+    AssignmentsIcon,
+    GradesIcon,
 } from '@/Components/ui/Icons';
 
 const ROLE_LABEL = {
-    admin:       'Administrator',
+    admin: 'Administrator',
     coordinator: 'Program Coordinator',
-    teacher:     'Teacher',
-    student:     'Student',
+    teacher: 'Teacher',
+    student: 'Student',
 };
 
 function buildNavSections(role, hasTeachingLoad) {
@@ -36,6 +42,7 @@ function buildNavSections(role, hasTeachingLoad) {
             title: 'Coordination',
             items: [
                 { label: 'Students', href: route('coordinator.students.index'), match: '/coordinator/students', Icon: StudentsIcon },
+                { label: 'Enrollments', href: route('coordinator.enrollments.index'), match: '/coordinator/enrollments', Icon: EnrollmentsIcon },
                 { label: 'Assignments', href: route('coordinator.assignments.index'), match: '/coordinator/assignments', Icon: AssignmentsIcon },
             ],
         });
@@ -65,10 +72,18 @@ export default function AuthenticatedLayout({ header, children }) {
         function tick() {
             const now = new Date();
             setCurrentTime(now.toLocaleTimeString('en-PH', { timeZone: 'Asia/Manila', hour12: true }));
-            setCurrentDate(now.toLocaleDateString('en-PH', { timeZone: 'Asia/Manila', weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }));
+            setCurrentDate(now.toLocaleDateString('en-PH', {
+                timeZone: 'Asia/Manila',
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+            }));
         }
+
         tick();
         const interval = setInterval(tick, 1000);
+
         return () => clearInterval(interval);
     }, []);
 
@@ -106,6 +121,7 @@ export default function AuthenticatedLayout({ header, children }) {
                             )}
                             {section.items.map(item => {
                                 const isActive = currentPath.startsWith(item.match);
+
                                 return (
                                     <Link
                                         key={item.match}
@@ -147,7 +163,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     <p className="text-base font-semibold text-gray-800">{header ?? 'Dashboard'}</p>
                     <div className="text-right">
                         <p className="text-sm font-semibold text-gray-700">{currentTime}</p>
-                        <p className="text-xs text-gray-400">{currentDate} · Philippine Time</p>
+                        <p className="text-xs text-gray-400">{currentDate} - Philippine Time</p>
                     </div>
                 </header>
 

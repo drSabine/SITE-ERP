@@ -2,22 +2,24 @@ const variants = {
     active:    'bg-green-100 text-green-800',
     inactive:  'bg-yellow-100 text-yellow-800',
     finalized: 'bg-gray-200 text-gray-600',
-    enrolled:  'bg-blue-100 text-blue-800',
+    enrolled:  'bg-emerald-100 text-emerald-800',
     passed:    'bg-green-100 text-green-800',
     failed:    'bg-red-100 text-red-800',
     dropped:   'bg-red-100 text-red-800',
-    inc:       'bg-orange-100 text-orange-800',
+    inc:          'bg-orange-100 text-orange-800',
+    not_enrolled: 'bg-amber-100 text-amber-700',
 };
 
 const defaultLabels = {
     active:    'Active',
     inactive:  'Inactive',
     finalized: 'Finalized',
-    enrolled:  'Enrolled',
+    enrolled:      'Enrolled',
     passed:    'Passed',
     failed:    'Failed',
     dropped:   'Dropped',
-    inc:       'INC',
+    inc:          'INC',
+    not_enrolled: 'Not Enrolled',
 };
 
 export default function StatusBadge({ status, label }) {

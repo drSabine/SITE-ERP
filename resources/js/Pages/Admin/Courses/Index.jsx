@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, CardHeader } from '@/Components/ui';
+import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, PagePanel } from '@/Components/ui';
 import { CourseFormModal } from '@/Components/Admin/Courses';
 import { SEMESTER_LABELS } from '@/Components/Admin/SchoolYears';
 import { BackIcon } from '@/Components/ui/Icons';
@@ -70,19 +70,18 @@ export default function Index({ program, courses }) {
                         </Link>
                     </div>
 
-                    <div className="mb-6 border border-gray-200 bg-white shadow-sm">
-                        <CardHeader
-                            title="Course Catalog"
-                            description={
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <Link href={route('admin.programs.index')} className="hover:text-emerald-700">Programs</Link>
-                                    <span className="text-gray-300">&gt;</span>
-                                    <span className="font-medium text-gray-800">{program.name}</span>
-                                </div>
-                            }
-                            action={<PrimaryButton onClick={openCreate}>+ Add Course</PrimaryButton>}
-                        />
-                    </div>
+                    <PagePanel
+                        className="mb-6"
+                        title="Course Catalog"
+                        description={
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Link href={route('admin.programs.index')} className="hover:text-emerald-700">Programs</Link>
+                                <span className="text-gray-300">&gt;</span>
+                                <span className="font-medium text-gray-800">{program.name}</span>
+                            </div>
+                        }
+                        action={<PrimaryButton onClick={openCreate}>+ Add Course</PrimaryButton>}
+                    />
 
                     {courses.length === 0 ? (
                         <div className="border border-gray-200 bg-white px-5 py-10 text-center text-sm text-gray-400 shadow-sm">
@@ -118,7 +117,7 @@ export default function Index({ program, courses }) {
                 </div>
             </div>
 
-            <CourseFormModal show={showForm} editTarget={editTarget} programId={program.id} onClose={() => setShowForm(false)} />
+            <CourseFormModal show={showForm} editTarget={editTarget} programId={program.id} courses={courses} onClose={() => setShowForm(false)} />
 
             <ConfirmModal
                 show={confirm !== null}

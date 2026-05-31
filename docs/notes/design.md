@@ -106,3 +106,31 @@ Allowed exceptions:
 | Inactive nav item | `text-emerald-100 hover:bg-emerald-800` |
 | Table `th` | `px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500` |
 | Table `td` action btn | `text-sm font-medium text-emerald-700 hover:text-emerald-900` |
+| Table `td` danger btn | `text-sm font-medium text-red-500 hover:text-red-700` |
+| `student_number` cell | `font-mono text-xs text-gray-500` — everywhere, no exceptions |
+
+---
+
+## StatusBadge Variants
+
+| Status key | Color | Label | Use for |
+|---|---|---|---|
+| `active` | green | Active | Student / course / school year status |
+| `inactive` | yellow | Inactive | Deactivated records |
+| `enrolled` | **emerald** | Enrolled | Enrollment record status OR student enrolled in active S.Y. |
+| `not_enrolled` | amber | Not Enrolled | Student has no enrollment in active S.Y. |
+| `finalized` | gray | Finalized | Locked enrollment term |
+| `passed` | green | Passed | Course grade outcome |
+| `failed` | red | Failed | Course grade outcome |
+| `dropped` | red | Dropped | Dropped course |
+| `inc` | orange | INC | Incomplete grade |
+
+**Rule:** NEVER use inline `<span>` for any status — always `<StatusBadge status="...">`. For enrollment column in tables: `<StatusBadge status={isEnrolled ? 'enrolled' : 'not_enrolled'} />`.
+
+---
+
+## DataTable Usage
+
+- Default (page tables): `<DataTable columns={...} rows={...} />`
+- Modal tables (compact): `<DataTable compact columns={...} rows={...} />` — uses `px-4 py-2.5` cells instead of `px-5 py-4`
+- **Never write raw `<table><thead><th>` markup.** Always use `DataTable`.

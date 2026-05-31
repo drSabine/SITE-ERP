@@ -1,7 +1,9 @@
 import { Fragment } from 'react';
 import Pagination from './Pagination';
 
-const thClass = 'px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500';
+function thClass(compact) {
+    return `${compact ? 'px-4 py-2' : 'px-5 py-3'} text-left text-xs font-semibold uppercase tracking-wider text-gray-500`;
+}
 
 function displayCellValue(value) {
     if (value === null || value === undefined || value === '') return '-';
@@ -36,6 +38,7 @@ export default function DataTable({
     renderExpandedRow,
     tableClassName = '',
     actionsColumnClassName = '',
+    compact = false,
 }) {
     const colSpan = columns.length + (actions ? 1 : 0);
 
@@ -48,18 +51,18 @@ export default function DataTable({
                             {columns.map(column => (
                                 <th
                                     key={column.key}
-                                    className={`${thClass} ${column.widthClassName ?? ''} ${column.headerClass ?? ''}`}
+                                    className={`${thClass(compact)} ${column.widthClassName ?? ''} ${column.headerClass ?? ''}`}
                                 >
                                     {column.label}
                                 </th>
                             ))}
-                            {actions && <th className={`px-5 py-3 ${actionsColumnClassName}`} />}
+                            {actions && <th className={`${compact ? 'px-4 py-2' : 'px-5 py-3'} ${actionsColumnClassName}`} />}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 bg-white">
                         {rows.length === 0 ? (
                             <tr>
-                                <td colSpan={colSpan} className="px-5 py-10 text-center text-sm text-gray-400">
+                                <td colSpan={colSpan} className={`${compact ? 'px-4 py-6' : 'px-5 py-10'} text-center text-sm text-gray-400`}>
                                     {emptyMessage}
                                 </td>
                             </tr>
@@ -69,13 +72,13 @@ export default function DataTable({
                                     {columns.map(column => (
                                         <td
                                             key={column.key}
-                                            className={`px-5 py-4 text-sm align-middle ${column.widthClassName ?? ''} ${column.className ?? 'text-gray-700'}`}
+                                            className={`${compact ? 'px-4 py-2.5' : 'px-5 py-4'} text-sm align-middle ${column.widthClassName ?? ''} ${column.className ?? 'text-gray-700'}`}
                                         >
                                             {column.render ? column.render(row) : displayCellValue(row[column.key])}
                                         </td>
                                     ))}
                                     {actions && (
-                                        <td className={`px-5 py-4 text-right align-middle ${actionsColumnClassName}`}>
+                                        <td className={`${compact ? 'px-4 py-2.5' : 'px-5 py-4'} text-right align-middle ${actionsColumnClassName}`}>
                                             <div className="flex items-center justify-end gap-3">
                                                 {actions(row)}
                                             </div>
