@@ -59,11 +59,14 @@ Route::prefix('coordinator')->middleware(['auth', 'role:admin,coordinator'])->na
 
     // Students
     Route::get('students', [Coordinator\StudentController::class, 'index'])->name('students.index');
+    Route::get('students/{student}/detail', [Coordinator\StudentController::class, 'detail'])->name('students.detail');
     Route::get('students/{student}', [Coordinator\StudentController::class, 'show'])->name('students.show');
     Route::post('students', [Coordinator\StudentController::class, 'store'])->name('students.store');
     Route::put('students/{student}', [Coordinator\StudentController::class, 'update'])->name('students.update');
 
     // Enrollments
+    Route::get('enrollments', [Coordinator\EnrollmentController::class, 'index'])->name('enrollments.index');
+    Route::post('enrollments/school-year', [Coordinator\EnrollmentController::class, 'storeForSchoolYear'])->name('enrollments.store-school-year');
     Route::post('enrollments', [Coordinator\EnrollmentController::class, 'store'])->name('enrollments.store');
     Route::post('enrollments/{enrollment}/load-curriculum', [Coordinator\EnrollmentController::class, 'loadCurriculum'])->name('enrollments.load-curriculum');
     Route::post('enrollments/{enrollment}/drop', [Coordinator\EnrollmentController::class, 'drop'])->name('enrollments.drop');

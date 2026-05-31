@@ -45,6 +45,16 @@ class Course extends Model
         );
     }
 
+    public function coRequisites(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Course::class,
+            'course_prerequisites',
+            'course_id',
+            'prerequisite_id'
+        )->wherePivot('type', 'co_requisite');
+    }
+
     public function enrollmentCourses(): HasMany
     {
         return $this->hasMany(EnrollmentCourse::class);

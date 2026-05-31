@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Coordinator;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicTerm;
+use App\Models\Course;
 use App\Models\Program;
+use App\Models\SchoolYear;
 use App\Models\Student;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,8 +18,25 @@ class StudentController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Student::with(['program:id,code'])
-            ->ordered();
+        $activeSchoolYear = SchoolYear::where('is_active', true)
+            ->with(['academicTerms' => fn ($q) => $q
+                ->orderByRaw("FIELD(semester, 'first', 'second', 'summer')")
+                ->select('id', 'school_year_id', 'semester', 'is_active')])
+            ->first(['id', 'name']);
+
+        $activeTermIds = $activeSchoolYear
+            ? $activeSchoolYear->academicTerms->pluck('id')
+            : collect();
+
+        $query = Student::with([
+            'program:id,code',
+            'enrollments' => fn ($q) => $q
+                ->whereIn('academic_term_id', $activeTermIds)
+                ->select('id', 'student_id', 'academic_term_id', 'year_level', 'status'),
+        ])
+        ->orderBy('year_level', 'asc')
+        ->orderBy('last_name', 'asc')
+        ->orderBy('first_name', 'asc');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -34,29 +55,69 @@ class StudentController extends Controller
             $query->where('year_level', $request->year_level);
         }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
+        $query->where('status', $request->filled('status') ? $request->status : 'active');
 
         return Inertia::render('Coordinator/Students/Index', [
-            'students' => $query->paginate(15)->withQueryString(),
-            'programs' => Program::active()->get(['id', 'code', 'name']),
-            'filters'  => $request->only(['search', 'program_id', 'year_level', 'status']),
+            'students'         => $query->paginate(20)->withQueryString(),
+            'programs'         => Program::active()->get(['id', 'code', 'name']),
+            'activeSchoolYear' => $activeSchoolYear,
+            'schoolYears'      => SchoolYear::with([
+                'academicTerms' => fn ($q) => $q->orderByRaw("FIELD(semester, 'first', 'second', 'summer')")->select('id', 'school_year_id', 'semester', 'is_active'),
+            ])->ordered()->get(['id', 'name']),
+            'filters'          => $request->only(['search', 'program_id', 'year_level', 'status']),
         ]);
     }
 
-    public function show(Student $student): Response
+    public function detail(Student $student): JsonResponse
     {
         $student->load([
             'program:id,code,name',
-            'enrollments' => fn($q) => $q->with([
-                'academicTerm' => fn($q) => $q->with(['schoolYear:id,name'])->select('id', 'school_year_id', 'semester', 'is_active'),
-                'enrollmentCourses' => fn($q) => $q->with(['course:id,course_code,title,units'])->select('id', 'enrollment_id', 'course_id', 'final_grade', 'status'),
+            'enrollments' => fn ($q) => $q->with([
+                'academicTerm' => fn ($q) => $q->with(['schoolYear:id,name'])->select('id', 'school_year_id', 'semester', 'is_active'),
+                'enrollmentCourses' => fn ($q) => $q->with(['course:id,course_code,title,units'])
+                    ->select('id', 'enrollment_id', 'course_id', 'final_grade', 'status'),
             ])->orderByDesc('id'),
         ]);
 
+        $availableCourses = Course::active()
+            ->where('program_id', $student->program_id)
+            ->orderBy('year_level')
+            ->orderByRaw("FIELD(semester_type, 'first', 'second', 'summer')")
+            ->get(['id', 'course_code', 'title', 'units', 'year_level', 'semester_type']);
+
+        return response()->json([
+            'student'          => $student,
+            'availableCourses' => $availableCourses,
+        ]);
+    }
+
+    public function show(Request $request, Student $student): Response|JsonResponse
+    {
+        $student->load([
+            'program:id,code,name',
+            'enrollments' => fn ($q) => $q->with([
+                'academicTerm' => fn ($q) => $q->with(['schoolYear:id,name'])->select('id', 'school_year_id', 'semester', 'is_active'),
+                'enrollmentCourses' => fn ($q) => $q->with(['course:id,course_code,title,units'])
+                    ->select('id', 'enrollment_id', 'course_id', 'final_grade', 'status'),
+            ])->orderByDesc('id'),
+        ]);
+
+        $availableCourses = Course::active()
+            ->where('program_id', $student->program_id)
+            ->orderBy('year_level')
+            ->orderByRaw("FIELD(semester_type, 'first', 'second', 'summer')")
+            ->get(['id', 'course_code', 'title', 'units', 'year_level', 'semester_type']);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'student'          => $student,
+                'availableCourses' => $availableCourses,
+            ]);
+        }
+
         return Inertia::render('Coordinator/Students/Show', [
-            'student' => $student,
+            'student'          => $student,
+            'availableCourses' => $availableCourses,
         ]);
     }
 

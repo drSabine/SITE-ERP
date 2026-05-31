@@ -23,10 +23,21 @@ class EnrollmentCourseController extends Controller
         $data = $request->validate([
             'enrollment_id' => 'required|exists:enrollments,id',
             'course_id'     => 'required|exists:courses,id',
+            'force'         => 'sometimes|boolean',
         ]);
 
         $enrollment = Enrollment::findOrFail($data['enrollment_id']);
         $course     = Course::findOrFail($data['course_id']);
+
+        if (! $request->boolean('force')) {
+            $unmet = $this->enrollmentService->getUnmetPrerequisites($enrollment, $course);
+
+            if (! empty($unmet)) {
+                return back()->withErrors([
+                    'prereq_warning' => implode('; ', $unmet),
+                ]);
+            }
+        }
 
         $this->enrollmentService->addCourse($enrollment, $course);
 
