@@ -50,6 +50,27 @@ class EnrollmentCourseController extends Controller
         return back();
     }
 
+    public function restore(EnrollmentCourse $enrollmentCourse): RedirectResponse
+    {
+        $this->enrollmentService->restoreCourse($enrollmentCourse);
+        return back();
+    }
+
+    public function credit(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'enrollment_id' => 'required|exists:enrollments,id',
+            'course_id'     => 'required|exists:courses,id',
+        ]);
+
+        $enrollment = Enrollment::findOrFail($data['enrollment_id']);
+        $course     = Course::findOrFail($data['course_id']);
+
+        $this->enrollmentService->creditCourse($enrollment, $course);
+
+        return back();
+    }
+
     /**
      * Override final_grade manually (INC resolution or correction).
      */

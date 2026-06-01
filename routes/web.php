@@ -76,8 +76,10 @@ Route::prefix('coordinator')->middleware(['auth', 'role:admin,coordinator'])->na
 
     // Enrollment Courses (subject load management)
     Route::post('enrollment-courses', [Coordinator\EnrollmentCourseController::class, 'store'])->name('enrollment-courses.store');
+    Route::post('enrollment-courses/credit', [Coordinator\EnrollmentCourseController::class, 'credit'])->name('enrollment-courses.credit');
     Route::delete('enrollment-courses/{enrollmentCourse}', [Coordinator\EnrollmentCourseController::class, 'destroy'])->name('enrollment-courses.destroy');
     Route::post('enrollment-courses/{enrollmentCourse}/override-grade', [Coordinator\EnrollmentCourseController::class, 'overrideGrade'])->name('enrollment-courses.override-grade');
+    Route::post('enrollment-courses/{enrollmentCourse}/restore', [Coordinator\EnrollmentCourseController::class, 'restore'])->name('enrollment-courses.restore');
 
     // Teacher Assignments
     Route::get('assignments', [Coordinator\TeacherAssignmentController::class, 'index'])->name('assignments.index');

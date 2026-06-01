@@ -28,7 +28,7 @@ return new class extends Migration
             $table->foreignId('enrollment_id')->constrained('enrollments')->onDelete('cascade');
             $table->foreignId('course_id')->constrained('courses')->onDelete('restrict');
             $table->decimal('final_grade', 3, 2)->nullable(); // 1.00–3.00 or 5.00
-            $table->enum('status', ['active', 'passed', 'failed', 'inc', 'dropped'])->default('active');
+            $table->enum('status', ['active', 'passed', 'failed', 'inc', 'dropped', 'credited'])->default('active');
             $table->timestamps();
 
             $table->unique(['enrollment_id', 'course_id']);

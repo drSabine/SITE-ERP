@@ -19,10 +19,22 @@ class EnrollmentService
      */
     public function enroll(Student $student, AcademicTerm $term, int $yearLevel): Enrollment
     {
-        if (Enrollment::where('student_id', $student->id)
+        $existing = Enrollment::where('student_id', $student->id)
             ->where('academic_term_id', $term->id)
-            ->exists()
-        ) {
+            ->first();
+
+        if ($existing) {
+            if ($existing->status === 'dropped') {
+                $existing->update([
+                    'year_level'  => $yearLevel,
+                    'status'      => 'enrolled',
+                    'dropped_at'  => null,
+                    'enrolled_at' => now(),
+                ]);
+
+                return $existing->fresh();
+            }
+
             throw ValidationException::withMessages([
                 'student_id' => 'Student is already enrolled in this term.',
             ]);
@@ -145,12 +157,17 @@ class EnrollmentService
         }
 
         $toAdd = [];
+        $currentUnits = $this->currentUnits($enrollment);
 
         foreach ($courses as $course) {
             // Skip courses already in the load
             if (EnrollmentCourse::where('enrollment_id', $enrollment->id)
                 ->where('course_id', $course->id)->exists()
             ) {
+                continue;
+            }
+
+            if (($currentUnits + $course->units) > self::MAX_UNITS) {
                 continue;
             }
 
@@ -161,6 +178,8 @@ class EnrollmentService
                 'created_at'    => now(),
                 'updated_at'    => now(),
             ];
+
+            $currentUnits += $course->units;
         }
 
         if (! empty($toAdd)) {
@@ -186,7 +205,7 @@ class EnrollmentService
             return [];
         }
 
-        $passedCourseIds = EnrollmentCourse::where('status', 'passed')
+        $passedCourseIds = EnrollmentCourse::whereIn('status', ['passed', 'credited'])
             ->whereHas('enrollment', fn ($query) => $query->where('student_id', $enrollment->student_id))
             ->pluck('course_id')
             ->all();
@@ -230,11 +249,46 @@ class EnrollmentService
 
     /**
      * Remove (drop) a course from an enrollment.
-     * Soft-drop: set status to dropped instead of deleting, to preserve history.
+     * Credited courses are hard-deleted (no history to preserve).
+     * All others are soft-dropped to preserve grading history.
      */
     public function removeCourse(EnrollmentCourse $enrollmentCourse): void
     {
-        $enrollmentCourse->update(['status' => 'dropped']);
+        if ($enrollmentCourse->status === 'credited') {
+            $enrollmentCourse->delete();
+        } else {
+            $enrollmentCourse->update(['status' => 'dropped']);
+        }
+    }
+
+    /**
+     * Credit a course for a transferee. Creates an enrollment_course with status 'credited'.
+     * Credited courses satisfy pre-req checks without the student having taken the course here.
+     */
+    public function creditCourse(Enrollment $enrollment, Course $course): EnrollmentCourse
+    {
+        if (EnrollmentCourse::where('enrollment_id', $enrollment->id)
+            ->where('course_id', $course->id)
+            ->exists()
+        ) {
+            throw ValidationException::withMessages([
+                'course_id' => 'This course is already in the student\'s enrollment.',
+            ]);
+        }
+
+        return EnrollmentCourse::create([
+            'enrollment_id' => $enrollment->id,
+            'course_id'     => $course->id,
+            'status'        => 'credited',
+        ]);
+    }
+
+    /**
+     * Restore a previously dropped course back to active status.
+     */
+    public function restoreCourse(EnrollmentCourse $enrollmentCourse): void
+    {
+        $enrollmentCourse->update(['status' => 'active']);
     }
 
     /**

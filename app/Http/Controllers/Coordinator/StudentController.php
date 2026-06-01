@@ -81,6 +81,7 @@ class StudentController extends Controller
 
         $availableCourses = Course::active()
             ->where('program_id', $student->program_id)
+            ->with(['coRequisites' => fn ($q) => $q->select('courses.id', 'course_code', 'title')])
             ->orderBy('year_level')
             ->orderByRaw("FIELD(semester_type, 'first', 'second', 'summer')")
             ->get(['id', 'course_code', 'title', 'units', 'year_level', 'semester_type']);
@@ -104,6 +105,7 @@ class StudentController extends Controller
 
         $availableCourses = Course::active()
             ->where('program_id', $student->program_id)
+            ->with(['coRequisites' => fn ($q) => $q->select('courses.id', 'course_code', 'title')])
             ->orderBy('year_level')
             ->orderByRaw("FIELD(semester_type, 'first', 'second', 'summer')")
             ->get(['id', 'course_code', 'title', 'units', 'year_level', 'semester_type']);

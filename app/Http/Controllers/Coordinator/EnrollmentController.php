@@ -44,16 +44,41 @@ class EnrollmentController extends Controller
             $query->where('year_level', $request->year_level);
         }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        $rawStatus    = $request->input('status', '');
+        $statusFilter = match(true) {
+            $rawStatus === 'all' => null,
+            $rawStatus !== ''    => $rawStatus,
+            default              => 'enrolled',
+        };
+
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
         }
 
         return Inertia::render('Coordinator/Enrollments/Index', [
-            'enrollments'    => $query->paginate(15)->withQueryString(),
-            'schoolYears'    => $schoolYears,
-            'programs'       => Program::active()->get(['id', 'code', 'name']),
-            'selectedTermId' => $termId,
-            'filters'        => $request->only(['term_id', 'program_id', 'year_level', 'status']),
+            'enrollments'        => $query->paginate(15)->withQueryString(),
+            'schoolYears'        => $schoolYears,
+            'programs'           => Program::active()->get(['id', 'code', 'name']),
+            'selectedTermId'     => $termId,
+            'filters'            => [
+                'term_id'    => $request->input('term_id', ''),
+                'program_id' => $request->input('program_id', ''),
+                'year_level' => $request->input('year_level', ''),
+                'status'     => $rawStatus ?: 'enrolled',
+            ],
+            'students'           => Student::active()->ordered()
+                ->with(['program:id,code'])
+                ->get(['id', 'student_number', 'first_name', 'last_name', 'year_level', 'program_id']),
+            'enrolledStudentIds' => $termId
+                ? Enrollment::where('academic_term_id', $termId)
+                    ->whereIn('status', ['enrolled', 'completed'])
+                    ->pluck('student_id')->all()
+                : [],
+            'droppedStudentIds'  => $termId
+                ? Enrollment::where('academic_term_id', $termId)
+                    ->where('status', 'dropped')
+                    ->pluck('student_id')->all()
+                : [],
         ]);
     }
 

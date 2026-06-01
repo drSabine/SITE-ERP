@@ -54,9 +54,10 @@ class CourseController extends Controller
 
         $exists = Course::where('program_id', $data['program_id'])
             ->where('course_code', $data['course_code'])
+            ->where('title', $data['title'])
             ->exists();
 
-        abort_if($exists, 422, 'Course code already exists for this program.');
+        abort_if($exists, 422, 'This course already exists for this program.');
 
         if (! $request->boolean('force_units') && ! empty($data['year_level']) && ! empty($data['semester_type'])) {
             $semesterTotal = Course::where('program_id', $data['program_id'])
