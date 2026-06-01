@@ -40,7 +40,6 @@ class CourseController extends Controller
             'program_id'         => 'required|exists:programs,id',
             'course_code'        => 'required|string|max:50',
             'title'              => 'required|string|max:191',
-            'units'              => 'required|integer|min:1|max:9',
             'lec_hours'          => 'required|integer|min:0',
             'lab_hours'          => 'required|integer|min:0',
             'year_level'         => 'nullable|integer|min:1|max:4',
@@ -51,6 +50,14 @@ class CourseController extends Controller
             'co_requisite_ids.*' => 'exists:courses,id',
             'force_units'        => 'sometimes|boolean',
         ]);
+
+        $data['units'] = $this->calculateUnits($data);
+
+        if ($data['units'] < 1 || $data['units'] > 9) {
+            return back()->withErrors([
+                'units' => 'Units are calculated from lecture plus lab hours and must be between 1 and 9.',
+            ]);
+        }
 
         $exists = Course::where('program_id', $data['program_id'])
             ->where('course_code', $data['course_code'])
@@ -86,7 +93,6 @@ class CourseController extends Controller
         $data = $request->validate([
             'course_code'        => 'required|string|max:50',
             'title'              => 'required|string|max:191',
-            'units'              => 'required|integer|min:1|max:9',
             'lec_hours'          => 'required|integer|min:0',
             'lab_hours'          => 'required|integer|min:0',
             'year_level'         => 'nullable|integer|min:1|max:4',
@@ -98,6 +104,14 @@ class CourseController extends Controller
             'co_requisite_ids.*' => 'exists:courses,id',
             'force_units'        => 'sometimes|boolean',
         ]);
+
+        $data['units'] = $this->calculateUnits($data);
+
+        if ($data['units'] < 1 || $data['units'] > 9) {
+            return back()->withErrors([
+                'units' => 'Units are calculated from lecture plus lab hours and must be between 1 and 9.',
+            ]);
+        }
 
         if (! $request->boolean('force_units') && ! empty($data['year_level']) && ! empty($data['semester_type'])) {
             $semesterTotal = Course::where('program_id', $course->program_id)
@@ -153,6 +167,11 @@ class CourseController extends Controller
         if (! empty($rows)) {
             DB::table('course_prerequisites')->insert($rows);
         }
+    }
+
+    private function calculateUnits(array $data): int
+    {
+        return (int) $data['lec_hours'] + (int) $data['lab_hours'];
     }
 
     public function destroy(Course $course): RedirectResponse

@@ -10,6 +10,10 @@ const SEMESTER_OPTIONS = [
 
 const SEMESTER_SORT = { first: 1, second: 2, summer: 3 };
 
+function calculateUnits(lectureHours, labHours) {
+    return Number(lectureHours || 0) + Number(labHours || 0);
+}
+
 export default function CourseFormModal({ show, editTarget, programId, courses, onClose }) {
     const isEdit = Boolean(editTarget);
 
@@ -33,7 +37,7 @@ export default function CourseFormModal({ show, editTarget, programId, courses, 
                 program_id: programId,
                 course_code: editTarget.course_code ?? '',
                 title: editTarget.title ?? '',
-                units: editTarget.units ?? 3,
+                units: calculateUnits(editTarget.lec_hours ?? 3, editTarget.lab_hours ?? 0),
                 lec_hours: editTarget.lec_hours ?? 3,
                 lab_hours: editTarget.lab_hours ?? 0,
                 year_level: editTarget.year_level ?? 1,
@@ -58,9 +62,10 @@ export default function CourseFormModal({ show, editTarget, programId, courses, 
 
     const semesterCurrentTotal = (courses ?? [])
         .filter(course => course.year_level === data.year_level && course.semester_type === data.semester_type && course.id !== editTarget?.id)
-        .reduce((sum, course) => sum + (course.units ?? 0), 0);
+        .reduce((sum, course) => sum + calculateUnits(course.lec_hours, course.lab_hours), 0);
 
-    const semesterProjectedTotal = semesterCurrentTotal + (data.units ?? 0);
+    const calculatedUnits = calculateUnits(data.lec_hours, data.lab_hours);
+    const semesterProjectedTotal = semesterCurrentTotal + calculatedUnits;
     const semesterOverLimit = semesterProjectedTotal > 26;
 
     function toggleType(courseId, type) {
@@ -96,7 +101,7 @@ export default function CourseFormModal({ show, editTarget, programId, courses, 
     }
 
     function handleForceUnitsSubmit() {
-        const submitData = { ...data, force_units: true };
+        const submitData = { ...data, units: calculatedUnits, force_units: true };
 
         if (isEdit) {
             router.put(route('admin.courses.update', editTarget.id), submitData, { onSuccess: onClose });
@@ -139,14 +144,11 @@ export default function CourseFormModal({ show, editTarget, programId, courses, 
                             label="Units"
                             id="c-units"
                             type="number"
-                            min={1}
-                            max={9}
-                            value={data.units}
-                            onChange={event => {
-                                setData('units', Number(event.target.value));
-                                clearErrors('over_unit_limit');
-                            }}
+                            value={calculatedUnits}
+                            disabled
+                            readOnly
                             error={errors.units}
+                            inputClassName="bg-gray-50 text-gray-700"
                             required
                         />
                         <InputField
@@ -155,7 +157,15 @@ export default function CourseFormModal({ show, editTarget, programId, courses, 
                             type="number"
                             min={0}
                             value={data.lec_hours}
-                            onChange={event => setData('lec_hours', Number(event.target.value))}
+                            onChange={event => {
+                                const lectureHours = Number(event.target.value);
+                                setData({
+                                    ...data,
+                                    lec_hours: lectureHours,
+                                    units: calculateUnits(lectureHours, data.lab_hours),
+                                });
+                                clearErrors('over_unit_limit');
+                            }}
                             error={errors.lec_hours}
                             required
                         />
@@ -165,7 +175,15 @@ export default function CourseFormModal({ show, editTarget, programId, courses, 
                             type="number"
                             min={0}
                             value={data.lab_hours}
-                            onChange={event => setData('lab_hours', Number(event.target.value))}
+                            onChange={event => {
+                                const labHours = Number(event.target.value);
+                                setData({
+                                    ...data,
+                                    lab_hours: labHours,
+                                    units: calculateUnits(data.lec_hours, labHours),
+                                });
+                                clearErrors('over_unit_limit');
+                            }}
                             error={errors.lab_hours}
                             required
                         />
@@ -208,7 +226,7 @@ export default function CourseFormModal({ show, editTarget, programId, courses, 
 
                     <div className={`border px-3 py-2 text-xs ${semesterOverLimit ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-500'}`}>
                         Semester load (Yr {data.year_level}, {data.semester_type}):&nbsp;
-                        <strong>{semesterCurrentTotal} current + {data.units ?? 0} this = {semesterProjectedTotal} units</strong>
+                        <strong>{semesterCurrentTotal} current + {calculatedUnits} this = {semesterProjectedTotal} units</strong>
                         {semesterOverLimit && <span className="ml-1 font-semibold">- exceeds 26-unit guideline</span>}
                     </div>
 
