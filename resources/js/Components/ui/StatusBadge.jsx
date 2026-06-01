@@ -7,6 +7,7 @@ const variants = {
     failed:    'bg-red-100 text-red-800',
     dropped:   'bg-red-100 text-red-800',
     inc:          'bg-orange-100 text-orange-800',
+    credited:     'bg-teal-100 text-teal-800',
     not_enrolled: 'bg-amber-100 text-amber-700',
 };
 
@@ -19,6 +20,7 @@ const defaultLabels = {
     failed:    'Failed',
     dropped:   'Dropped',
     inc:          'INC',
+    credited:     'Credited',
     not_enrolled: 'Not Enrolled',
 };
 

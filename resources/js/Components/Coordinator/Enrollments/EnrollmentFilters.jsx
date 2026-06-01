@@ -30,7 +30,7 @@ export default function EnrollmentFilters({
                 ))}
             </FilterSelect>
             <FilterSelect value={status} onChange={onStatusChange}>
-                <option value="">All Statuses</option>
+                <option value="all">All Statuses</option>
                 {ENROLLMENT_STATUS_OPTIONS.map(option => (
                     <option key={option.value} value={option.value}>{option.label}</option>
                 ))}

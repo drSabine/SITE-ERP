@@ -1,89 +1,23 @@
-import { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { StatusBadge, ConfirmModal, DataTable, ActionsDropdown } from '@/Components/ui';
-import { EnrollmentFilters, SchoolYearTermPicker } from '@/Components/Coordinator/Enrollments';
-import {
-    PagePanel,
-    countIncCourses,
-    formatStudentName,
-    getSemesterLabel,
-    getYearLabel,
-} from '@/Components/Coordinator/Shared';
+import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, ActionsDropdown } from '@/Components/ui';
+import { EnrollmentFilters, SchoolYearTermPicker, AddEnrollmentModal } from '@/Components/Coordinator/Enrollments';
+import { CourseManagerModal } from '@/Components/Coordinator/Students';
+import { PagePanel, formatStudentName, getSemesterLabel, getYearLabel, countIncCourses } from '@/Components/Coordinator/Shared';
+import { useEnrollments } from './useEnrollments';
 
-export default function Index({ enrollments, schoolYears, programs, selectedTermId, filters = {} }) {
-    const [programId, setProgramId] = useState(filters.program_id ?? '');
-    const [yearLevel, setYearLevel] = useState(filters.year_level ?? '');
-    const [status, setStatus] = useState(filters.status ?? '');
-    const [confirm, setConfirm] = useState(null);
-
-    const allTerms = schoolYears.flatMap(schoolYear =>
-        (schoolYear.academic_terms ?? []).map(term => ({ ...term, school_year: schoolYear }))
-    );
-
-    const selectedTerm = allTerms.find(term => term.id === selectedTermId);
-    const selectedSchoolYear = selectedTerm?.school_year ?? null;
-    const termsForSelectedYear = selectedSchoolYear
-        ? (selectedSchoolYear.academic_terms ?? [])
-        : [];
-
-    function navigate(overrides = {}) {
-        const params = {
-            term_id: selectedTermId ?? '',
-            program_id: programId,
-            year_level: yearLevel,
-            status,
-            ...overrides,
-        };
-
-        router.get(route('coordinator.enrollments.index'), params, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    }
-
-    function handleSchoolYearChange(event) {
-        const schoolYearId = Number(event.target.value);
-        const schoolYear = schoolYears.find(item => item.id === schoolYearId);
-        const firstTerm = schoolYear?.academic_terms?.[0];
-
-        if (firstTerm) {
-            navigate({ term_id: firstTerm.id });
-        }
-    }
-
-    function handleTermTabClick(termId) {
-        navigate({ term_id: termId });
-    }
-
-    function handleProgramFilter(event) {
-        const value = event.target.value;
-        setProgramId(value);
-        navigate({ program_id: value });
-    }
-
-    function handleYearLevelFilter(event) {
-        const value = event.target.value;
-        setYearLevel(value);
-        navigate({ year_level: value });
-    }
-
-    function handleStatusFilter(event) {
-        const value = event.target.value;
-        setStatus(value);
-        navigate({ status: value });
-    }
-
-    function requestDropEnrollment(enrollment) {
-        setConfirm({
-            title: 'Drop Enrollment',
-            message: <>Drop <strong>{formatStudentName(enrollment.student, { includeSuffix: false })}</strong> from this term? This action cannot be undone.</>,
-            confirmLabel: 'Drop',
-            onConfirm: () => router.post(route('coordinator.enrollments.drop', enrollment.id), {}, {
-                onSuccess: () => setConfirm(null),
-            }),
-        });
-    }
+export default function Index({ enrollments, schoolYears, programs, selectedTermId, students, enrolledStudentIds = [], droppedStudentIds = [], filters = {} }) {
+    const {
+        programId, yearLevel, status,
+        confirm, setConfirm,
+        showAddModal, setShowAddModal,
+        managingRow, managingStudentData, managingLoading,
+        selectedTerm, selectedSchoolYear, termsForSelectedYear,
+        handleSchoolYearChange, handleTermTabClick,
+        handleProgramFilter, handleYearLevelFilter, handleStatusFilter,
+        openCourseManager, closeCourseManager, refetchManagingStudent,
+        requestDropEnrollment,
+    } = useEnrollments({ selectedTermId, schoolYears, filters });
 
     const columns = [
         {
@@ -137,7 +71,7 @@ export default function Index({ enrollments, schoolYears, programs, selectedTerm
     ];
 
     const termLabel = selectedTerm
-        ? `${getSemesterLabel(selectedTerm.semester)} - S.Y. ${selectedTerm.school_year?.name}`
+        ? `${getSemesterLabel(selectedTerm.semester)} > S.Y. ${selectedTerm.school_year?.name}`
         : 'No term selected';
 
     return (
@@ -146,7 +80,18 @@ export default function Index({ enrollments, schoolYears, programs, selectedTerm
 
             <div className="py-8">
                 <div className="mx-auto max-w-6xl px-6">
-                    <PagePanel title="Enrollments" description={termLabel}>
+                    <PagePanel
+                        title="Enrollments"
+                        description={termLabel}
+                        action={
+                            <PrimaryButton
+                                onClick={() => setShowAddModal(true)}
+                                disabled={!selectedTermId}
+                            >
+                                + New Enrollment
+                            </PrimaryButton>
+                        }
+                    >
                         <SchoolYearTermPicker
                             schoolYears={schoolYears}
                             selectedSchoolYear={selectedSchoolYear}
@@ -178,6 +123,7 @@ export default function Index({ enrollments, schoolYears, programs, selectedTerm
                                 emptyMessage="No enrollments found for this term."
                                 actions={row => (
                                     <ActionsDropdown items={[
+                                        { label: 'Manage Courses', onClick: () => openCourseManager(row) },
                                         { label: 'View Student', href: `${route('coordinator.students.index')}?search=${row.student?.student_number ?? ''}` },
                                         row.status === 'enrolled' && { label: 'Drop', onClick: () => requestDropEnrollment(row), variant: 'danger' },
                                     ]} />
@@ -187,6 +133,30 @@ export default function Index({ enrollments, schoolYears, programs, selectedTerm
                     </PagePanel>
                 </div>
             </div>
+
+            <CourseManagerModal
+                show={managingRow !== null}
+                student={managingRow?.student ?? null}
+                enrollment={
+                    managingStudentData
+                        ? (managingStudentData.student?.enrollments ?? []).find(enrollment => enrollment.id === managingRow?.id) ?? null
+                        : null
+                }
+                availableCourses={managingStudentData?.availableCourses ?? []}
+                loading={managingLoading}
+                onClose={closeCourseManager}
+                onActionDone={refetchManagingStudent}
+            />
+
+            <AddEnrollmentModal
+                key={`add-enrollment-${selectedTermId ?? 'none'}`}
+                show={showAddModal}
+                term={selectedTerm ?? null}
+                students={students ?? []}
+                enrolledStudentIds={enrolledStudentIds}
+                droppedStudentIds={droppedStudentIds}
+                onClose={() => setShowAddModal(false)}
+            />
 
             <ConfirmModal
                 show={confirm !== null}

@@ -187,7 +187,7 @@ export default function StudentDrawer({
                                                 <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
                                                     <div>
                                                         <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Program</span>
-                                                        <p className="text-gray-700">{student.program?.code} - {student.program?.name}</p>
+                                                        <p className="text-gray-700">{student.program?.code} &gt; {student.program?.name}</p>
                                                     </div>
                                                     <div>
                                                         <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Year Level</span>

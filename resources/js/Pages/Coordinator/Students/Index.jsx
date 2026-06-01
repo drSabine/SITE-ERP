@@ -1,107 +1,31 @@
-import { useState, useEffect } from 'react';
-import { Head, router } from '@inertiajs/react';
-import axios from 'axios';
+import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, ActionsDropdown } from '@/Components/ui';
 import { StudentFormModal, StudentDrawer, EnrollmentModal, CourseManagerModal, StudentFilters } from '@/Components/Coordinator/Students';
-import { PagePanel, SegmentedTabs, YEAR_TABS, formatStudentName, getYearLabel } from '@/Components/Coordinator/Shared';
+import { PagePanel, SegmentedTabs, YEAR_TABS, getYearLabel, formatStudentName } from '@/Components/Coordinator/Shared';
+import { useStudents } from './useStudents';
 
 export default function Index({ students, programs, activeSchoolYear, schoolYears, filters = {} }) {
-    const [search, setSearch] = useState(filters.search ?? '');
-    const [programId, setProgramId] = useState(filters.program_id ?? '');
-    const [yearLevel, setYearLevel] = useState(filters.year_level ?? '');
-    const [status, setStatus] = useState(filters.status ?? 'active');
-
-    const [showStudentForm, setShowStudentForm] = useState(false);
-    const [studentFormTarget, setStudentFormTarget] = useState(null);
-
-    const [selectedStudentId, setSelectedStudentId] = useState(null);
-    const [drawerData, setDrawerData] = useState(null);
-    const [drawerLoading, setDrawerLoading] = useState(false);
-
-    const [showEnrollModal, setShowEnrollModal] = useState(false);
-    const [showCourseManager, setShowCourseManager] = useState(false);
-    const [managingEnrollmentId, setManagingEnrollmentId] = useState(null);
-    const [confirm, setConfirm] = useState(null);
-
-    useEffect(() => {
-        if (!selectedStudentId) {
-            setDrawerData(null);
-            return;
-        }
-
-        setDrawerLoading(true);
-        const controller = new AbortController();
-
-        axios.get(route('coordinator.students.detail', selectedStudentId), { signal: controller.signal })
-            .then(response => setDrawerData(response.data))
-            .catch(error => {
-                if (!axios.isCancel(error)) {
-                    setDrawerData(null);
-                }
-            })
-            .finally(() => setDrawerLoading(false));
-
-        return () => controller.abort();
-    }, [selectedStudentId]);
-
-    function refetchDrawerStudent() {
-        if (!selectedStudentId) return;
-
-        setDrawerLoading(true);
-        axios.get(route('coordinator.students.detail', selectedStudentId))
-            .then(response => setDrawerData(response.data))
-            .catch(() => {})
-            .finally(() => setDrawerLoading(false));
-    }
-
-    function applyFilters(overrides = {}) {
-        const params = {
-            search,
-            program_id: programId,
-            year_level: yearLevel,
-            status,
-            ...overrides,
-        };
-
-        router.get(route('coordinator.students.index'), params, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    }
-
-    function handleYearTab(value) {
-        setYearLevel(value);
-        applyFilters({ year_level: value });
-    }
-
-    function closeDrawer() {
-        setSelectedStudentId(null);
-        setDrawerData(null);
-        setShowEnrollModal(false);
-        setShowCourseManager(false);
-        setManagingEnrollmentId(null);
-    }
-
-    function requestDeleteStudent(student) {
-        setConfirm({
-            title: 'Delete Student',
-            message: <>Delete <strong>{formatStudentName(student, { middleInitial: true })}</strong>? This action cannot be undone.</>,
-            confirmLabel: 'Delete',
-            onConfirm: () => router.delete(route('coordinator.students.destroy', student.id), {
-                onSuccess: () => {
-                    setConfirm(null);
-                    if (selectedStudentId === student.id) {
-                        closeDrawer();
-                    }
-                },
-            }),
-        });
-    }
-
-    const managingEnrollment = managingEnrollmentId && drawerData
-        ? (drawerData.student?.enrollments ?? []).find(enrollment => enrollment.id === managingEnrollmentId)
-        : null;
+    const {
+        search, setSearch,
+        programId, setProgramId,
+        yearLevel, status,
+        showStudentForm, setShowStudentForm,
+        studentFormTarget, setStudentFormTarget,
+        selectedStudentId, setSelectedStudentId,
+        drawerData,
+        drawerLoading,
+        showEnrollModal, setShowEnrollModal,
+        showCourseManager, setShowCourseManager,
+        managingEnrollmentId, setManagingEnrollmentId,
+        confirm, setConfirm,
+        managingEnrollment,
+        handleYearTab,
+        applyFilters,
+        closeDrawer,
+        requestDeleteStudent,
+        refetchDrawerStudent,
+    } = useStudents(filters);
 
     const columns = [
         {
@@ -156,7 +80,7 @@ export default function Index({ students, programs, activeSchoolYear, schoolYear
                     <PagePanel
                         title="Students"
                         description={activeSchoolYear
-                            ? `S.Y. ${activeSchoolYear.name} - sorted by year level`
+                            ? `S.Y. ${activeSchoolYear.name} > Sorted by year level`
                             : 'Manage student records and enrollment.'}
                         action={
                             <PrimaryButton onClick={() => { setStudentFormTarget(null); setShowStudentForm(true); }}>

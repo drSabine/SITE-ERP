@@ -60,7 +60,7 @@ export default function EnrollmentModal({ show, student, activeSchoolYear, exist
                     <h2 className="text-lg font-semibold text-gray-900">Enroll Student</h2>
                     {student && (
                         <p className="mt-0.5 text-sm text-gray-500">
-                            {student.last_name}, {student.first_name} - {student.student_number}
+                            {student.last_name}, {student.first_name} &gt; {student.student_number}
                         </p>
                     )}
                 </div>
@@ -168,7 +168,7 @@ export default function EnrollmentModal({ show, student, activeSchoolYear, exist
                             <ul className="mt-1 space-y-0.5">
                                 {incCourses.map(enrollmentCourse => (
                                     <li key={enrollmentCourse.id} className="text-xs text-orange-700">
-                                        {enrollmentCourse.course?.course_code} - {enrollmentCourse.course?.title}
+                                        {enrollmentCourse.course?.course_code} &gt; {enrollmentCourse.course?.title}
                                         {enrollmentCourse.termSemester && (
                                             <span className="ml-1 text-orange-500">({getSemesterLabel(enrollmentCourse.termSemester)})</span>
                                         )}

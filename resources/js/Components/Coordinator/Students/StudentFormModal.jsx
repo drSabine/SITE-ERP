@@ -119,7 +119,7 @@ export default function StudentFormModal({ show, editTarget, programs, onClose }
                                     <option value="">Select program...</option>
                                     {programs.map(program => (
                                         <option key={program.id} value={program.id}>
-                                            {program.code} - {program.name}
+                                            {program.code} &gt; {program.name}
                                         </option>
                                     ))}
                                 </select>
