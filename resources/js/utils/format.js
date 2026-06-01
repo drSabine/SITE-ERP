@@ -11,5 +11,5 @@ export function formatDate(dateString) {
 }
 
 export function formatDateRange(startDate, endDate) {
-    return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+    return `${formatDate(startDate)} to ${formatDate(endDate)}`;
 }

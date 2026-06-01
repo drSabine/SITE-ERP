@@ -19,7 +19,7 @@ function WelcomeHeader({ user, activeTerm, hasTeachingLoad }) {
     const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
     let roleLabel = ROLE_LABELS[user.role] ?? user.role;
     if (hasTeachingLoad && user.role !== 'teacher') roleLabel += ' and Teacher';
-    const termLabel = activeTerm ? `${activeTerm.semester} - ${activeTerm.school_year?.name ?? ''}` : null;
+    const termLabel = activeTerm ? `${activeTerm.semester} > ${activeTerm.school_year?.name ?? ''}` : null;
 
     return (
         <div className="border border-gray-200 bg-white p-6 shadow-sm">

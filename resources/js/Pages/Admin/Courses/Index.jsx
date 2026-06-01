@@ -1,51 +1,18 @@
+import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, PagePanel, ActionsDropdown } from '@/Components/ui';
 import { CourseFormModal } from '@/Components/Admin/Courses';
 import { SEMESTER_LABELS } from '@/Components/Admin/SchoolYears';
 import { BackIcon } from '@/Components/ui/Icons';
-import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
-
-function groupCourses(courses) {
-    const groups = {};
-    courses.forEach(course => {
-        const key = `${course.year_level ?? 0}-${course.semester_type ?? 'none'}`;
-        if (!groups[key]) {
-            groups[key] = {
-                year_level:    course.year_level,
-                semester_type: course.semester_type,
-                courses:       [],
-            };
-        }
-        groups[key].courses.push(course);
-    });
-    return Object.values(groups).sort((groupA, groupB) => {
-        if (groupA.year_level !== groupB.year_level) return (groupA.year_level ?? 99) - (groupB.year_level ?? 99);
-        const order = { first: 1, second: 2, summer: 3, none: 4 };
-        return (order[groupA.semester_type] ?? 4) - (order[groupB.semester_type] ?? 4);
-    });
-}
+import { useCourses } from './useCourses';
 
 export default function Index({ program, courses }) {
-    const [showForm, setShowForm]     = useState(false);
-    const [editTarget, setEditTarget] = useState(null);
-    const [confirm, setConfirm]       = useState(null);
-
-    function openCreate() { setEditTarget(null); setShowForm(true); }
-    function openEdit(course) { setEditTarget(course); setShowForm(true); }
-
-    function requestDelete(course) {
-        setConfirm({
-            title: 'Delete Course',
-            message: <>Delete <strong>{course.course_code} - {course.title}</strong>? This cannot be undone.</>,
-            confirmLabel: 'Delete',
-            onConfirm: () => router.delete(route('admin.courses.destroy', course.id), {
-                onSuccess: () => setConfirm(null),
-            }),
-        });
-    }
-
-    const groups = groupCourses(courses);
+    const {
+        showForm, setShowForm, editTarget,
+        confirm, setConfirm,
+        groups,
+        openCreate, openEdit, requestDelete,
+    } = useCourses(courses);
     const columns = [
         { key: 'course_code', label: 'Code', widthClassName: 'w-28', headerClass: 'text-[11px]', className: 'font-mono text-xs font-semibold text-emerald-800 whitespace-nowrap' },
         { key: 'title',       label: 'Title', widthClassName: 'w-[48%]', className: 'text-gray-800' },
@@ -105,7 +72,7 @@ export default function Index({ program, courses }) {
                                     <div className="border-b border-gray-200 bg-gray-50 px-6 py-2">
                                         <p className="text-xs font-bold uppercase tracking-widest text-gray-500">
                                             {group.year_level ? `Year ${group.year_level}` : 'General'}
-                                            {group.semester_type ? ` - ${SEMESTER_LABELS[group.semester_type] ?? group.semester_type}` : ''}
+                                            {group.semester_type ? ` > ${SEMESTER_LABELS[group.semester_type] ?? group.semester_type}` : ''}
                                         </p>
                                     </div>
                                     <DataTable

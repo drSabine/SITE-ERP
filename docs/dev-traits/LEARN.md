@@ -12,7 +12,7 @@
 - **Two-team split** — Team Enrollments owns student/enrollment data; Team Grading Input owns grade submission and finalization. Shared boundary: `enrollment_courses` table. See `CLAUDE.md §2.3`.
 - **Flat grading model** — one `final_grade` per `enrollment_course` per semester. No Prelim/Midterm/Finals breakdown. Teachers submit one grade. Coordinator finalizes the term which locks statuses.
 - **`academic_terms` is the semester wrapper** — `school_years → academic_terms (semester: first|second|summer)`. There is no separate semesters table. `AcademicTerm` is the semester unit.
-- **Co-located state** — page component holds its own state and handlers inline. No split `useX.js` hook files unless logic is reused across 2+ pages.
+- **Co-located hooks** — each page that has significant state/handler logic has a `useX.jsx` hook file co-located in the same folder (e.g. `Pages/Admin/Users/useUsers.jsx`). The hook owns all state, effects, and handlers; `Index.jsx` owns only columns, JSX layout, and modal wiring. Hook files use `.jsx` extension because they may contain JSX in confirm-dialog messages.
 - **Single unified Dashboard page** — `Pages/Dashboard.jsx` handles all roles. No separate `Admin/Dashboard`, `Teacher/Dashboard` etc. The controller passes `hasTeachingLoad` and role-specific stats. The page uses `build*Sections()` from `Components/Dashboard/dashboardSections.js` to assemble the card grid per role. Admin and coordinator can also carry a teaching load (they appear in `teacher_assignments`); when they do, the Teaching section appends automatically. To add a new role section: add a `buildXxxSections()` to `dashboardSections.js` and call it in `Dashboard.jsx`. Never create a new page for a role.
 
 ---

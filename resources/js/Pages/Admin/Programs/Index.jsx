@@ -1,27 +1,15 @@
+import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, PagePanel, ActionsDropdown } from '@/Components/ui';
 import { ProgramFormModal } from '@/Components/Admin/Programs';
-import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { usePrograms } from './usePrograms';
 
 export default function Index({ programs }) {
-    const [showForm, setShowForm]     = useState(false);
-    const [editTarget, setEditTarget] = useState(null);
-    const [confirm, setConfirm]       = useState(null);
-
-    function openCreate() { setEditTarget(null); setShowForm(true); }
-    function openEdit(program) { setEditTarget(program); setShowForm(true); }
-
-    function requestDelete(program) {
-        setConfirm({
-            title: 'Delete Program',
-            message: <>Delete <strong>{program.code} - {program.name}</strong>? This cannot be undone.</>,
-            confirmLabel: 'Delete',
-            onConfirm: () => router.delete(route('admin.programs.destroy', program.id), {
-                onSuccess: () => setConfirm(null),
-            }),
-        });
-    }
+    const {
+        showForm, setShowForm, editTarget,
+        confirm, setConfirm,
+        openCreate, openEdit, requestDelete,
+    } = usePrograms();
 
     const columns = [
         { key: 'code',         label: 'Code',         className: 'font-mono font-semibold text-emerald-800' },

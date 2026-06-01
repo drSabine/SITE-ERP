@@ -36,7 +36,7 @@ export default function TermsPanel({ sy, terms, onActivate, onAddSummer }) {
                             {term.is_active && <StatusBadge status="active" />}
                             {term.start_date && (
                                 <span className="text-xs text-gray-400">
-                                    {formatDate(term.start_date)} - {formatDate(term.end_date)}
+                                    {formatDate(term.start_date)} to {formatDate(term.end_date)}
                                 </span>
                             )}
                         </div>

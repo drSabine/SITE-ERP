@@ -174,7 +174,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     <p className="text-base font-semibold text-gray-800">{header ?? 'Dashboard'}</p>
                     <div className="text-right">
                         <p className="text-sm font-semibold text-gray-700">{currentTime}</p>
-                        <p className="text-xs text-gray-400">{currentDate} - Philippine Time</p>
+                        <p className="text-xs text-gray-400">{currentDate} | Philippine Time</p>
                     </div>
                 </header>
 
