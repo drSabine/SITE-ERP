@@ -24,16 +24,22 @@ class SchoolYearSeeder extends Seeder
 
         $terms = [
             [
-                'semester' => 'first',
+                'semester'   => 'first',
                 'start_date' => '2025-08-01',
-                'end_date' => '2025-12-20',
-                'is_active' => false,
+                'end_date'   => '2025-12-20',
+                'is_active'  => false,
             ],
             [
-                'semester' => 'second',
+                'semester'   => 'second',
                 'start_date' => '2026-01-05',
-                'end_date' => '2026-05-31',
-                'is_active' => true,
+                'end_date'   => '2026-05-31',
+                'is_active'  => true,
+            ],
+            [
+                'semester'   => 'summer',
+                'start_date' => null,
+                'end_date'   => null,
+                'is_active'  => false,
             ],
         ];
 

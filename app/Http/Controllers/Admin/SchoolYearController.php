@@ -26,9 +26,11 @@ class SchoolYearController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name'       => 'required|string|max:20|unique:school_years,name',
-            'start_date' => 'required|date',
-            'end_date'   => 'required|date|after:start_date',
+            'name'              => 'required|string|max:20|unique:school_years,name',
+            'start_date'        => 'required|date',
+            'end_date'          => 'required|date|after:start_date',
+            'summer_start_date' => 'nullable|date',
+            'summer_end_date'   => 'nullable|date|after:summer_start_date',
         ]);
 
         $this->service->create($data);

@@ -2,7 +2,7 @@ import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { formatDateRange } from '@/utils/format';
 import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, PagePanel, ActionsDropdown } from '@/Components/ui';
-import { SchoolYearFormModal, TermsPanel } from '@/Components/Admin/SchoolYears';
+import { SchoolYearFormModal, TermsPanel, TermDateModal } from '@/Components/Admin/SchoolYears';
 import { useSchoolYears, syStatus } from './useSchoolYears';
 
 export default function Index({ schoolYears }) {
@@ -11,7 +11,8 @@ export default function Index({ schoolYears }) {
         expandedSY, terms, loadingTerms,
         confirm, setConfirm,
         openCreate, openEdit, toggleExpand,
-        activateSY, activateTerm, addSummerTerm,
+        activateSY, activateTerm,
+        showTermDates, editTermTarget, openTermDates, closeTermDates, afterTermDatesSaved,
         requestFinalizeSY, requestDeleteSY,
     } = useSchoolYears();
 
@@ -39,16 +40,30 @@ export default function Index({ schoolYears }) {
                             renderExpandedRow={sy => (
                                 loadingTerms
                                     ? <p className="text-sm text-gray-400">Loading...</p>
-                                    : <TermsPanel sy={sy} terms={terms} onActivate={activateTerm} onAddSummer={() => addSummerTerm(sy)} />
+                                    : <TermsPanel
+                                        sy={sy}
+                                        terms={terms}
+                                        onActivate={activateTerm}
+                                        onEditDates={openTermDates}
+                                    />
                             )}
                             actions={sy => (
-                                <ActionsDropdown items={[
-                                    { label: expandedSY === sy.id ? 'Hide Terms' : 'View Terms', onClick: () => toggleExpand(sy), variant: 'primary' },
-                                    sy.status !== 'finalized' && { label: 'Edit', onClick: () => openEdit(sy) },
-                                    !sy.is_active && sy.status !== 'finalized' && { label: 'Activate', onClick: () => activateSY(sy), variant: 'primary' },
-                                    sy.status !== 'finalized' && { label: 'Finalize', onClick: () => requestFinalizeSY(sy), variant: 'danger' },
-                                    !sy.is_active && sy.status !== 'finalized' && !sy.academic_terms_count && { label: 'Delete', onClick: () => requestDeleteSY(sy), variant: 'danger' },
-                                ]} />
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleExpand(sy)}
+                                        className="border border-emerald-600 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50"
+                                    >
+                                        {expandedSY === sy.id ? 'Hide Terms' : 'View Terms'}
+                                    </button>
+
+                                    <ActionsDropdown items={[
+                                        sy.status !== 'finalized' && { label: 'Edit', onClick: () => openEdit(sy) },
+                                        !sy.is_active && sy.status !== 'finalized' && { label: 'Activate', onClick: () => activateSY(sy), variant: 'primary' },
+                                        sy.status !== 'finalized' && { label: 'Finalize', onClick: () => requestFinalizeSY(sy), variant: 'danger' },
+                                        !sy.is_active && sy.status !== 'finalized' && !sy.academic_terms_count && { label: 'Delete', onClick: () => requestDeleteSY(sy), variant: 'danger' },
+                                    ]} />
+                                </div>
                             )}
                         />
                     </PagePanel>
@@ -59,6 +74,13 @@ export default function Index({ schoolYears }) {
                 show={showForm}
                 editTarget={editTarget}
                 onClose={() => setShowForm(false)}
+            />
+
+            <TermDateModal
+                show={showTermDates}
+                term={editTermTarget}
+                onClose={closeTermDates}
+                onSaved={afterTermDatesSaved}
             />
 
             <ConfirmModal
@@ -72,3 +94,4 @@ export default function Index({ schoolYears }) {
         </AuthenticatedLayout>
     );
 }
+

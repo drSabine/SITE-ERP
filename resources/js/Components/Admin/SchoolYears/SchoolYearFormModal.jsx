@@ -7,6 +7,8 @@ export default function SchoolYearFormModal({ show, editTarget, onClose }) {
         name: '',
         start_date: '',
         end_date: '',
+        summer_start_date: '',
+        summer_end_date: '',
     });
 
     useEffect(() => {
@@ -15,6 +17,8 @@ export default function SchoolYearFormModal({ show, editTarget, onClose }) {
                 name: editTarget.name,
                 start_date: editTarget.start_date ?? '',
                 end_date: editTarget.end_date ?? '',
+                summer_start_date: '',
+                summer_end_date: '',
             });
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -67,6 +71,32 @@ export default function SchoolYearFormModal({ show, editTarget, onClose }) {
                         />
                     </div>
                 </div>
+
+                    {!editTarget && (
+                        <div className="border-t border-gray-100 pt-4">
+                            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                                Summer Term <span className="font-normal normal-case text-gray-400">(optional — dates can be set later)</span>
+                            </p>
+                            <div className="grid grid-cols-2 gap-4">
+                                <InputField
+                                    label="Summer Start"
+                                    id="sy-summer-start"
+                                    type="date"
+                                    value={data.summer_start_date}
+                                    onChange={event => setData('summer_start_date', event.target.value)}
+                                    error={errors.summer_start_date}
+                                />
+                                <InputField
+                                    label="Summer End"
+                                    id="sy-summer-end"
+                                    type="date"
+                                    value={data.summer_end_date}
+                                    onChange={event => setData('summer_end_date', event.target.value)}
+                                    error={errors.summer_end_date}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                 <div className="mt-6 flex justify-end gap-3">
                     <SecondaryButton type="button" onClick={onClose}>Cancel</SecondaryButton>

@@ -9,12 +9,14 @@ export function syStatus(sy) {
 }
 
 export function useSchoolYears() {
-    const [showForm, setShowForm]         = useState(false);
-    const [editTarget, setEditTarget]     = useState(null);
-    const [expandedSY, setExpandedSY]     = useState(null);
-    const [terms, setTerms]               = useState([]);
-    const [loadingTerms, setLoadingTerms] = useState(false);
-    const [confirm, setConfirm]           = useState(null);
+    const [showForm, setShowForm]               = useState(false);
+    const [editTarget, setEditTarget]           = useState(null);
+    const [expandedSY, setExpandedSY]           = useState(null);
+    const [terms, setTerms]                     = useState([]);
+    const [loadingTerms, setLoadingTerms]       = useState(false);
+    const [confirm, setConfirm]                 = useState(null);
+    const [showTermDates, setShowTermDates]     = useState(false);
+    const [editTermTarget, setEditTermTarget]   = useState(null);
 
     function openCreate() { setEditTarget(null); setShowForm(true); }
     function openEdit(sy) { setEditTarget(sy); setShowForm(true); }
@@ -32,7 +34,10 @@ export function useSchoolYears() {
     }
 
     function activateSY(sy) {
-        router.post(route('admin.school-years.activate', sy.id));
+        router.post(route('admin.school-years.activate', sy.id), {}, {
+            preserveScroll: true,
+            preserveState: true,
+        });
     }
 
     function activateTerm(term) {
@@ -43,10 +48,19 @@ export function useSchoolYears() {
         });
     }
 
-    function addSummerTerm(sy) {
-        router.post(route('admin.academic-terms.store', sy.id), { semester: 'summer' }, {
-            onSuccess: () => loadTerms(sy.id),
-        });
+    function openTermDates(term) {
+        setEditTermTarget(term);
+        setShowTermDates(true);
+    }
+
+    function closeTermDates() {
+        setShowTermDates(false);
+        setEditTermTarget(null);
+    }
+
+    function afterTermDatesSaved() {
+        closeTermDates();
+        if (expandedSY) loadTerms(expandedSY);
     }
 
     function requestFinalizeSY(sy) {
@@ -80,7 +94,8 @@ export function useSchoolYears() {
         confirm, setConfirm,
         openCreate, openEdit,
         toggleExpand,
-        activateSY, activateTerm, addSummerTerm,
+        activateSY, activateTerm,
+        showTermDates, editTermTarget, openTermDates, closeTermDates, afterTermDatesSaved,
         requestFinalizeSY, requestDeleteSY,
     };
 }
