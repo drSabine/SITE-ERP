@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { PrimaryButton, StatusBadge, ConfirmModal, DataTable } from '@/Components/ui';
+import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, ActionsDropdown } from '@/Components/ui';
 import { StudentFormModal, StudentDrawer, EnrollmentModal, CourseManagerModal, StudentFilters } from '@/Components/Coordinator/Students';
 import { PagePanel, SegmentedTabs, YEAR_TABS, formatStudentName, getYearLabel } from '@/Components/Coordinator/Shared';
 
@@ -197,18 +197,20 @@ export default function Index({ students, programs, activeSchoolYear, schoolYear
                             pagination={students}
                             emptyMessage="No students found."
                             actions={student => (
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setSelectedStudentId(student.id);
-                                        setShowEnrollModal(false);
-                                        setShowCourseManager(false);
-                                        setManagingEnrollmentId(null);
-                                    }}
-                                    className="text-sm font-medium text-emerald-700 hover:text-emerald-900"
-                                >
-                                    View
-                                </button>
+                                <ActionsDropdown items={[
+                                    {
+                                        label: 'View Profile',
+                                        onClick: () => {
+                                            setSelectedStudentId(student.id);
+                                            setShowEnrollModal(false);
+                                            setShowCourseManager(false);
+                                            setManagingEnrollmentId(null);
+                                        },
+                                        variant: 'primary',
+                                    },
+                                    { label: 'Edit', onClick: () => { setStudentFormTarget(student); setShowStudentForm(true); } },
+                                    { label: 'Delete', onClick: () => requestDeleteStudent(student), variant: 'danger' },
+                                ]} />
                             )}
                         />
                     </PagePanel>

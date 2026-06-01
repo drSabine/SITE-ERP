@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, PagePanel } from '@/Components/ui';
+import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, PagePanel, ActionsDropdown } from '@/Components/ui';
 import { ProgramFormModal } from '@/Components/Admin/Programs';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function Index({ programs }) {
@@ -46,15 +46,11 @@ export default function Index({ programs }) {
                             rows={programs}
                             emptyMessage="No programs yet. Create one to get started."
                             actions={program => (
-                                <>
-                                    <Link href={route('admin.courses.index', { program_id: program.id })} className="text-sm font-medium text-gray-500 hover:text-gray-700">
-                                        Manage Courses
-                                    </Link>
-                                    <button onClick={() => openEdit(program)} className="text-sm font-medium text-emerald-700 hover:text-emerald-900">Edit</button>
-                                    {!program.courses_count && (
-                                        <button onClick={() => requestDelete(program)} className="text-sm font-medium text-red-500 hover:text-red-700">Delete</button>
-                                    )}
-                                </>
+                                <ActionsDropdown items={[
+                                    { label: 'Manage Courses', href: route('admin.courses.index', { program_id: program.id }) },
+                                    { label: 'Edit', onClick: () => openEdit(program) },
+                                    !program.courses_count && { label: 'Delete', onClick: () => requestDelete(program), variant: 'danger' },
+                                ]} />
                             )}
                         />
                     </PagePanel>

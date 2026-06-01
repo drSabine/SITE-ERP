@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, SearchBar, PagePanel, SegmentedTabs, Dropdown } from '@/Components/ui';
+import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, SearchBar, PagePanel, SegmentedTabs, ActionsDropdown } from '@/Components/ui';
 import { UserFormModal } from '@/Components/Admin/Users';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -122,38 +122,12 @@ export default function Index({ users, filters = {} }) {
                             pagination={users}
                             emptyMessage="No accounts found."
                             actions={user => (
-                                <Dropdown>
-                                    <Dropdown.Trigger>
-                                        <button className="text-sm font-medium text-gray-500 hover:text-gray-700">
-                                            Actions
-                                        </button>
-                                    </Dropdown.Trigger>
-                                    <Dropdown.Content width="40" align="right">
-                                        <button
-                                            onClick={() => openEdit(user)}
-                                            className="block w-full px-4 py-2 text-start text-sm text-gray-700 hover:bg-gray-100"
-                                        >
-                                            Edit
-                                        </button>
-                                        {status === 'inactive' ? (
-                                            <button
-                                                onClick={() => requestReactivate(user)}
-                                                className="block w-full px-4 py-2 text-start text-sm text-emerald-700 hover:bg-emerald-50"
-                                            >
-                                                Reactivate
-                                            </button>
-                                        ) : (
-                                            user.id !== currentUserId && (
-                                                <button
-                                                    onClick={() => requestDeactivate(user)}
-                                                    className="block w-full px-4 py-2 text-start text-sm text-red-600 hover:bg-red-50"
-                                                >
-                                                    Deactivate
-                                                </button>
-                                            )
-                                        )}
-                                    </Dropdown.Content>
-                                </Dropdown>
+                                <ActionsDropdown items={[
+                                    { label: 'Edit', onClick: () => openEdit(user) },
+                                    status === 'inactive'
+                                        ? { label: 'Reactivate', onClick: () => requestReactivate(user), variant: 'primary' }
+                                        : user.id !== currentUserId && { label: 'Deactivate', onClick: () => requestDeactivate(user), variant: 'danger' },
+                                ]} />
                             )}
                         />
                     </PagePanel>

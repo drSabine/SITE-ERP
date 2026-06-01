@@ -100,7 +100,7 @@ const Content = ({
                     ref={dropdownRef}
                     className={`fixed z-50 rounded-md shadow-lg ${widthClasses}`}
                     style={{ top: position.top, left: position.left }}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(event) => { event.stopPropagation(); close(); }}
                 >
                     <div
                         className={

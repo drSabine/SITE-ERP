@@ -165,8 +165,10 @@ POST /enrollments/school-year       coordinator.enrollments.store-school-year
 ApplicationLogo, Checkbox, DangerButton, Dropdown, InputError, InputLabel,
 Modal, NavLink, PrimaryButton, ResponsiveNavLink, SecondaryButton, TextInput,
 StatusBadge, ConfirmModal, Icons, InputField, DetailField,
-DataTable, CardHeader, Pagination, SearchBar, SegmentedTabs, PagePanel
+DataTable, CardHeader, Pagination, SearchBar, SegmentedTabs, PagePanel, ActionsButton
 ```
+
+**ActionsButton** — universal table row dropdown trigger. Square border + "Actions" label + ChevronDown icon, emerald hover. Always wrap in `<Dropdown><Dropdown.Trigger><ActionsButton /></Dropdown.Trigger>...</Dropdown>`. Applied to all 6 index pages.
 
 ---
 

@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, PagePanel } from '@/Components/ui';
+import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, PagePanel, ActionsDropdown } from '@/Components/ui';
 import { CourseFormModal } from '@/Components/Admin/Courses';
 import { SEMESTER_LABELS } from '@/Components/Admin/SchoolYears';
 import { BackIcon } from '@/Components/ui/Icons';
@@ -114,10 +114,10 @@ export default function Index({ program, courses }) {
                                         columns={columns}
                                         rows={group.courses}
                                         actions={course => (
-                                            <>
-                                                <button onClick={() => openEdit(course)} className="text-sm font-medium text-emerald-700 hover:text-emerald-900">Edit</button>
-                                                <button onClick={() => requestDelete(course)} className="text-sm font-medium text-red-500 hover:text-red-700">Delete</button>
-                                            </>
+                                            <ActionsDropdown items={[
+                                                { label: 'Edit', onClick: () => openEdit(course) },
+                                                { label: 'Delete', onClick: () => requestDelete(course), variant: 'danger' },
+                                            ]} />
                                         )}
                                     />
                                 </div>

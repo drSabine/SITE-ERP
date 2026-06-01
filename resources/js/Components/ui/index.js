@@ -19,3 +19,5 @@ export { default as Pagination } from './Pagination';
 export { default as SearchBar } from './SearchBar';
 export { default as SegmentedTabs } from './SegmentedTabs';
 export { default as PagePanel } from './PagePanel';
+export { default as ActionsButton } from './ActionsButton';
+export { default as ActionsDropdown } from './ActionsDropdown';

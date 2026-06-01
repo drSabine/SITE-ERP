@@ -56,7 +56,8 @@ utils/format.js                   ← formatDate(), formatDateRange()
 
 **ui/ exports:** ApplicationLogo, Checkbox, DangerButton, Dropdown, InputError, InputLabel,
 Modal, NavLink, PrimaryButton, SecondaryButton, TextInput, StatusBadge, ConfirmModal, Icons,
-InputField, DetailField, DataTable, CardHeader, Pagination, SearchBar, SegmentedTabs, PagePanel
+InputField, DetailField, DataTable, CardHeader, Pagination, SearchBar, SegmentedTabs, PagePanel,
+ActionsButton, ActionsDropdown
 
 **PagePanel** — standard page card wrapper: `<PagePanel title description action className>children</PagePanel>`. Replaces raw `<div className="border border-gray-200 bg-white shadow-sm"><CardHeader .../></div>`. Supports optional `className` for extra classes (e.g. `mb-6`).
 
@@ -72,8 +73,8 @@ InputField, DetailField, DataTable, CardHeader, Pagination, SearchBar, Segmented
 **Reuse rules:**
 - ALL tables → `DataTable` (never raw `<table><thead><th>...</th>` markup)
 - ALL status/enrollment indicators → `StatusBadge`
-- ALL action buttons in table rows → raw `className="text-sm font-medium text-emerald-700 hover:text-emerald-900"` (this is the standard)
-- Danger row actions → `className="text-sm font-medium text-red-500 hover:text-red-700"`
+- ALL table row actions → `<ActionsDropdown items={[{ label, onClick?, href?, variant? }]} />`. Falsy items filtered automatically — inline conditionals like `row.active && { ... }` are safe.
+- Item `variant`: `'primary'` (emerald), `'danger'` (red), omit for default (gray)
 - `student_number` column standard → `className: 'font-mono text-xs text-gray-500'` everywhere
 
 **Admin component folders:** `SchoolYears/`, `Users/`, `Programs/`, `Courses/`

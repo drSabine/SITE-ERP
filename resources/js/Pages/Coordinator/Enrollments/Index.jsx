@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { StatusBadge, ConfirmModal, DataTable } from '@/Components/ui';
+import { StatusBadge, ConfirmModal, DataTable, ActionsDropdown } from '@/Components/ui';
 import { EnrollmentFilters, SchoolYearTermPicker } from '@/Components/Coordinator/Enrollments';
 import {
     PagePanel,
@@ -177,22 +177,10 @@ export default function Index({ enrollments, schoolYears, programs, selectedTerm
                                 pagination={enrollments}
                                 emptyMessage="No enrollments found for this term."
                                 actions={row => (
-                                    <>
-                                        <Link
-                                            href={`${route('coordinator.students.index')}?search=${row.student?.student_number ?? ''}`}
-                                            className="text-sm font-medium text-emerald-700 hover:text-emerald-900"
-                                        >
-                                            View Student
-                                        </Link>
-                                        {row.status === 'enrolled' && (
-                                            <button
-                                                onClick={() => requestDropEnrollment(row)}
-                                                className="text-sm font-medium text-red-500 hover:text-red-700"
-                                            >
-                                                Drop
-                                            </button>
-                                        )}
-                                    </>
+                                    <ActionsDropdown items={[
+                                        { label: 'View Student', href: `${route('coordinator.students.index')}?search=${row.student?.student_number ?? ''}` },
+                                        row.status === 'enrolled' && { label: 'Drop', onClick: () => requestDropEnrollment(row), variant: 'danger' },
+                                    ]} />
                                 )}
                             />
                         )}
