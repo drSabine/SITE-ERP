@@ -30,13 +30,15 @@ export const STUDENT_STATUS_OPTIONS = [
 ];
 
 export const ENROLLMENT_STATUS_OPTIONS = [
-    { value: 'enrolled', label: 'Enrolled' },
+    { value: 'enrolled', label: 'Evaluated' },
     { value: 'completed', label: 'Completed' },
     { value: 'dropped', label: 'Dropped' },
 ];
 
 export const ACTIVE_COURSE_STATUSES = ['active', 'inc'];
-export const MAX_ENROLLMENT_UNITS = 26;
+export function getMaxUnits(semester) {
+    return semester === 'summer' ? 9 : 26;
+}
 
 export function getYearLabel(yearLevel) {
     return YEAR_LABELS[yearLevel] ?? yearLevel;

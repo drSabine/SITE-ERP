@@ -12,7 +12,8 @@ use Illuminate\Validation\ValidationException;
 
 class EnrollmentService
 {
-    public const MAX_UNITS = 26;
+    private const REGULAR_MAX_UNITS = 26;
+    private const SUMMER_MAX_UNITS   = 9;
 
     /**
      * Enroll a student in an academic term.
@@ -43,6 +44,7 @@ class EnrollmentService
         return Enrollment::create([
             'student_id'       => $student->id,
             'academic_term_id' => $term->id,
+            'program_id'       => $student->program_id,
             'year_level'       => $yearLevel,
             'status'           => 'enrolled',
             'enrolled_at'      => now(),
@@ -79,6 +81,7 @@ class EnrollmentService
             $enrollment = Enrollment::create([
                 'student_id'       => $student->id,
                 'academic_term_id' => $term->id,
+                'program_id'       => $student->program_id,
                 'year_level'       => $yearLevel,
                 'status'           => 'enrolled',
                 'enrolled_at'      => now(),
@@ -159,6 +162,8 @@ class EnrollmentService
         $toAdd = [];
         $currentUnits = $this->currentUnits($enrollment);
 
+        $maxUnits = $this->maxUnits($enrollment);
+
         foreach ($courses as $course) {
             // Skip courses already in the load
             if (EnrollmentCourse::where('enrollment_id', $enrollment->id)
@@ -167,7 +172,7 @@ class EnrollmentService
                 continue;
             }
 
-            if (($currentUnits + $course->units) > self::MAX_UNITS) {
+            if (($currentUnits + $course->units) > $maxUnits) {
                 continue;
             }
 
@@ -233,10 +238,11 @@ class EnrollmentService
         }
 
         $currentUnits = $this->currentUnits($enrollment);
+        $maxUnits     = $this->maxUnits($enrollment);
 
-        if (($currentUnits + $course->units) > self::MAX_UNITS) {
+        if (($currentUnits + $course->units) > $maxUnits) {
             throw ValidationException::withMessages([
-                'course_id' => "Adding this course ({$course->units} units) would exceed the 26-unit maximum. Current: {$currentUnits} units.",
+                'course_id' => "Adding this course ({$course->units} units) would exceed the {$maxUnits}-unit maximum. Current: {$currentUnits} units.",
             ]);
         }
 
@@ -300,6 +306,15 @@ class EnrollmentService
             'status'     => 'dropped',
             'dropped_at' => now(),
         ]);
+    }
+
+    private function maxUnits(Enrollment $enrollment): int
+    {
+        $enrollment->loadMissing('academicTerm');
+
+        return $enrollment->academicTerm?->semester === 'summer'
+            ? self::SUMMER_MAX_UNITS
+            : self::REGULAR_MAX_UNITS;
     }
 
     private function currentUnits(Enrollment $enrollment): int

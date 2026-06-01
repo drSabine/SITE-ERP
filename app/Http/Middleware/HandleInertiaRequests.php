@@ -33,7 +33,7 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
 
         $hasTeachingLoad = false;
-        if ($user && in_array($user->role, ['admin', 'coordinator', 'teacher'])) {
+        if ($user && in_array($user->role, ['admin', 'coordinator_it', 'coordinator_engineering', 'teacher'])) {
             $activeTerm = AcademicTerm::active()->first(['id']);
             if ($activeTerm) {
                 $hasTeachingLoad = $user->teacherAssignments()

@@ -57,13 +57,11 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
 // ─────────────────────────────────────────────────────────────
 // Coordinator routes (also accessible by admin)
 // ─────────────────────────────────────────────────────────────
-Route::prefix('coordinator')->middleware(['auth', 'role:admin,coordinator'])->name('coordinator.')->group(function () {
+Route::prefix('coordinator')->middleware(['auth', 'role:admin,coordinator_it,coordinator_engineering'])->name('coordinator.')->group(function () {
 
     // Students
     Route::get('students', [Coordinator\StudentController::class, 'index'])->name('students.index');
     Route::get('students/{student}/detail', [Coordinator\StudentController::class, 'detail'])->name('students.detail');
-    Route::get('students/{student}', [Coordinator\StudentController::class, 'show'])->name('students.show');
-    Route::post('students', [Coordinator\StudentController::class, 'store'])->name('students.store');
     Route::put('students/{student}', [Coordinator\StudentController::class, 'update'])->name('students.update');
     Route::delete('students/{student}', [Coordinator\StudentController::class, 'destroy'])->name('students.destroy');
 

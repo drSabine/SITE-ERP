@@ -38,12 +38,12 @@ function buildNavSections(role, hasTeachingLoad) {
         });
     }
 
-    if (role === 'coordinator') {
+    if (role === 'coordinator_it' || role === 'coordinator_engineering') {
         sections.push({
             title: 'Coordination',
             items: [
                 { label: 'Students', href: route('coordinator.students.index'), match: '/coordinator/students', Icon: StudentsIcon },
-                { label: 'Enrollments', href: route('coordinator.enrollments.index'), match: '/coordinator/enrollments', Icon: EnrollmentsIcon },
+                { label: 'Evaluations', href: route('coordinator.enrollments.index'), match: '/coordinator/enrollments', Icon: EnrollmentsIcon },
                 { label: 'Assignments', href: route('coordinator.assignments.index'), match: '/coordinator/assignments', Icon: AssignmentsIcon },
             ],
         });

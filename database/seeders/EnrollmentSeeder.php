@@ -47,6 +47,7 @@ class EnrollmentSeeder extends Seeder
             $enrollment = Enrollment::create([
                 'student_id'       => $student->id,
                 'academic_term_id' => $activeTerm->id,
+                'program_id'       => $student->program_id,
                 'year_level'       => $student->year_level,
                 'status'           => 'enrolled',
                 'enrolled_at'      => now(),

@@ -14,13 +14,11 @@ return new class extends Migration
             $table->id();
             // Optional portal account. Null = no login access yet.
             $table->foreignId('user_id')->nullable()->unique()->constrained('users')->nullOnDelete();
-            $table->string('student_number', 30)->unique(); // e.g., 2024-0001
             $table->string('first_name', 100);
             $table->string('middle_name', 100)->nullable();
             $table->string('last_name', 100);
             $table->string('suffix', 20)->nullable();
             $table->enum('sex', ['Male', 'Female']);
-            $table->date('birthdate');
             $table->text('address')->nullable();
             $table->string('contact_number', 30)->nullable();
             $table->string('email', 191)->nullable();

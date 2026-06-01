@@ -21,12 +21,6 @@ export default function Index({ enrollments, schoolYears, programs, selectedTerm
 
     const columns = [
         {
-            key: 'student_number',
-            label: 'Student No.',
-            className: 'font-mono text-xs text-gray-500',
-            render: row => row.student?.student_number ?? '-',
-        },
-        {
             key: 'name',
             label: 'Name',
             className: 'font-semibold text-gray-900',
@@ -75,20 +69,20 @@ export default function Index({ enrollments, schoolYears, programs, selectedTerm
         : 'No term selected';
 
     return (
-        <AuthenticatedLayout header="Enrollments">
-            <Head title="Enrollments" />
+        <AuthenticatedLayout header="Evaluations">
+            <Head title="Evaluations" />
 
             <div className="py-8">
                 <div className="mx-auto max-w-6xl px-6">
                     <PagePanel
-                        title="Enrollments"
+                        title="Evaluations"
                         description={termLabel}
                         action={
                             <PrimaryButton
                                 onClick={() => setShowAddModal(true)}
                                 disabled={!selectedTermId}
                             >
-                                + New Enrollment
+                                + New Evaluation
                             </PrimaryButton>
                         }
                     >
@@ -113,18 +107,18 @@ export default function Index({ enrollments, schoolYears, programs, selectedTerm
 
                         {!selectedTermId ? (
                             <div className="px-6 py-16 text-center text-sm text-gray-400">
-                                Select a school year and semester to view enrollments.
+                                Select a school year and semester to view evaluations.
                             </div>
                         ) : (
                             <DataTable
                                 columns={columns}
                                 rows={enrollments.data}
                                 pagination={enrollments}
-                                emptyMessage="No enrollments found for this term."
+                                emptyMessage="No evaluations found for this term."
                                 actions={row => (
                                     <ActionsDropdown items={[
                                         { label: 'Manage Courses', onClick: () => openCourseManager(row) },
-                                        { label: 'View Student', href: `${route('coordinator.students.index')}?search=${row.student?.student_number ?? ''}` },
+                                        { label: 'View Student', href: `${route('coordinator.students.index')}?search=${row.student?.last_name ?? ''}` },
                                         row.status === 'enrolled' && { label: 'Drop', onClick: () => requestDropEnrollment(row), variant: 'danger' },
                                     ]} />
                                 )}

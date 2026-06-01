@@ -21,7 +21,7 @@ export default function StudentFilters({
                 onSubmit={onSearchSubmit}
                 onClear={onSearchClear}
                 active={!!filters.search}
-                placeholder="Search by name or student number..."
+                placeholder="Search by name..."
             />
             <FilterSelect value={programId} onChange={onProgramChange}>
                 <option value="">All Programs</option>

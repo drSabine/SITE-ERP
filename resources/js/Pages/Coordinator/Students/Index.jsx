@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, ActionsDropdown } from '@/Components/ui';
+import { StatusBadge, ConfirmModal, DataTable, ActionsDropdown } from '@/Components/ui';
 import { StudentFormModal, StudentDrawer, EnrollmentModal, CourseManagerModal, StudentFilters } from '@/Components/Coordinator/Students';
 import { PagePanel, SegmentedTabs, YEAR_TABS, getYearLabel, formatStudentName } from '@/Components/Coordinator/Shared';
 import { useStudents } from './useStudents';
@@ -29,11 +29,6 @@ export default function Index({ students, programs, activeSchoolYear, schoolYear
 
     const columns = [
         {
-            key: 'student_number',
-            label: 'Student No.',
-            className: 'font-mono text-xs text-gray-500',
-        },
-        {
             key: 'name',
             label: 'Name',
             className: 'font-semibold text-gray-900',
@@ -53,15 +48,15 @@ export default function Index({ students, programs, activeSchoolYear, schoolYear
         },
         {
             key: 'enrollment',
-            label: activeSchoolYear ? `S.Y. ${activeSchoolYear.name}` : 'Enrollment',
+            label: activeSchoolYear ? `S.Y. ${activeSchoolYear.name}` : 'Evaluation',
             render: student => {
                 if (!activeSchoolYear) {
                     return <span className="text-xs text-gray-400">No active S.Y.</span>;
                 }
 
-                const isEnrolled = (student.enrollments ?? []).length > 0;
+                const isEnrolled = (student.enrollments ?? []).some(enrollment => enrollment.status === 'enrolled');
 
-                return <StatusBadge status={isEnrolled ? 'enrolled' : 'not_enrolled'} />;
+                return <StatusBadge status={isEnrolled ? 'enrolled' : 'not_enrolled'} label={isEnrolled ? 'Evaluated' : 'Not Evaluated'} />;
             },
         },
         {
@@ -81,12 +76,7 @@ export default function Index({ students, programs, activeSchoolYear, schoolYear
                         title="Students"
                         description={activeSchoolYear
                             ? `S.Y. ${activeSchoolYear.name} > Sorted by year level`
-                            : 'Manage student records and enrollment.'}
-                        action={
-                            <PrimaryButton onClick={() => { setStudentFormTarget(null); setShowStudentForm(true); }}>
-                                + New Student
-                            </PrimaryButton>
-                        }
+                            : 'Manage student records.'}
                     >
                         <SegmentedTabs options={YEAR_TABS} value={yearLevel} onChange={handleYearTab} />
 

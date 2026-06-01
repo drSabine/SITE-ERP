@@ -1,8 +1,9 @@
 import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react';
 import { StatusBadge } from '@/Components/ui';
 import { CloseIcon } from '@/Components/ui/Icons';
-import { getSemesterLabel, getYearLabel } from '@/Components/Coordinator/Shared';
 import { formatDate } from '@/utils/format';
+import { getSemesterLabel, getYearLabel } from '@/Components/Coordinator/Shared';
+import EvaluationHistoryGroup from './EvaluationHistoryGroup';
 
 function groupEnrollmentsBySchoolYear(enrollments) {
     const groups = {};
@@ -24,46 +25,6 @@ function groupEnrollmentsBySchoolYear(enrollments) {
     }
 
     return Object.values(groups).sort((groupA, groupB) => groupB.name.localeCompare(groupA.name));
-}
-
-function EnrollmentRow({ enrollment, onManageClick }) {
-    const activeCount = (enrollment.enrollment_courses ?? []).filter(
-        enrollmentCourse => ['active', 'inc'].includes(enrollmentCourse.status)
-    ).length;
-    const incCount = (enrollment.enrollment_courses ?? []).filter(
-        enrollmentCourse => enrollmentCourse.status === 'inc'
-    ).length;
-
-    return (
-        <div className="flex items-center justify-between py-2.5 pl-4">
-            <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-800">
-                    {getSemesterLabel(enrollment.academic_term?.semester)}
-                    {enrollment.year_level && (
-                        <span className="ml-2 text-xs font-normal text-gray-500">
-                            {getYearLabel(enrollment.year_level)}
-                        </span>
-                    )}
-                </p>
-                <p className="mt-0.5 text-xs text-gray-500">
-                    {activeCount} course{activeCount !== 1 ? 's' : ''}
-                    {incCount > 0 && (
-                        <span className="ml-1.5 font-semibold text-orange-600">{incCount} INC</span>
-                    )}
-                </p>
-            </div>
-            <div className="ml-3 flex shrink-0 items-center gap-2">
-                <StatusBadge status={enrollment.status} />
-                <button
-                    type="button"
-                    onClick={() => onManageClick(enrollment)}
-                    className="text-xs font-medium text-emerald-700 hover:text-emerald-900"
-                >
-                    Manage
-                </button>
-            </div>
-        </div>
-    );
 }
 
 export default function StudentDrawer({
@@ -127,7 +88,7 @@ export default function StudentDrawer({
                                         <div className="flex flex-1 flex-col overflow-hidden">
                                             {(() => {
                                                 const activeEnrollment = (student.enrollments ?? []).find(
-                                                    enrollment => enrollment.academic_term?.is_active
+                                                    enrollment => enrollment.status === 'enrolled' && enrollment.academic_term?.school_year?.is_active
                                                 );
 
                                                 if (activeEnrollment) {
@@ -140,7 +101,7 @@ export default function StudentDrawer({
                                                     return (
                                                         <div className="border-b border-emerald-200 bg-emerald-50 px-5 py-2.5">
                                                             <div className="text-xs text-emerald-800">
-                                                                <span className="font-semibold">Enrolled</span>
+                                                                <span className="font-semibold">Evaluated</span>
                                                                 {` in ${termLabel}`}
                                                                 {syName && ` for S.Y. ${syName}`}
                                                                 <span className="ml-1.5 text-emerald-600">
@@ -154,7 +115,7 @@ export default function StudentDrawer({
                                                 return (
                                                     <div className="flex items-center justify-between border-b border-amber-200 bg-amber-50 px-5 py-2.5">
                                                         <p className="text-xs font-medium text-amber-800">
-                                                            Not enrolled in the active term
+                                                            Not evaluated for the active term
                                                         </p>
                                                         {student.status === 'active' && (
                                                             <button
@@ -162,7 +123,7 @@ export default function StudentDrawer({
                                                                 onClick={onEnrollClick}
                                                                 className="bg-emerald-700 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-800"
                                                             >
-                                                                + Enroll
+                                                                + Evaluate
                                                             </button>
                                                         )}
                                                     </div>
@@ -177,9 +138,6 @@ export default function StudentDrawer({
                                                             {student.middle_name && ` ${student.middle_name}`}
                                                             {student.suffix && ` ${student.suffix}`}
                                                         </h2>
-                                                        <p className="mt-0.5 font-mono text-sm text-gray-500">
-                                                            {student.student_number}
-                                                        </p>
                                                     </div>
                                                     <StatusBadge status={student.status} />
                                                 </div>
@@ -242,33 +200,22 @@ export default function StudentDrawer({
                                             <div className="flex-1 overflow-y-auto px-5 py-4">
                                                 <div className="mb-3">
                                                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                                                        Enrollment History
+                                                        Evaluation History
                                                     </p>
                                                 </div>
 
                                                 {schoolYearGroups.length === 0 ? (
                                                     <p className="py-4 text-center text-sm text-gray-400">
-                                                        No enrollment records found.
+                                                        No evaluation records found.
                                                     </p>
                                                 ) : (
                                                     <div className="space-y-4">
                                                         {schoolYearGroups.map(group => (
-                                                            <div key={group.id} className="border border-gray-200">
-                                                                <div className="bg-gray-50 px-4 py-2">
-                                                                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                                                        S.Y. {group.name}
-                                                                    </p>
-                                                                </div>
-                                                                <div className="divide-y divide-gray-100">
-                                                                    {group.enrollments.map(enrollment => (
-                                                                        <EnrollmentRow
-                                                                            key={enrollment.id}
-                                                                            enrollment={enrollment}
-                                                                            onManageClick={onManageClick}
-                                                                        />
-                                                                    ))}
-                                                                </div>
-                                                            </div>
+                                                            <EvaluationHistoryGroup
+                                                                key={group.id}
+                                                                group={group}
+                                                                onManageClick={onManageClick}
+                                                            />
                                                         ))}
                                                     </div>
                                                 )}

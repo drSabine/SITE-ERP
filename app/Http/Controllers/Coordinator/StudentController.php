@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Coordinator;
 
 use App\Http\Controllers\Controller;
-use App\Models\AcademicTerm;
 use App\Models\Course;
 use App\Models\Program;
 use App\Models\SchoolYear;
@@ -16,8 +15,15 @@ use Inertia\Response;
 
 class StudentController extends Controller
 {
+    private function scopedPrograms(): ?array
+    {
+        return auth()->user()->coordinatorProgramCodes();
+    }
+
     public function index(Request $request): Response
     {
+        $scopedCodes = $this->scopedPrograms();
+
         $activeSchoolYear = SchoolYear::where('is_active', true)
             ->with(['academicTerms' => fn ($q) => $q
                 ->orderByRaw("FIELD(semester, 'first', 'second', 'summer')")
@@ -32,18 +38,23 @@ class StudentController extends Controller
             'program:id,code',
             'enrollments' => fn ($q) => $q
                 ->whereIn('academic_term_id', $activeTermIds)
+                ->where('status', 'enrolled')
                 ->select('id', 'student_id', 'academic_term_id', 'year_level', 'status'),
         ])
         ->orderBy('year_level', 'asc')
         ->orderBy('last_name', 'asc')
         ->orderBy('first_name', 'asc');
 
+        if ($scopedCodes !== null) {
+            $scopedProgramIds = Program::whereIn('code', $scopedCodes)->pluck('id');
+            $query->whereIn('program_id', $scopedProgramIds);
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('last_name', 'like', "%{$search}%")
-                    ->orWhere('first_name', 'like', "%{$search}%")
-                    ->orWhere('student_number', 'like', "%{$search}%");
+                    ->orWhere('first_name', 'like', "%{$search}%");
             });
         }
 
@@ -57,9 +68,13 @@ class StudentController extends Controller
 
         $query->where('status', $request->filled('status') ? $request->status : 'active');
 
+        $programs = $scopedCodes !== null
+            ? Program::active()->whereIn('code', $scopedCodes)->get(['id', 'code', 'name'])
+            : Program::active()->get(['id', 'code', 'name']);
+
         return Inertia::render('Coordinator/Students/Index', [
             'students'         => $query->paginate(20)->withQueryString(),
-            'programs'         => Program::active()->get(['id', 'code', 'name']),
+            'programs'         => $programs,
             'activeSchoolYear' => $activeSchoolYear,
             'schoolYears'      => SchoolYear::with([
                 'academicTerms' => fn ($q) => $q->orderByRaw("FIELD(semester, 'first', 'second', 'summer')")->select('id', 'school_year_id', 'semester', 'is_active'),
@@ -73,9 +88,10 @@ class StudentController extends Controller
         $student->load([
             'program:id,code,name',
             'enrollments' => fn ($q) => $q->with([
-                'academicTerm' => fn ($q) => $q->with(['schoolYear:id,name'])->select('id', 'school_year_id', 'semester', 'is_active'),
+                'academicTerm' => fn ($q) => $q->with(['schoolYear:id,name,is_active'])->select('id', 'school_year_id', 'semester', 'is_active'),
                 'enrollmentCourses' => fn ($q) => $q->with(['course:id,course_code,title,units'])
                     ->select('id', 'enrollment_id', 'course_id', 'final_grade', 'status'),
+                'program:id,code',
             ])->orderByDesc('id'),
         ]);
 
@@ -92,70 +108,14 @@ class StudentController extends Controller
         ]);
     }
 
-    public function show(Request $request, Student $student): Response|JsonResponse
-    {
-        $student->load([
-            'program:id,code,name',
-            'enrollments' => fn ($q) => $q->with([
-                'academicTerm' => fn ($q) => $q->with(['schoolYear:id,name'])->select('id', 'school_year_id', 'semester', 'is_active'),
-                'enrollmentCourses' => fn ($q) => $q->with(['course:id,course_code,title,units'])
-                    ->select('id', 'enrollment_id', 'course_id', 'final_grade', 'status'),
-            ])->orderByDesc('id'),
-        ]);
-
-        $availableCourses = Course::active()
-            ->where('program_id', $student->program_id)
-            ->with(['coRequisites' => fn ($q) => $q->select('courses.id', 'course_code', 'title')])
-            ->orderBy('year_level')
-            ->orderByRaw("FIELD(semester_type, 'first', 'second', 'summer')")
-            ->get(['id', 'course_code', 'title', 'units', 'year_level', 'semester_type']);
-
-        if ($request->wantsJson()) {
-            return response()->json([
-                'student'          => $student,
-                'availableCourses' => $availableCourses,
-            ]);
-        }
-
-        return Inertia::render('Coordinator/Students/Show', [
-            'student'          => $student,
-            'availableCourses' => $availableCourses,
-        ]);
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        $data = $request->validate([
-            'student_number' => 'required|string|max:30|unique:students,student_number',
-            'first_name'     => 'required|string|max:100',
-            'middle_name'    => 'nullable|string|max:100',
-            'last_name'      => 'required|string|max:100',
-            'suffix'         => 'nullable|string|max:20',
-            'sex'            => 'required|in:Male,Female',
-            'birthdate'      => 'required|date',
-            'address'        => 'nullable|string',
-            'contact_number' => 'nullable|string|max:30',
-            'email'          => 'nullable|email|max:191',
-            'program_id'     => 'required|exists:programs,id',
-            'year_level'     => 'required|integer|min:1|max:4',
-            'remarks'        => 'nullable|string',
-        ]);
-
-        Student::create($data);
-
-        return back();
-    }
-
     public function update(Request $request, Student $student): RedirectResponse
     {
         $data = $request->validate([
-            'student_number' => 'required|string|max:30|unique:students,student_number,' . $student->id,
             'first_name'     => 'required|string|max:100',
             'middle_name'    => 'nullable|string|max:100',
             'last_name'      => 'required|string|max:100',
             'suffix'         => 'nullable|string|max:20',
             'sex'            => 'required|in:Male,Female',
-            'birthdate'      => 'required|date',
             'address'        => 'nullable|string',
             'contact_number' => 'nullable|string|max:30',
             'email'          => 'nullable|email|max:191',

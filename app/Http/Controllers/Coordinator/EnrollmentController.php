@@ -11,6 +11,7 @@ use App\Models\Student;
 use App\Services\EnrollmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,6 +21,8 @@ class EnrollmentController extends Controller
 
     public function index(Request $request): Response
     {
+        $scopedCodes = auth()->user()->coordinatorProgramCodes();
+
         $schoolYears = SchoolYear::with([
             'academicTerms' => fn ($q) => $q->orderByRaw("FIELD(semester, 'first', 'second', 'summer')")->select('id', 'school_year_id', 'semester', 'is_active'),
         ])->ordered()->get(['id', 'name']);
@@ -27,14 +30,22 @@ class EnrollmentController extends Controller
         $activeTerm = AcademicTerm::active()->first();
         $termId     = $request->filled('term_id') ? (int) $request->term_id : $activeTerm?->id;
 
+        $scopedProgramIds = $scopedCodes !== null
+            ? Program::whereIn('code', $scopedCodes)->pluck('id')
+            : null;
+
         $query = Enrollment::with([
-            'student' => fn ($q) => $q->select('id', 'student_number', 'first_name', 'middle_name', 'last_name', 'suffix', 'program_id', 'status')
+            'student' => fn ($q) => $q->select('id', 'first_name', 'middle_name', 'last_name', 'suffix', 'program_id', 'status')
                 ->with(['program:id,code']),
             'enrollmentCourses' => fn ($q) => $q->whereIn('status', ['active', 'inc'])->select('id', 'enrollment_id', 'status'),
         ])
         ->where('academic_term_id', $termId ?? 0)
         ->orderBy('year_level', 'asc')
         ->orderByRaw('(SELECT last_name FROM students WHERE students.id = enrollments.student_id) ASC');
+
+        if ($scopedProgramIds !== null) {
+            $query->whereHas('student', fn ($q) => $q->whereIn('program_id', $scopedProgramIds));
+        }
 
         if ($request->filled('program_id')) {
             $query->whereHas('student', fn ($q) => $q->where('program_id', $request->program_id));
@@ -55,10 +66,19 @@ class EnrollmentController extends Controller
             $query->where('status', $statusFilter);
         }
 
+        $programs = $scopedCodes !== null
+            ? Program::active()->whereIn('code', $scopedCodes)->get(['id', 'code', 'name'])
+            : Program::active()->get(['id', 'code', 'name']);
+
+        $studentsQuery = Student::active()->ordered()->with(['program:id,code']);
+        if ($scopedProgramIds !== null) {
+            $studentsQuery->whereIn('program_id', $scopedProgramIds);
+        }
+
         return Inertia::render('Coordinator/Enrollments/Index', [
             'enrollments'        => $query->paginate(15)->withQueryString(),
             'schoolYears'        => $schoolYears,
-            'programs'           => Program::active()->get(['id', 'code', 'name']),
+            'programs'           => $programs,
             'selectedTermId'     => $termId,
             'filters'            => [
                 'term_id'    => $request->input('term_id', ''),
@@ -66,9 +86,7 @@ class EnrollmentController extends Controller
                 'year_level' => $request->input('year_level', ''),
                 'status'     => $rawStatus ?: 'enrolled',
             ],
-            'students'           => Student::active()->ordered()
-                ->with(['program:id,code'])
-                ->get(['id', 'student_number', 'first_name', 'last_name', 'year_level', 'program_id']),
+            'students'           => $studentsQuery->get(['id', 'first_name', 'last_name', 'year_level', 'program_id']),
             'enrolledStudentIds' => $termId
                 ? Enrollment::where('academic_term_id', $termId)
                     ->whereIn('status', ['enrolled', 'completed'])
@@ -109,10 +127,16 @@ class EnrollmentController extends Controller
 
     public function storeForSchoolYear(Request $request): RedirectResponse
     {
+        $activeSchoolYearId = SchoolYear::where('is_active', true)->value('id');
+
+        if (! $activeSchoolYearId) {
+            return back()->withErrors(['term_ids' => 'No active school year found.']);
+        }
+
         $data = $request->validate([
             'student_id'      => 'required|exists:students,id',
             'term_ids'        => 'required|array|min:1',
-            'term_ids.*'      => 'exists:academic_terms,id',
+            'term_ids.*'      => ['integer', Rule::exists('academic_terms', 'id')->where('school_year_id', $activeSchoolYearId)],
             'year_level'      => 'required|integer|min:1|max:4',
             'load_curriculum' => 'sometimes|boolean',
         ]);

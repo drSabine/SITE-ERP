@@ -50,17 +50,17 @@ export default function EnrollmentModal({ show, student, activeSchoolYear, exist
     const newTermsCount = data.term_ids.filter(termId => !enrolledTermIds.has(termId)).length;
     const isSubmitDisabled = processing || newTermsCount === 0 || data.term_ids.length === 0;
     const submitLabel = processing
-        ? 'Enrolling...'
-        : `Enroll${newTermsCount > 0 ? ` (${newTermsCount} term${newTermsCount !== 1 ? 's' : ''})` : ''}`;
+        ? 'Processing...'
+        : `Evaluate${newTermsCount > 0 ? ` (${newTermsCount} term${newTermsCount !== 1 ? 's' : ''})` : ''}`;
 
     return (
         <Modal show={show} maxWidth="lg" onClose={onClose} afterLeave={() => reset()}>
             <form onSubmit={handleSubmit}>
                 <div className="border-b border-gray-200 px-6 py-4">
-                    <h2 className="text-lg font-semibold text-gray-900">Enroll Student</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">Add Evaluation</h2>
                     {student && (
                         <p className="mt-0.5 text-sm text-gray-500">
-                            {student.last_name}, {student.first_name} &gt; {student.student_number}
+                            {student.last_name}, {student.first_name}
                         </p>
                     )}
                 </div>
@@ -70,7 +70,7 @@ export default function EnrollmentModal({ show, student, activeSchoolYear, exist
                         <div className="border border-amber-200 bg-amber-50 px-4 py-3">
                             <p className="text-sm font-semibold text-amber-800">No Active School Year</p>
                             <p className="mt-0.5 text-xs text-amber-700">
-                                The administrator must activate a school year before enrollment is possible.
+                                The administrator must activate a school year before an evaluation record can be created.
                             </p>
                         </div>
                     )}
@@ -81,6 +81,13 @@ export default function EnrollmentModal({ show, student, activeSchoolYear, exist
                                 <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">School Year</span>
                                 <span className="text-sm font-semibold text-gray-800">S.Y. {activeSchoolYear.name}</span>
                             </div>
+
+                            {student?.program && (
+                                <div className="flex items-center justify-between border border-gray-200 bg-gray-50 px-4 py-2.5">
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Program</span>
+                                    <span className="text-sm font-semibold text-gray-800">{student.program.code}</span>
+                                </div>
+                            )}
 
                             <div>
                                 <InputLabel value="Year Level" />
@@ -97,7 +104,7 @@ export default function EnrollmentModal({ show, student, activeSchoolYear, exist
                             </div>
 
                             <div>
-                                <InputLabel value="Semesters to Enroll In" />
+                                <InputLabel value="Semesters" />
                                 <div className="mt-2 space-y-2 border border-gray-200 px-4 py-3">
                                     {terms.length === 0 ? (
                                         <p className="text-sm text-gray-400">No terms configured for this school year.</p>
@@ -127,7 +134,7 @@ export default function EnrollmentModal({ show, student, activeSchoolYear, exist
                                                         </span>
                                                     </div>
                                                     {alreadyEnrolled && (
-                                                        <span className="text-xs text-gray-400">Already enrolled</span>
+                                                        <span className="text-xs text-gray-400">Already evaluated</span>
                                                     )}
                                                 </label>
                                             );

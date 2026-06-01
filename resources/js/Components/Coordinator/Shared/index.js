@@ -6,7 +6,6 @@ export { default as SelectField } from './SelectField';
 export {
     ACTIVE_COURSE_STATUSES,
     ENROLLMENT_STATUS_OPTIONS,
-    MAX_ENROLLMENT_UNITS,
     SEMESTER_LABELS,
     STUDENT_STATUS_OPTIONS,
     YEAR_LABELS,
@@ -15,6 +14,7 @@ export {
     countIncCourses,
     formatStudentName,
     getActiveEnrollmentCourses,
+    getMaxUnits,
     getSemesterLabel,
     getYearLabel,
 } from './utils';

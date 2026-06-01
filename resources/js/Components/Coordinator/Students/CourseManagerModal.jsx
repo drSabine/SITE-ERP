@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useForm, router } from '@inertiajs/react';
 import { Modal, PrimaryButton, SecondaryButton, StatusBadge, InputLabel, InputError, DataTable, ConfirmModal } from '@/Components/ui';
-import { MAX_ENROLLMENT_UNITS, getSemesterLabel, getYearLabel } from '@/Components/Coordinator/Shared';
+import { getMaxUnits, getSemesterLabel, getYearLabel } from '@/Components/Coordinator/Shared';
 
 export default function CourseManagerModal({ show, student, enrollment, availableCourses, loading = false, onClose, onActionDone }) {
     const [loadingAction, setLoadingAction] = useState(null);
@@ -188,8 +188,8 @@ export default function CourseManagerModal({ show, student, enrollment, availabl
                 {!loading && (<>
                 <div className="mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <span className={`text-sm font-semibold ${currentUnits > MAX_ENROLLMENT_UNITS ? 'text-red-600' : currentUnits >= MAX_ENROLLMENT_UNITS - 2 ? 'text-amber-600' : 'text-gray-700'}`}>
-                            {currentUnits} / {MAX_ENROLLMENT_UNITS} units
+                        <span className={`text-sm font-semibold ${currentUnits > getMaxUnits(enrollment?.academic_term?.semester) ? 'text-red-600' : currentUnits >= getMaxUnits(enrollment?.academic_term?.semester) - 2 ? 'text-amber-600' : 'text-gray-700'}`}>
+                            {currentUnits} / {getMaxUnits(enrollment?.academic_term?.semester)} units
                         </span>
                         <StatusBadge status={enrollment?.status ?? 'enrolled'} />
                     </div>

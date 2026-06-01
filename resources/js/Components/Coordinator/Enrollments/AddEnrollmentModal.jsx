@@ -40,7 +40,7 @@ export default function AddEnrollmentModal({ show, term, students = [], enrolled
         <Modal show={show} maxWidth="md" onClose={onClose} afterLeave={() => reset()}>
             <form onSubmit={handleSubmit}>
                 <div className="border-b border-gray-200 px-6 py-4">
-                    <h2 className="text-lg font-semibold text-gray-900">New Enrollment</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">New Evaluation</h2>
                     {term && (
                         <p className="mt-0.5 text-sm text-gray-500">
                             {getSemesterLabel(term.semester)} &gt; S.Y. {term.school_year?.name}
@@ -70,20 +70,20 @@ export default function AddEnrollmentModal({ show, term, students = [], enrolled
                             <option value="">Select a student...</option>
                             {availableStudents.map(student => (
                                 <option key={student.id} value={student.id}>
-                                    {student.last_name}, {student.first_name} &gt; {student.student_number}
+                                    {student.last_name}, {student.first_name}
                                     {student.program ? ` (${student.program.code})` : ''}
-                                    {droppedStudentIdSet.has(student.id) ? ' (Re-enroll)' : ''}
+                                    {droppedStudentIdSet.has(student.id) ? ' (Re-evaluate)' : ''}
                                 </option>
                             ))}
                         </select>
                         {availableStudents.length === 0 && (
                             <p className="mt-1 text-xs text-gray-400">
-                                All active students are already enrolled or have been enrolled in this term.
+                                All active students already have an evaluation record for this term.
                             </p>
                         )}
                         {droppedStudentIds.length > 0 && (
                             <p className="mt-1 text-xs text-amber-600">
-                                Students marked <strong>Re-enroll</strong> were previously dropped from this term.
+                                Students marked <strong>Re-evaluate</strong> were previously dropped from this term.
                             </p>
                         )}
                         {errors.student_id && <InputError message={errors.student_id} className="mt-1" />}
@@ -130,7 +130,7 @@ export default function AddEnrollmentModal({ show, term, students = [], enrolled
                 <div className="flex items-center justify-end gap-3 border-t border-gray-200 px-6 py-4">
                     <SecondaryButton type="button" onClick={onClose}>Cancel</SecondaryButton>
                     <PrimaryButton type="submit" disabled={processing || !data.student_id || !term}>
-                        {processing ? 'Enrolling...' : 'Enroll Student'}
+                        {processing ? 'Processing...' : 'Add Evaluation'}
                     </PrimaryButton>
                 </div>
             </form>

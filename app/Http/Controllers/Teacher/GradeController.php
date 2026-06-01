@@ -58,7 +58,7 @@ class GradeController extends Controller
         ->whereIn('status', ['active', 'inc'])
         ->with([
             'enrollment' => fn($q) => $q->select('id', 'student_id')
-                ->with(['student' => fn($q) => $q->select('id', 'student_number', 'first_name', 'last_name')]),
+                ->with(['student' => fn($q) => $q->select('id', 'first_name', 'last_name')]),
         ])
         ->get(['id', 'enrollment_id', 'course_id', 'final_grade', 'status']);
 

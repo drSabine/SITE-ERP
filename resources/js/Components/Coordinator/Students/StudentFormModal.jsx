@@ -3,16 +3,14 @@ import { Modal, InputField, PrimaryButton, SecondaryButton, InputLabel, InputErr
 import { STUDENT_STATUS_OPTIONS, YEAR_LEVELS, getYearLabel } from '@/Components/Coordinator/Shared';
 
 export default function StudentFormModal({ show, editTarget, programs, onClose }) {
-    const isEdit = !!editTarget;
+    const isEdit = Boolean(editTarget);
 
-    const { data, setData, post, put, processing, errors, reset } = useForm({
-        student_number: editTarget?.student_number ?? '',
+    const { data, setData, put, processing, errors, reset } = useForm({
         first_name: editTarget?.first_name ?? '',
         middle_name: editTarget?.middle_name ?? '',
         last_name: editTarget?.last_name ?? '',
         suffix: editTarget?.suffix ?? '',
         sex: editTarget?.sex ?? 'Male',
-        birthdate: editTarget?.birthdate ? String(editTarget.birthdate).substring(0, 10) : '',
         program_id: editTarget?.program_id ?? '',
         year_level: editTarget?.year_level ?? 1,
         address: editTarget?.address ?? '',
@@ -24,12 +22,7 @@ export default function StudentFormModal({ show, editTarget, programs, onClose }
 
     function handleSubmit(event) {
         event.preventDefault();
-
-        if (isEdit) {
-            put(route('coordinator.students.update', editTarget.id), { onSuccess: () => onClose() });
-        } else {
-            post(route('coordinator.students.store'), { onSuccess: () => onClose() });
-        }
+        put(route('coordinator.students.update', editTarget.id), { onSuccess: () => onClose() });
     }
 
     return (
@@ -37,7 +30,7 @@ export default function StudentFormModal({ show, editTarget, programs, onClose }
             <form onSubmit={handleSubmit}>
                 <div className="border-b border-gray-200 px-6 py-4">
                     <h2 className="text-lg font-semibold text-gray-900">
-                        {isEdit ? 'Edit Student' : 'New Student'}
+                        Edit Student
                     </h2>
                 </div>
 
@@ -45,15 +38,6 @@ export default function StudentFormModal({ show, editTarget, programs, onClose }
                     <div>
                         <p className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-400">Personal Information</p>
                         <div className="grid grid-cols-3 gap-4">
-                            <InputField
-                                label="Student Number"
-                                id="student_number"
-                                value={data.student_number}
-                                onChange={event => setData('student_number', event.target.value)}
-                                error={errors.student_number}
-                                disabled={isEdit}
-                                placeholder="e.g. 2025-0001"
-                            />
                             <InputField
                                 label="First Name"
                                 id="first_name"
@@ -95,14 +79,6 @@ export default function StudentFormModal({ show, editTarget, programs, onClose }
                                 </select>
                                 {errors.sex && <InputError message={errors.sex} className="mt-1" />}
                             </div>
-                            <InputField
-                                label="Birthdate"
-                                id="birthdate"
-                                type="date"
-                                value={data.birthdate}
-                                onChange={event => setData('birthdate', event.target.value)}
-                                error={errors.birthdate}
-                            />
                         </div>
                     </div>
 
@@ -138,7 +114,7 @@ export default function StudentFormModal({ show, editTarget, programs, onClose }
                                 </select>
                                 {errors.year_level && <InputError message={errors.year_level} className="mt-1" />}
                             </div>
-                            {isEdit && (
+                            {(
                                 <div>
                                     <InputLabel value="Status" />
                                     <select
@@ -192,7 +168,7 @@ export default function StudentFormModal({ show, editTarget, programs, onClose }
                 <div className="flex items-center justify-end gap-3 border-t border-gray-200 px-6 py-4">
                     <SecondaryButton type="button" onClick={onClose}>Cancel</SecondaryButton>
                     <PrimaryButton type="submit" disabled={processing}>
-                        {isEdit ? 'Save Changes' : 'Create Student'}
+                        Save Changes
                     </PrimaryButton>
                 </div>
             </form>

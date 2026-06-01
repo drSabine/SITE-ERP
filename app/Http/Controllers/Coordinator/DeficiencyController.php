@@ -21,7 +21,7 @@ class DeficiencyController extends Controller
             ->with([
                 'course:id,course_code,title',
                 'enrollment' => fn($q) => $q->select('id', 'student_id', 'academic_term_id')
-                    ->with(['student' => fn($q) => $q->select('id', 'student_number', 'first_name', 'last_name', 'year_level', 'program_id')
+                    ->with(['student' => fn($q) => $q->select('id', 'first_name', 'last_name', 'year_level', 'program_id')
                         ->with(['program:id,code'])]),
             ])
             ->get(['id', 'enrollment_id', 'course_id', 'final_grade', 'status']);

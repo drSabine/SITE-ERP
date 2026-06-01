@@ -12,14 +12,14 @@ class Student extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'student_number', 'first_name', 'middle_name', 'last_name',
-        'suffix', 'sex', 'birthdate', 'address', 'contact_number', 'email',
+        'user_id', 'first_name', 'middle_name', 'last_name',
+        'suffix', 'sex', 'address', 'contact_number', 'email',
         'program_id', 'year_level', 'status', 'remarks',
     ];
 
     protected function casts(): array
     {
-        return ['birthdate' => 'date'];
+        return [];
     }
 
     public function scopeActive($query)
