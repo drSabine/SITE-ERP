@@ -1,11 +1,12 @@
-import { Modal, InputField, PrimaryButton, SecondaryButton } from '@/Components/ui';
+import { Modal, InputField, PrimaryButton, SecondaryButton, InputLabel, InputError } from '@/Components/ui';
 import { useForm } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { YEAR_LEVELS, getYearLabel } from '@/Components/Coordinator/Shared';
 
 const ROLE_SELECT_OPTIONS = [
     { value: 'admin', label: 'Administrator', actualRole: 'admin', defaultSpec: '' },
-    { value: 'coordinator_it', label: 'IT Coordinator', actualRole: 'coordinator', defaultSpec: 'Information Technology' },
-    { value: 'coordinator_eng', label: 'Engineering Coordinator', actualRole: 'coordinator', defaultSpec: 'Engineering' },
+    { value: 'coordinator_it', label: 'IT Coordinator', actualRole: 'coordinator_it', defaultSpec: 'Information Technology' },
+    { value: 'coordinator_eng', label: 'Engineering Coordinator', actualRole: 'coordinator_engineering', defaultSpec: 'Engineering' },
     { value: 'teacher', label: 'Teacher', actualRole: 'teacher', defaultSpec: '' },
     { value: 'student', label: 'Student', actualRole: 'student', defaultSpec: '' },
 ];
@@ -23,13 +24,15 @@ const EMPTY_FORM = {
     suffix: '',
     degree: '',
     specialization: '',
+    // student-specific
+    program_id: '',
+    year_level: 1,
+    sex: 'Male',
 };
 
-function deriveRoleSelection(role, specialization) {
-    if (role === 'coordinator') {
-        return specialization === 'Engineering' ? 'coordinator_eng' : 'coordinator_it';
-    }
-
+function deriveRoleSelection(role) {
+    if (role === 'coordinator_engineering') return 'coordinator_eng';
+    if (role === 'coordinator_it') return 'coordinator_it';
     return role ?? 'teacher';
 }
 
@@ -49,7 +52,7 @@ function buildFormData(editTarget) {
     if (!editTarget) return { ...EMPTY_FORM };
 
     const profile = editTarget.user_profile;
-    const specialization = profile?.specialization ?? '';
+    const student = editTarget.student;
 
     return {
         name: editTarget.name ?? '',
@@ -63,11 +66,15 @@ function buildFormData(editTarget) {
         last_name: profile?.last_name ?? '',
         suffix: profile?.suffix ?? '',
         degree: profile?.degree ?? '',
-        specialization,
+        specialization: profile?.specialization ?? '',
+        // student-specific
+        program_id: student?.program_id ?? '',
+        year_level: student?.year_level ?? 1,
+        sex: student?.sex ?? 'Male',
     };
 }
 
-export default function UserFormModal({ show, editTarget, onClose }) {
+export default function UserFormModal({ show, editTarget, programs = [], onClose }) {
     const isEdit = Boolean(editTarget);
     const { data, setData, post, put, processing, errors, reset } = useForm(EMPTY_FORM);
     const [roleSelection, setRoleSelection] = useState('teacher');
@@ -83,7 +90,7 @@ export default function UserFormModal({ show, editTarget, onClose }) {
         if (!show) return;
 
         const nextFormData = buildFormData(editTarget);
-        const nextRoleSelection = deriveRoleSelection(nextFormData.role, nextFormData.specialization);
+        const nextRoleSelection = deriveRoleSelection(nextFormData.role);
 
         setRoleSelection(nextRoleSelection);
         setShowPasswordFields(false);
@@ -105,7 +112,7 @@ export default function UserFormModal({ show, editTarget, onClose }) {
             setData(current => ({
                 ...current,
                 role: found.actualRole,
-                degree: ['coordinator', 'teacher'].includes(found.actualRole) ? current.degree : '',
+                degree: ['coordinator_it', 'coordinator_engineering', 'teacher'].includes(found.actualRole) ? current.degree : '',
                 specialization: found.defaultSpec,
             }));
         }
@@ -122,7 +129,8 @@ export default function UserFormModal({ show, editTarget, onClose }) {
         post(route('admin.users.store'), { onSuccess: onClose });
     }
 
-    const showsAcademicFields = data.role === 'teacher' || data.role === 'coordinator';
+    const showsAcademicFields = ['teacher', 'coordinator_it', 'coordinator_engineering'].includes(data.role);
+    const showsStudentFields  = data.role === 'student';
 
     return (
         <Modal show={show} maxWidth="lg" onClose={onClose} afterLeave={resetModalState}>
@@ -147,6 +155,53 @@ export default function UserFormModal({ show, editTarget, onClose }) {
                             <InputField label="Specialization" id="u-spec" value={data.specialization} onChange={event => setData('specialization', event.target.value)} error={errors.specialization} placeholder="e.g. Networks, Data Science" />
                         </div>
                     )}
+
+                    {showsStudentFields && (
+                        <div className="mt-4 border-t border-gray-100 pt-4">
+                            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">Student Record</p>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <InputLabel value="Program" />
+                                    <select
+                                        value={data.program_id}
+                                        onChange={event => setData('program_id', event.target.value)}
+                                        className="mt-1 block w-full rounded border-gray-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                    >
+                                        <option value="">Select program...</option>
+                                        {programs.map(program => (
+                                            <option key={program.id} value={program.id}>{program.code} &gt; {program.name}</option>
+                                        ))}
+                                    </select>
+                                    {errors.program_id && <InputError message={errors.program_id} className="mt-1" />}
+                                </div>
+                                <div>
+                                    <InputLabel value="Year Level" />
+                                    <select
+                                        value={data.year_level}
+                                        onChange={event => setData('year_level', Number(event.target.value))}
+                                        className="mt-1 block w-full rounded border-gray-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                    >
+                                        {YEAR_LEVELS.map(level => (
+                                            <option key={level} value={level}>{getYearLabel(level)}</option>
+                                        ))}
+                                    </select>
+                                    {errors.year_level && <InputError message={errors.year_level} className="mt-1" />}
+                                </div>
+                                <div>
+                                    <InputLabel value="Sex" />
+                                    <select
+                                        value={data.sex}
+                                        onChange={event => setData('sex', event.target.value)}
+                                        className="mt-1 block w-full rounded border-gray-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                    >
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                    {errors.sex && <InputError message={errors.sex} className="mt-1" />}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="mt-5 border-t border-gray-100 pt-4">
@@ -155,23 +210,11 @@ export default function UserFormModal({ show, editTarget, onClose }) {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Display Name</label>
-                            <input
-                                type="text"
-                                value={data.name}
-                                readOnly
-                                className="mt-1 block w-full border-gray-200 bg-gray-50 text-sm text-gray-500 shadow-sm"
-                                placeholder="Auto-generated from name"
-                            />
+                            <p className="mt-1 text-sm text-gray-600">{data.name || <span className="text-gray-400 italic">Auto-generated from name</span>}</p>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Email</label>
-                            <input
-                                type="text"
-                                value={data.email}
-                                readOnly
-                                className="mt-1 block w-full border-gray-200 bg-gray-50 text-sm text-gray-500 shadow-sm"
-                                placeholder="Auto-generated from name"
-                            />
+                            <p className="mt-1 text-sm text-gray-600">{data.email || <span className="text-gray-400 italic">Auto-generated from name</span>}</p>
                         </div>
                     </div>
 

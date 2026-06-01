@@ -16,6 +16,11 @@ class User extends Authenticatable
 
     protected $fillable = ['name', 'email', 'password', 'role', 'is_active'];
 
+    const COORDINATOR_PROGRAMS = [
+        'coordinator_it'          => ['BSIT', 'BSCpE', 'BLIS'],
+        'coordinator_engineering' => ['BSCE', 'BSENSE'],
+    ];
+
     protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
@@ -25,6 +30,11 @@ class User extends Authenticatable
             'password'          => 'hashed',
             'is_active'         => 'boolean',
         ];
+    }
+
+    public function coordinatorProgramCodes(): ?array
+    {
+        return self::COORDINATOR_PROGRAMS[$this->role] ?? null;
     }
 
     // Scopes
@@ -40,13 +50,18 @@ class User extends Authenticatable
 
     public function scopeCoordinators($query)
     {
-        return $query->where('role', 'coordinator');
+        return $query->whereIn('role', ['coordinator_it', 'coordinator_engineering']);
     }
 
     // Relationships
     public function userProfile(): HasOne
     {
         return $this->hasOne(UserProfile::class);
+    }
+
+    public function student(): HasOne
+    {
+        return $this->hasOne(Student::class);
     }
 
     public function teacherAssignments(): HasMany

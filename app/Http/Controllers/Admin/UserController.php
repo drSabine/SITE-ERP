@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Program;
+use App\Models\Student;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Services\UserService;
@@ -68,6 +70,8 @@ class UserController extends Controller
             'userProfile' => fn($query) => $query
                 ->withTrashed()
                 ->select('id', 'user_id', 'first_name', 'middle_name', 'last_name', 'suffix', 'degree', 'specialization'),
+            'student' => fn($query) => $query
+                ->select('id', 'user_id', 'program_id', 'year_level', 'sex'),
         ])->select('id', 'name', 'email', 'role', 'is_active');
 
         if ($status === 'inactive') {
@@ -96,8 +100,9 @@ class UserController extends Controller
         $users = $usersQuery->paginate(10)->withQueryString();
 
         return Inertia::render('Admin/Users/Index', [
-            'users' => $users,
-            'filters' => ['search' => $search, 'role' => $role, 'status' => $status],
+            'users'    => $users,
+            'filters'  => ['search' => $search, 'role' => $role, 'status' => $status],
+            'programs' => Program::active()->orderBy('code')->get(['id', 'code', 'name']),
         ]);
     }
 
@@ -105,29 +110,50 @@ class UserController extends Controller
     {
         $this->mergeGeneratedIdentity($request);
 
+        $isStudent = $request->input('role') === 'student';
+
         $data = $request->validate([
-            'name' => 'required|string|max:191',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:admin,coordinator,teacher,student',
-            'first_name' => 'required|string|max:100',
-            'middle_name' => 'nullable|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'suffix' => 'nullable|string|max:20',
+            'name'           => 'required|string|max:191',
+            'email'          => 'required|email|unique:users,email',
+            'password'       => 'required|string|min:8|confirmed',
+            'role'           => 'required|in:admin,coordinator_it,coordinator_engineering,teacher,student',
+            'first_name'     => 'required|string|max:100',
+            'middle_name'    => 'nullable|string|max:100',
+            'last_name'      => 'required|string|max:100',
+            'suffix'         => 'nullable|string|max:20',
             'specialization' => 'nullable|string|max:191',
-            'degree' => 'nullable|string|max:191',
+            'degree'         => 'nullable|string|max:191',
+            // Student-specific fields — required only when role = student
+            'program_id'     => $isStudent ? 'required|exists:programs,id' : 'nullable',
+            'year_level'     => $isStudent ? 'required|integer|min:1|max:4' : 'nullable',
+            'sex'            => $isStudent ? 'required|in:Male,Female' : 'nullable',
         ]);
 
-        DB::transaction(function () use ($data) {
+        DB::transaction(function () use ($data, $isStudent) {
             $user = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => Hash::make($data['password']),
-                'role' => $data['role'],
+                'name'      => $data['name'],
+                'email'     => $data['email'],
+                'password'  => Hash::make($data['password']),
+                'role'      => $data['role'],
                 'is_active' => true,
             ]);
 
             $this->upsertUserProfile($user, $data);
+
+            if ($isStudent) {
+                Student::create([
+                    'user_id'    => $user->id,
+                    'first_name' => $data['first_name'],
+                    'middle_name' => $data['middle_name'] ?? null,
+                    'last_name'  => $data['last_name'],
+                    'suffix'     => $data['suffix'] ?? null,
+                    'sex'        => $data['sex'],
+                    'email'      => $data['email'],
+                    'program_id' => $data['program_id'],
+                    'year_level' => $data['year_level'],
+                    'status'     => 'active',
+                ]);
+            }
         });
 
         return back();
@@ -137,25 +163,31 @@ class UserController extends Controller
     {
         $this->mergeGeneratedIdentity($request, $user);
 
+        $isStudent = $request->input('role') === 'student';
+
         $data = $request->validate([
-            'name' => 'required|string|max:191',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'role' => 'required|in:admin,coordinator,teacher,student',
-            'is_active' => 'boolean',
-            'first_name' => 'required|string|max:100',
-            'middle_name' => 'nullable|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'suffix' => 'nullable|string|max:20',
+            'name'           => 'required|string|max:191',
+            'email'          => 'required|email|unique:users,email,' . $user->id,
+            'role'           => 'required|in:admin,coordinator_it,coordinator_engineering,teacher,student',
+            'is_active'      => 'boolean',
+            'first_name'     => 'required|string|max:100',
+            'middle_name'    => 'nullable|string|max:100',
+            'last_name'      => 'required|string|max:100',
+            'suffix'         => 'nullable|string|max:20',
             'specialization' => 'nullable|string|max:191',
-            'degree' => 'nullable|string|max:191',
-            'password' => 'nullable|string|min:8|confirmed',
+            'degree'         => 'nullable|string|max:191',
+            'password'       => 'nullable|string|min:8|confirmed',
+            // Student-specific fields — required only when role = student
+            'program_id'     => $isStudent ? 'required|exists:programs,id' : 'nullable',
+            'year_level'     => $isStudent ? 'required|integer|min:1|max:4' : 'nullable',
+            'sex'            => $isStudent ? 'required|in:Male,Female' : 'nullable',
         ]);
 
-        DB::transaction(function () use ($user, $data) {
+        DB::transaction(function () use ($user, $data, $isStudent) {
             $userUpdate = [
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'role' => $data['role'],
+                'name'      => $data['name'],
+                'email'     => $data['email'],
+                'role'      => $data['role'],
                 'is_active' => $data['is_active'] ?? true,
             ];
 
@@ -165,6 +197,28 @@ class UserController extends Controller
 
             $user->update($userUpdate);
             $this->upsertUserProfile($user, $data);
+
+            if ($isStudent) {
+                $student = Student::withTrashed()->firstOrNew(['user_id' => $user->id]);
+
+                if ($student->exists && $student->trashed()) {
+                    $student->restore();
+                }
+
+                $student->fill([
+                    'first_name'  => $data['first_name'],
+                    'middle_name' => $data['middle_name'] ?? null,
+                    'last_name'   => $data['last_name'],
+                    'suffix'      => $data['suffix'] ?? null,
+                    'sex'         => $data['sex'],
+                    'email'       => $data['email'],
+                    'program_id'  => $data['program_id'],
+                    'year_level'  => $data['year_level'],
+                    'status'      => 'active',
+                ]);
+                $student->user_id = $user->id;
+                $student->save();
+            }
         });
 
         return back();

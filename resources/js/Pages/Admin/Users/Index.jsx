@@ -4,7 +4,7 @@ import { PrimaryButton, StatusBadge, ConfirmModal, DataTable, SearchBar, PagePan
 import { UserFormModal } from '@/Components/Admin/Users';
 import { useUsers, ROLE_LABEL, TABLE_FILTERS } from './useUsers';
 
-export default function Index({ users, filters = {} }) {
+export default function Index({ users, filters = {}, programs = [] }) {
     const {
         currentUserId,
         showForm, setShowForm, editTarget,
@@ -74,6 +74,7 @@ export default function Index({ users, filters = {} }) {
                 key={editTarget?.id ?? 'create'}
                 show={showForm}
                 editTarget={editTarget}
+                programs={programs}
                 onClose={() => setShowForm(false)}
             />
 
