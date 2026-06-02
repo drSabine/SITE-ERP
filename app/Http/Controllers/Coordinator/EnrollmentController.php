@@ -38,6 +38,7 @@ class EnrollmentController extends Controller
             'student' => fn ($q) => $q->select('id', 'first_name', 'middle_name', 'last_name', 'suffix', 'program_id', 'status')
                 ->with(['program:id,code']),
             'enrollmentCourses' => fn ($q) => $q->whereIn('status', ['active', 'inc'])->select('id', 'enrollment_id', 'status'),
+            'section:id,name',
         ])
         ->where('academic_term_id', $termId ?? 0)
         ->orderBy('year_level', 'asc')
@@ -105,7 +106,7 @@ class EnrollmentController extends Controller
         $data = $request->validate([
             'student_id'       => 'required|exists:students,id',
             'academic_term_id' => 'required|exists:academic_terms,id',
-            'year_level'       => 'required|integer|min:1|max:4',
+            'year_level'       => 'required|integer|min:1|max:5',
             'load_curriculum'  => 'sometimes|boolean',
         ]);
 
@@ -137,7 +138,7 @@ class EnrollmentController extends Controller
             'student_id'      => 'required|exists:students,id',
             'term_ids'        => 'required|array|min:1',
             'term_ids.*'      => ['integer', Rule::exists('academic_terms', 'id')->where('school_year_id', $activeSchoolYearId)],
-            'year_level'      => 'required|integer|min:1|max:4',
+            'year_level'      => 'required|integer|min:1|max:5',
             'load_curriculum' => 'sometimes|boolean',
         ]);
 

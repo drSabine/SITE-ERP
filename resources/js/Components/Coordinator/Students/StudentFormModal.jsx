@@ -6,16 +6,8 @@ export default function StudentFormModal({ show, editTarget, programs, onClose }
     const isEdit = Boolean(editTarget);
 
     const { data, setData, put, processing, errors, reset } = useForm({
-        first_name: editTarget?.first_name ?? '',
-        middle_name: editTarget?.middle_name ?? '',
-        last_name: editTarget?.last_name ?? '',
-        suffix: editTarget?.suffix ?? '',
-        sex: editTarget?.sex ?? 'Male',
         program_id: editTarget?.program_id ?? '',
         year_level: editTarget?.year_level ?? 1,
-        address: editTarget?.address ?? '',
-        contact_number: editTarget?.contact_number ?? '',
-        email: editTarget?.email ?? '',
         status: editTarget?.status ?? 'active',
         remarks: editTarget?.remarks ?? '',
     });
@@ -35,53 +27,6 @@ export default function StudentFormModal({ show, editTarget, programs, onClose }
                 </div>
 
                 <div className="max-h-[70vh] space-y-6 overflow-y-auto px-6 py-5">
-                    <div>
-                        <p className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-400">Personal Information</p>
-                        <div className="grid grid-cols-3 gap-4">
-                            <InputField
-                                label="First Name"
-                                id="first_name"
-                                value={data.first_name}
-                                onChange={event => setData('first_name', event.target.value)}
-                                error={errors.first_name}
-                            />
-                            <InputField
-                                label="Middle Name"
-                                id="middle_name"
-                                value={data.middle_name}
-                                onChange={event => setData('middle_name', event.target.value)}
-                                error={errors.middle_name}
-                            />
-                            <InputField
-                                label="Last Name"
-                                id="last_name"
-                                value={data.last_name}
-                                onChange={event => setData('last_name', event.target.value)}
-                                error={errors.last_name}
-                            />
-                            <InputField
-                                label="Suffix"
-                                id="suffix"
-                                value={data.suffix}
-                                onChange={event => setData('suffix', event.target.value)}
-                                error={errors.suffix}
-                                placeholder="Jr., III..."
-                            />
-                            <div>
-                                <InputLabel value="Sex" />
-                                <select
-                                    value={data.sex}
-                                    onChange={event => setData('sex', event.target.value)}
-                                    className="mt-1 block w-full rounded border-gray-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-                                >
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                </select>
-                                {errors.sex && <InputError message={errors.sex} className="mt-1" />}
-                            </div>
-                        </div>
-                    </div>
-
                     <div>
                         <p className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-400">Academic Information</p>
                         <div className="grid grid-cols-2 gap-4">
@@ -129,30 +74,6 @@ export default function StudentFormModal({ show, editTarget, programs, onClose }
                                     {errors.status && <InputError message={errors.status} className="mt-1" />}
                                 </div>
                             )}
-                            <InputField
-                                label="Contact Number"
-                                id="contact_number"
-                                value={data.contact_number}
-                                onChange={event => setData('contact_number', event.target.value)}
-                                error={errors.contact_number}
-                            />
-                            <InputField
-                                label="Email Address"
-                                id="email"
-                                type="email"
-                                value={data.email}
-                                onChange={event => setData('email', event.target.value)}
-                                error={errors.email}
-                                className="col-span-2"
-                            />
-                            <InputField
-                                label="Address"
-                                id="address"
-                                value={data.address}
-                                onChange={event => setData('address', event.target.value)}
-                                error={errors.address}
-                                className="col-span-2"
-                            />
                             <InputField
                                 label="Remarks"
                                 id="remarks"

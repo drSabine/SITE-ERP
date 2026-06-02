@@ -52,6 +52,17 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     Route::post('courses', [Admin\CourseController::class, 'store'])->name('courses.store');
     Route::put('courses/{course}', [Admin\CourseController::class, 'update'])->name('courses.update');
     Route::delete('courses/{course}', [Admin\CourseController::class, 'destroy'])->name('courses.destroy');
+
+    // Teacher Assignments
+    Route::get('assignments', [Admin\AssignmentController::class, 'index'])->name('assignments.index');
+    Route::post('assignments', [Admin\AssignmentController::class, 'store'])->name('assignments.store');
+    Route::delete('assignments/{teacherAssignment}', [Admin\AssignmentController::class, 'destroy'])->name('assignments.destroy');
+    Route::post('assignments/{teacherAssignment}/finalize', [Admin\AssignmentController::class, 'finalize'])->name('assignments.finalize');
+    Route::post('assignments/{teacherAssignment}/reopen', [Admin\AssignmentController::class, 'reopen'])->name('assignments.reopen');
+
+    // Grading Monitor
+    Route::get('grading-monitor', [Admin\GradingMonitorController::class, 'index'])->name('grading-monitor.index');
+    Route::get('grading-monitor/{teacherAssignment}/students', [Admin\GradingMonitorController::class, 'students'])->name('grading-monitor.students');
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -79,13 +90,16 @@ Route::prefix('coordinator')->middleware(['auth', 'role:admin,coordinator_it,coo
     Route::post('enrollment-courses/{enrollmentCourse}/override-grade', [Coordinator\EnrollmentCourseController::class, 'overrideGrade'])->name('enrollment-courses.override-grade');
     Route::post('enrollment-courses/{enrollmentCourse}/restore', [Coordinator\EnrollmentCourseController::class, 'restore'])->name('enrollment-courses.restore');
 
-    // Teacher Assignments
-    Route::get('assignments', [Coordinator\TeacherAssignmentController::class, 'index'])->name('assignments.index');
-    Route::post('assignments', [Coordinator\TeacherAssignmentController::class, 'store'])->name('assignments.store');
-    Route::delete('assignments/{teacherAssignment}', [Coordinator\TeacherAssignmentController::class, 'destroy'])->name('assignments.destroy');
+    // Sections
+    Route::get('sections', [Coordinator\SectionController::class, 'index'])->name('sections.index');
+    Route::get('sections/students-preview', [Coordinator\SectionController::class, 'studentsPreview'])->name('sections.students-preview');
+    Route::post('sections', [Coordinator\SectionController::class, 'store'])->name('sections.store');
+    Route::post('sections/bulk-assign-students', [Coordinator\SectionController::class, 'bulkAssignStudents'])->name('sections.bulk-assign-students');
 
     // INC / Deficiency list
     Route::get('deficiencies/{academicTerm}', [Coordinator\DeficiencyController::class, 'index'])->name('deficiencies.index');
+    Route::get('grading-monitor', [Coordinator\GradingMonitorController::class, 'index'])->name('grading-monitor.index');
+    Route::get('grading-monitor/{teacherAssignment}/students', [Coordinator\GradingMonitorController::class, 'students'])->name('grading-monitor.students');
 });
 
 // ─────────────────────────────────────────────────────────────

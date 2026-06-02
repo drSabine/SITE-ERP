@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Enrollment extends Model
 {
     protected $fillable = [
-        'student_id', 'academic_term_id', 'program_id', 'year_level', 'status', 'enrolled_at', 'completed_at', 'dropped_at',
+        'student_id', 'academic_term_id', 'program_id', 'section_id', 'year_level', 'status', 'enrolled_at', 'completed_at', 'dropped_at',
     ];
 
     protected function casts(): array
@@ -39,6 +39,11 @@ class Enrollment extends Model
     public function academicTerm(): BelongsTo
     {
         return $this->belongsTo(AcademicTerm::class);
+    }
+
+    public function section(): BelongsTo
+    {
+        return $this->belongsTo(Section::class);
     }
 
     public function enrollmentCourses(): HasMany

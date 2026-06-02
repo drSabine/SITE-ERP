@@ -9,9 +9,10 @@ export const YEAR_LABELS = {
     2: '2nd Year',
     3: '3rd Year',
     4: '4th Year',
+    5: '5th Year',
 };
 
-export const YEAR_LEVELS = [1, 2, 3, 4];
+export const YEAR_LEVELS = [1, 2, 3, 4, 5];
 
 export const YEAR_TABS = [
     { label: 'All Years', value: '' },
@@ -19,6 +20,7 @@ export const YEAR_TABS = [
     { label: YEAR_LABELS[2], value: '2' },
     { label: YEAR_LABELS[3], value: '3' },
     { label: YEAR_LABELS[4], value: '4' },
+    { label: YEAR_LABELS[5], value: '5' },
 ];
 
 export const STUDENT_STATUS_OPTIONS = [

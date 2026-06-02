@@ -34,6 +34,8 @@ function buildNavSections(role, hasTeachingLoad) {
                 { label: 'School Years', href: route('admin.school-years.index'), match: '/admin/school-years', Icon: SchoolYearsIcon },
                 { label: 'Users', href: route('admin.users.index'), match: '/admin/users', Icon: UsersIcon },
                 { label: 'Programs', href: route('admin.programs.index'), match: '/admin/programs', Icon: ProgramsIcon },
+                { label: 'Teacher Assignment', href: route('admin.assignments.index'), match: '/admin/assignments', Icon: AssignmentsIcon },
+                { label: 'Grading Monitor', href: route('admin.grading-monitor.index'), match: '/admin/grading-monitor', Icon: GradesIcon },
             ],
         });
     }
@@ -44,7 +46,8 @@ function buildNavSections(role, hasTeachingLoad) {
             items: [
                 { label: 'Students', href: route('coordinator.students.index'), match: '/coordinator/students', Icon: StudentsIcon },
                 { label: 'Evaluations', href: route('coordinator.enrollments.index'), match: '/coordinator/enrollments', Icon: EnrollmentsIcon },
-                { label: 'Assignments', href: route('coordinator.assignments.index'), match: '/coordinator/assignments', Icon: AssignmentsIcon },
+                { label: 'Section Assignment', href: route('coordinator.sections.index'), match: '/coordinator/sections', Icon: AssignmentsIcon },
+                { label: 'Grading Monitor', href: route('coordinator.grading-monitor.index'), match: '/coordinator/grading-monitor', Icon: GradesIcon },
             ],
         });
     }

@@ -28,4 +28,9 @@ class Program extends Model
     {
         return $this->hasMany(Student::class);
     }
+
+    public function sections(): HasMany
+    {
+        return $this->hasMany(Section::class);
+    }
 }

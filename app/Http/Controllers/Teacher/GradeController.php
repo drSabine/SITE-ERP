@@ -27,8 +27,13 @@ class GradeController extends Controller
         $assignments = $activeTerm
             ? TeacherAssignment::where('teacher_id', $teacher->id)
                 ->where('academic_term_id', $activeTerm->id)
-                ->with(['course:id,course_code,title,units'])
-                ->get(['id', 'teacher_id', 'course_id', 'academic_term_id'])
+                ->with([
+                    'course:id,course_code,title,units',
+                    'section:id,name,program_id,year_level',
+                    'section.program:id,code',
+                    'finalizer:id,name',
+                ])
+                ->get(['id', 'teacher_id', 'course_id', 'academic_term_id', 'section_id', 'finalized_at', 'finalized_by'])
             : collect();
 
         return Inertia::render('Teacher/Grades/Index', [
@@ -49,21 +54,28 @@ class GradeController extends Controller
             'You are not assigned to this course.'
         );
 
+        abort_if(
+            ! $teacherAssignment->section_id,
+            422,
+            'This assignment has no section.'
+        );
+
         $enrollmentCourses = EnrollmentCourse::whereHas(
             'enrollment',
             fn($q) => $q->where('academic_term_id', $teacherAssignment->academic_term_id)
                 ->where('status', 'enrolled')
+                ->where('section_id', $teacherAssignment->section_id)
         )
         ->where('course_id', $teacherAssignment->course_id)
         ->whereIn('status', ['active', 'inc'])
         ->with([
-            'enrollment' => fn($q) => $q->select('id', 'student_id')
+            'enrollment' => fn($q) => $q->select('id', 'student_id', 'section_id')
                 ->with(['student' => fn($q) => $q->select('id', 'first_name', 'last_name')]),
         ])
         ->get(['id', 'enrollment_id', 'course_id', 'final_grade', 'status']);
 
         return Inertia::render('Teacher/Grades/Show', [
-            'assignment'        => $teacherAssignment->load(['course:id,course_code,title', 'academicTerm:id,semester']),
+            'assignment'        => $teacherAssignment->load(['course:id,course_code,title', 'academicTerm:id,semester', 'section:id,name,program_id,year_level', 'section.program:id,code', 'finalizer:id,name']),
             'enrollmentCourses' => $enrollmentCourses,
             'validGrades'       => GradeService::VALID_GRADES,
         ]);
@@ -86,9 +98,19 @@ class GradeController extends Controller
         $assigned = TeacherAssignment::where('teacher_id', auth()->id())
             ->where('course_id', $ec->course_id)
             ->where('academic_term_id', $ec->enrollment->academic_term_id)
+            ->where('section_id', $ec->enrollment->section_id)
             ->exists();
 
         abort_if(! $assigned, 403, 'You are not assigned to this course.');
+
+        $finalized = TeacherAssignment::where('teacher_id', auth()->id())
+            ->where('course_id', $ec->course_id)
+            ->where('academic_term_id', $ec->enrollment->academic_term_id)
+            ->where('section_id', $ec->enrollment->section_id)
+            ->whereNotNull('finalized_at')
+            ->exists();
+
+        abort_if($finalized, 422, 'This assignment is already finalized and cannot be edited.');
 
         $this->gradeService->inputGrade(
             $ec,

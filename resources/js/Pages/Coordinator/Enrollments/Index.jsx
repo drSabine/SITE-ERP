@@ -39,6 +39,12 @@ export default function Index({ enrollments, schoolYears, programs, selectedTerm
             render: row => getYearLabel(row.year_level),
         },
         {
+            key: 'section',
+            label: 'Section',
+            className: 'text-gray-600',
+            render: row => row.section?.name ?? '-',
+        },
+        {
             key: 'courses',
             label: 'Courses',
             className: 'text-center text-gray-600',
@@ -60,7 +66,7 @@ export default function Index({ enrollments, schoolYears, programs, selectedTerm
         {
             key: 'status',
             label: 'Status',
-            render: row => <StatusBadge status={row.status} />,
+            render: row => <StatusBadge status={row.status} label={row.status === 'enrolled' ? 'Evaluated' : undefined} />,
         },
     ];
 
