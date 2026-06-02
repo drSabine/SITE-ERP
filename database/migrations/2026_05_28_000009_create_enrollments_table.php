@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('student_id')->constrained('students')->onDelete('restrict');
             $table->foreignId('academic_term_id')->constrained('academic_terms')->onDelete('restrict');
             $table->foreignId('program_id')->nullable()->constrained('programs')->nullOnDelete(); // snapshot of student's program at enrollment time
+            $table->foreignId('section_id')->nullable()->constrained('sections')->nullOnDelete();
             $table->unsignedTinyInteger('year_level'); // snapshot of student's year level at enrollment time
             $table->enum('status', ['enrolled', 'completed', 'dropped'])->default('enrolled');
             $table->timestamp('enrolled_at')->nullable();

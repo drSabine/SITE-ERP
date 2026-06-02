@@ -97,6 +97,7 @@ export default function StudentDrawer({
                                                     ).length;
                                                     const termLabel = getSemesterLabel(activeEnrollment.academic_term?.semester);
                                                     const syName = activeEnrollment.academic_term?.school_year?.name ?? '';
+                                                    const sectionName = activeEnrollment.section?.name;
 
                                                     return (
                                                         <div className="border-b border-emerald-200 bg-emerald-50 px-5 py-2.5">
@@ -108,6 +109,11 @@ export default function StudentDrawer({
                                                                     ({courseCount} course{courseCount !== 1 ? 's' : ''})
                                                                 </span>
                                                             </div>
+                                                            {sectionName && (
+                                                                <p className="mt-1 text-xs font-semibold text-emerald-900">
+                                                                    Section: {sectionName}
+                                                                </p>
+                                                            )}
                                                         </div>
                                                     );
                                                 }

@@ -22,6 +22,8 @@ export function buildAdminSections() {
                 { title: 'Users', description: 'Manage user accounts', href: route('admin.users.index') },
                 { title: 'Programs', description: 'Manage degree programs', href: route('admin.programs.index') },
                 { title: 'Courses', description: 'Manage the course catalog', href: route('admin.courses.index') },
+                { title: 'Teacher Assignment', description: 'Assign teachers to section subjects', href: route('admin.assignments.index') },
+                { title: 'Grading Monitor', description: 'Track teacher grading progress', href: route('admin.grading-monitor.index') },
             ],
         },
     ];
@@ -34,7 +36,8 @@ export function buildCoordinatorSections() {
             cols: 'grid-cols-2 sm:grid-cols-3',
             cards: [
                 { title: 'Students', description: 'View and manage student records', href: route('coordinator.students.index') },
-                { title: 'Teacher Assignments', description: 'Assign faculty to courses', href: route('coordinator.assignments.index') },
+                { title: 'Section Assignment', description: 'Create sections and assign students', href: route('coordinator.sections.index') },
+                { title: 'Grading Monitor', description: 'Track teacher grading progress', href: route('coordinator.grading-monitor.index') },
             ],
         },
     ];

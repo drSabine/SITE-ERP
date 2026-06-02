@@ -92,6 +92,7 @@ class StudentController extends Controller
                 'enrollmentCourses' => fn ($q) => $q->with(['course:id,course_code,title,units'])
                     ->select('id', 'enrollment_id', 'course_id', 'final_grade', 'status'),
                 'program:id,code',
+                'section:id,name',
             ])->orderByDesc('id'),
         ]);
 
@@ -111,16 +112,8 @@ class StudentController extends Controller
     public function update(Request $request, Student $student): RedirectResponse
     {
         $data = $request->validate([
-            'first_name'     => 'required|string|max:100',
-            'middle_name'    => 'nullable|string|max:100',
-            'last_name'      => 'required|string|max:100',
-            'suffix'         => 'nullable|string|max:20',
-            'sex'            => 'required|in:Male,Female',
-            'address'        => 'nullable|string',
-            'contact_number' => 'nullable|string|max:30',
-            'email'          => 'nullable|email|max:191',
             'program_id'     => 'required|exists:programs,id',
-            'year_level'     => 'required|integer|min:1|max:4',
+            'year_level'     => 'required|integer|min:1|max:5',
             'status'         => 'required|in:active,graduated,transferred,dropped,leave_of_absence',
             'remarks'        => 'nullable|string',
         ]);
