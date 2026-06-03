@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\Coordinator;
+use App\Http\Controllers\Documents;
 use App\Http\Controllers\Teacher;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -110,6 +111,29 @@ Route::prefix('teacher')->middleware(['auth', 'role:admin,coordinator,teacher'])
     Route::get('grades/{teacherAssignment}', [Teacher\GradeController::class, 'show'])->name('grades.show');
     Route::post('grades', [Teacher\GradeController::class, 'store'])->name('grades.store');
 });
+
+// ─────────────────────────────────────────────────────────────
+// Document Submission & Verification
+// Submission/tracking shared by staff roles; verification is admin-only.
+// ─────────────────────────────────────────────────────────────
+Route::prefix('documents')
+    ->middleware(['auth', 'role:admin,coordinator_it,coordinator_engineering,teacher'])
+    ->name('documents.')
+    ->group(function () {
+        Route::get('/', [Documents\DocumentController::class, 'index'])->name('index');
+        Route::post('/', [Documents\DocumentController::class, 'store'])->name('store');
+        Route::get('status', [Documents\DocumentController::class, 'status'])->name('status');
+        Route::get('{document}/history', [Documents\DocumentController::class, 'history'])->name('history');
+        Route::get('{document}/files/{file}/download', [Documents\DocumentController::class, 'download'])->name('download');
+        Route::post('{document}/versions', [Documents\DocumentController::class, 'addVersion'])->name('versions.store');
+        Route::delete('{document}', [Documents\DocumentController::class, 'destroy'])->name('destroy');
+
+        // Verification — admin only
+        Route::middleware('role:admin')->group(function () {
+            Route::get('verify', [Documents\VerificationController::class, 'index'])->name('verify');
+            Route::post('{document}/verify', [Documents\VerificationController::class, 'verify'])->name('verify.store');
+        });
+    });
 
 // Profile (Breeze default — keep as-is)
 Route::middleware('auth')->group(function () {

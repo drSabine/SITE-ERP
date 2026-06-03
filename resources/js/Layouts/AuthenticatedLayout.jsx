@@ -10,6 +10,8 @@ import {
     EnrollmentsIcon,
     AssignmentsIcon,
     GradesIcon,
+    DocumentsIcon,
+    VerifyIcon,
 } from '@/Components/ui/Icons';
 
 const ROLE_LABEL = {
@@ -19,7 +21,7 @@ const ROLE_LABEL = {
     student: 'Student',
 };
 
-function buildNavSections(role, hasTeachingLoad) {
+function buildNavSections(role, hasTeachingLoad, documentsPendingCount) {
     const sections = [
         {
             title: null,
@@ -61,11 +63,29 @@ function buildNavSections(role, hasTeachingLoad) {
         });
     }
 
+    // Document Submission & Verification — available to all staff roles.
+    const documentItems = [
+        { label: 'Documents', href: route('documents.index'), match: '/documents', exact: true, Icon: DocumentsIcon },
+        { label: 'Submission Status', href: route('documents.status'), match: '/documents/status', Icon: GradesIcon },
+    ];
+
+    if (role === 'admin') {
+        documentItems.push({
+            label: 'Verification',
+            href: route('documents.verify'),
+            match: '/documents/verify',
+            Icon: VerifyIcon,
+            badge: documentsPendingCount,
+        });
+    }
+
+    sections.push({ title: 'Documents', items: documentItems });
+
     return sections;
 }
 
 export default function AuthenticatedLayout({ header, children }) {
-    const { auth, hasTeachingLoad = false } = usePage().props;
+    const { auth, hasTeachingLoad = false, documentsPendingCount = 0 } = usePage().props;
     const user = auth.user;
     const role = user.role;
 
@@ -103,7 +123,7 @@ export default function AuthenticatedLayout({ header, children }) {
         return () => clearInterval(interval);
     }, []);
 
-    const navSections = buildNavSections(role, hasTeachingLoad);
+    const navSections = buildNavSections(role, hasTeachingLoad, documentsPendingCount);
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
 
     return (
@@ -136,7 +156,9 @@ export default function AuthenticatedLayout({ header, children }) {
                                 </p>
                             )}
                             {section.items.map(item => {
-                                const isActive = currentPath.startsWith(item.match);
+                                const isActive = item.exact
+                                    ? currentPath === item.match
+                                    : currentPath.startsWith(item.match);
 
                                 return (
                                     <Link
@@ -150,6 +172,11 @@ export default function AuthenticatedLayout({ header, children }) {
                                     >
                                         {item.Icon && <item.Icon className="h-[18px] w-[18px] shrink-0 opacity-80" />}
                                         <span>{item.label}</span>
+                                        {item.badge > 0 && (
+                                            <span className="ml-auto inline-flex min-w-[18px] items-center justify-center bg-yellow-400 px-1.5 text-[10px] font-bold text-emerald-950">
+                                                {item.badge}
+                                            </span>
+                                        )}
                                     </Link>
                                 );
                             })}

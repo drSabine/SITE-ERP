@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\AcademicTerm;
+use App\Models\Document;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -42,11 +43,16 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
+        $documentsPendingCount = ($user && $user->role === 'admin')
+            ? Document::pending()->count()
+            : 0;
+
         return [
             ...parent::share($request),
-            'auth'            => ['user' => $user],
-            'hasTeachingLoad' => $hasTeachingLoad,
-            'appEnv'          => config('app.env'),
+            'auth'                  => ['user' => $user],
+            'hasTeachingLoad'       => $hasTeachingLoad,
+            'documentsPendingCount' => $documentsPendingCount,
+            'appEnv'                => config('app.env'),
         ];
     }
 }
