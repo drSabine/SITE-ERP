@@ -42,6 +42,9 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     Route::patch('users/{user}/reactivate', [Admin\UserController::class, 'reactivate'])->name('users.reactivate');
     Route::delete('users/{user}', [Admin\UserController::class, 'destroy'])->name('users.destroy');
 
+    // Activity Logs
+    Route::get('activity-logs', [Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
+
     // Programs
     Route::get('programs', [Admin\ProgramController::class, 'index'])->name('programs.index');
     Route::post('programs', [Admin\ProgramController::class, 'store'])->name('programs.store');
@@ -106,7 +109,7 @@ Route::prefix('coordinator')->middleware(['auth', 'role:admin,coordinator_it,coo
 // ─────────────────────────────────────────────────────────────
 // Teacher routes
 // ─────────────────────────────────────────────────────────────
-Route::prefix('teacher')->middleware(['auth', 'role:admin,coordinator,teacher'])->name('teacher.')->group(function () {
+Route::prefix('teacher')->middleware(['auth', 'role:admin,coordinator_it,coordinator_engineering,teacher'])->name('teacher.')->group(function () {
     Route::get('grades', [Teacher\GradeController::class, 'index'])->name('grades.index');
     Route::get('grades/{teacherAssignment}', [Teacher\GradeController::class, 'show'])->name('grades.show');
     Route::post('grades', [Teacher\GradeController::class, 'store'])->name('grades.store');

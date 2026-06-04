@@ -5,13 +5,17 @@ import {
     buildCoordinatorSections,
     buildTeachingSections,
     buildStudentSections,
+    EvaluationOutcomeTrend,
+    ProgramDistributionChart,
+    SchoolYearEvaluationTrend,
 } from '@/Components/Dashboard';
 
 const ROLE_LABELS = {
-    admin:       'Administrator',
-    coordinator: 'Program Coordinator',
-    teacher:     'Teacher',
-    student:     'Student',
+    admin:                   'Administrator',
+    coordinator_it:          'IT Coordinator',
+    coordinator_engineering: 'Engineering Coordinator',
+    teacher:                 'Teacher',
+    student:                 'Student',
 };
 
 function WelcomeHeader({ user, activeTerm, hasTeachingLoad }) {
@@ -56,17 +60,19 @@ export default function Dashboard({
     studentCount,
     enrolledCount,
     incCount,
+    analytics = {},
 }) {
     const { auth } = usePage().props;
     const user = auth.user;
     const role = user.role;
     const hasActiveTerm = !!activeTerm;
+    const isCoordinator = ['coordinator_it', 'coordinator_engineering'].includes(role);
 
     const showTeaching = role === 'teacher' || hasTeachingLoad;
 
     const sections = [
         ...(role === 'admin'       ? buildAdminSections() : []),
-        ...(role === 'coordinator' ? buildCoordinatorSections() : []),
+        ...(isCoordinator          ? buildCoordinatorSections() : []),
         ...(showTeaching           ? buildTeachingSections({ hasActiveTerm }) : []),
         ...(role === 'student'     ? buildStudentSections() : []),
     ];
@@ -76,7 +82,7 @@ export default function Dashboard({
             { label: 'Total Students', value: studentCount ?? 0 },
             { label: 'Currently Enrolled', value: enrolledCount ?? 0 },
         ] : []),
-        ...(role === 'coordinator' ? [
+        ...(isCoordinator ? [
             { label: 'INC / Deficiency Count', value: incCount ?? 0 },
         ] : []),
     ];
@@ -98,6 +104,14 @@ export default function Dashboard({
                                         <p className="mt-2 text-3xl font-bold text-gray-900">{stat.value}</p>
                                     </div>
                                 ))}
+                            </div>
+                        )}
+
+                        {role === 'admin' && (
+                            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                <SchoolYearEvaluationTrend data={analytics.schoolYearEvaluationTrend ?? []} />
+                                <ProgramDistributionChart data={analytics.programDistribution ?? []} />
+                                <EvaluationOutcomeTrend data={analytics.evaluationOutcomeTrend ?? []} />
                             </div>
                         )}
 

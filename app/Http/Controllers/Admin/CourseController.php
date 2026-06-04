@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Program;
+use App\Services\ActivityLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,8 @@ use Inertia\Response;
 
 class CourseController extends Controller
 {
+    public function __construct(private ActivityLogService $activityLogs) {}
+
     public function index(Request $request): Response
     {
         $request->validate(['program_id' => 'required|exists:programs,id']);
@@ -85,6 +88,14 @@ class CourseController extends Controller
 
         $this->syncCourseRelationships($course, $data['prerequisite_ids'] ?? [], $data['co_requisite_ids'] ?? []);
 
+        $this->activityLogs->record(
+            $request,
+            'created',
+            'Courses',
+            "Created course {$course->course_code}.",
+            $course
+        );
+
         return back();
     }
 
@@ -133,6 +144,14 @@ class CourseController extends Controller
 
         $this->syncCourseRelationships($course, $data['prerequisite_ids'] ?? [], $data['co_requisite_ids'] ?? []);
 
+        $this->activityLogs->record(
+            $request,
+            'updated',
+            'Courses',
+            "Updated course {$course->course_code}.",
+            $course
+        );
+
         return back();
     }
 
@@ -174,7 +193,7 @@ class CourseController extends Controller
         return (int) $data['lec_hours'] + (int) $data['lab_hours'];
     }
 
-    public function destroy(Course $course): RedirectResponse
+    public function destroy(Request $request, Course $course): RedirectResponse
     {
         abort_if(
             $course->enrollmentCourses()->exists(),
@@ -183,6 +202,14 @@ class CourseController extends Controller
         );
 
         $course->delete();
+
+        $this->activityLogs->record(
+            $request,
+            'deleted',
+            'Courses',
+            "Deleted course {$course->course_code}.",
+            $course
+        );
 
         return back();
     }

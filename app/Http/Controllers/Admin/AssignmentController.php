@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\Section;
 use App\Models\TeacherAssignment;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use App\Services\SectionAssignmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,7 +17,10 @@ use Inertia\Response;
 
 class AssignmentController extends Controller
 {
-    public function __construct(private SectionAssignmentService $service) {}
+    public function __construct(
+        private SectionAssignmentService $service,
+        private ActivityLogService $activityLogs,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -79,33 +83,72 @@ class AssignmentController extends Controller
 
         abort_if($exists, 422, 'This section already has a teacher assigned for this subject in this term.');
 
-        TeacherAssignment::create($data);
+        $teacherAssignment = TeacherAssignment::create($data);
+
+        $this->activityLogs->record(
+            $request,
+            'created',
+            'Teacher Assignments',
+            "Assigned {$teacher->name} to a section subject.",
+            $teacherAssignment,
+            [
+                'teacher_id' => $data['teacher_id'],
+                'course_id' => $data['course_id'],
+                'section_id' => $data['section_id'],
+                'academic_term_id' => $data['academic_term_id'],
+            ]
+        );
 
         return back();
     }
 
-    public function destroy(TeacherAssignment $teacherAssignment): RedirectResponse
+    public function destroy(Request $request, TeacherAssignment $teacherAssignment): RedirectResponse
     {
         $teacherAssignment->delete();
+
+        $this->activityLogs->record(
+            $request,
+            'deleted',
+            'Teacher Assignments',
+            'Removed a teacher assignment.',
+            $teacherAssignment
+        );
+
         return back();
     }
 
-    public function finalize(TeacherAssignment $teacherAssignment): RedirectResponse
+    public function finalize(Request $request, TeacherAssignment $teacherAssignment): RedirectResponse
     {
         $teacherAssignment->update([
             'finalized_at' => now(),
             'finalized_by' => auth()->id(),
         ]);
 
+        $this->activityLogs->record(
+            $request,
+            'finalized',
+            'Teacher Assignments',
+            'Finalized a teacher assignment grade sheet.',
+            $teacherAssignment
+        );
+
         return back();
     }
 
-    public function reopen(TeacherAssignment $teacherAssignment): RedirectResponse
+    public function reopen(Request $request, TeacherAssignment $teacherAssignment): RedirectResponse
     {
         $teacherAssignment->update([
             'finalized_at' => null,
             'finalized_by' => null,
         ]);
+
+        $this->activityLogs->record(
+            $request,
+            'reopened',
+            'Teacher Assignments',
+            'Reopened a teacher assignment grade sheet.',
+            $teacherAssignment
+        );
 
         return back();
     }

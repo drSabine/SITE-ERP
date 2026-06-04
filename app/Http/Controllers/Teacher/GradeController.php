@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AcademicTerm;
 use App\Models\EnrollmentCourse;
 use App\Models\TeacherAssignment;
+use App\Services\ActivityLogService;
 use App\Services\GradeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,10 @@ use Inertia\Response;
 
 class GradeController extends Controller
 {
-    public function __construct(private GradeService $gradeService) {}
+    public function __construct(
+        private GradeService $gradeService,
+        private ActivityLogService $activityLogs,
+    ) {}
 
     /**
      * List the teacher''s course assignments for the active academic term.
@@ -115,6 +119,15 @@ class GradeController extends Controller
         $this->gradeService->inputGrade(
             $ec,
             isset($data['grade']) ? (float) $data['grade'] : null
+        );
+
+        $this->activityLogs->record(
+            $request,
+            'submitted_grade',
+            'Grades',
+            'Submitted or updated a student final grade.',
+            $ec,
+            ['grade' => $data['grade'] ?? null]
         );
 
         return back();

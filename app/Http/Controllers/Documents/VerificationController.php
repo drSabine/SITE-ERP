@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Documents;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Services\ActivityLogService;
 use App\Services\DocumentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,9 +13,10 @@ use Inertia\Response;
 
 class VerificationController extends Controller
 {
-    public function __construct(private readonly DocumentService $documents)
-    {
-    }
+    public function __construct(
+        private readonly DocumentService $documents,
+        private readonly ActivityLogService $activityLogs,
+    ) {}
 
     public function index(): Response
     {
@@ -35,6 +37,15 @@ class VerificationController extends Controller
         }
 
         $this->documents->verify($request->user(), $document, $data['action'], $data['remarks'] ?? null);
+
+        $this->activityLogs->record(
+            $request,
+            $data['action'] === 'approve' ? 'verified' : 'rejected',
+            'Documents',
+            ($data['action'] === 'approve' ? 'Verified' : 'Rejected') . " document {$document->title}.",
+            $document,
+            ['remarks' => $data['remarks'] ?? null]
+        );
 
         return back()->with('success', 'Verification recorded.');
     }

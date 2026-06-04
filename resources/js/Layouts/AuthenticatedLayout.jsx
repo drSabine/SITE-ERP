@@ -12,6 +12,7 @@ import {
     GradesIcon,
     DocumentsIcon,
     VerifyIcon,
+    ActivityLogsIcon,
 } from '@/Components/ui/Icons';
 
 const ROLE_LABEL = {
@@ -38,6 +39,7 @@ function buildNavSections(role, hasTeachingLoad, documentsPendingCount) {
                 { label: 'Programs', href: route('admin.programs.index'), match: '/admin/programs', Icon: ProgramsIcon },
                 { label: 'Teacher Assignment', href: route('admin.assignments.index'), match: '/admin/assignments', Icon: AssignmentsIcon },
                 { label: 'Grading Monitor', href: route('admin.grading-monitor.index'), match: '/admin/grading-monitor', Icon: GradesIcon },
+                { label: 'Activity Logs', href: route('admin.activity-logs.index'), match: '/admin/activity-logs', Icon: ActivityLogsIcon },
             ],
         });
     }

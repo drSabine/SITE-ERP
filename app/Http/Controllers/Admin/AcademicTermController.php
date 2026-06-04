@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicTerm;
 use App\Models\SchoolYear;
+use App\Services\ActivityLogService;
 use App\Services\GradeService;
 use App\Services\SchoolYearService;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +18,7 @@ class AcademicTermController extends Controller
     public function __construct(
         private SchoolYearService $service,
         private GradeService $gradeService,
+        private ActivityLogService $activityLogs,
     ) {}
 
     // Returns terms for a given school year — used by the SchoolYears page via axios
@@ -37,7 +39,15 @@ class AcademicTermController extends Controller
         ]);
 
         if ($request->semester === 'summer') {
-            $this->service->createSummerTerm($schoolYear);
+            $academicTerm = $this->service->createSummerTerm($schoolYear);
+
+            $this->activityLogs->record(
+                $request,
+                'created',
+                'Academic Terms',
+                "Created summer term for {$schoolYear->name}.",
+                $academicTerm
+            );
         }
 
         return back();
@@ -52,12 +62,29 @@ class AcademicTermController extends Controller
 
         $academicTerm->update($data);
 
+        $this->activityLogs->record(
+            $request,
+            'updated',
+            'Academic Terms',
+            "Updated {$academicTerm->semester} term dates.",
+            $academicTerm
+        );
+
         return back();
     }
 
-    public function activate(AcademicTerm $academicTerm): RedirectResponse
+    public function activate(Request $request, AcademicTerm $academicTerm): RedirectResponse
     {
         $this->service->activateTerm($academicTerm);
+
+        $this->activityLogs->record(
+            $request,
+            'activated',
+            'Academic Terms',
+            "Activated {$academicTerm->semester} term.",
+            $academicTerm
+        );
+
         return back();
     }
 
@@ -65,9 +92,18 @@ class AcademicTermController extends Controller
      * Finalize an academic term — locks all active enrollment_course statuses
      * to passed / failed / inc and marks the term as inactive.
      */
-    public function finalize(AcademicTerm $academicTerm): RedirectResponse
+    public function finalize(Request $request, AcademicTerm $academicTerm): RedirectResponse
     {
         $this->gradeService->finalizeTerm($academicTerm);
+
+        $this->activityLogs->record(
+            $request,
+            'finalized',
+            'Academic Terms',
+            "Finalized {$academicTerm->semester} term and locked grade outcomes.",
+            $academicTerm
+        );
+
         return back();
     }
 }

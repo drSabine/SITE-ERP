@@ -7,6 +7,7 @@ use App\Models\AcademicTerm;
 use App\Models\Enrollment;
 use App\Models\Program;
 use App\Models\Section;
+use App\Services\ActivityLogService;
 use App\Services\SectionAssignmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +17,10 @@ use Inertia\Response;
 
 class SectionController extends Controller
 {
-    public function __construct(private SectionAssignmentService $service) {}
+    public function __construct(
+        private SectionAssignmentService $service,
+        private ActivityLogService $activityLogs,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -55,13 +59,21 @@ class SectionController extends Controller
         $program = Program::findOrFail($data['program_id']);
         $this->service->validateYearLevelByProgram($program->code, (int) $data['year_level']);
 
-        Section::firstOrCreate(
+        $section = Section::firstOrCreate(
             [
                 'program_id' => $data['program_id'],
                 'year_level' => $data['year_level'],
                 'name' => trim($data['name']),
             ],
             ['is_active' => true]
+        );
+
+        $this->activityLogs->record(
+            $request,
+            'created',
+            'Sections',
+            "Created or restored section {$section->name}.",
+            $section
         );
 
         return back();
@@ -81,6 +93,15 @@ class SectionController extends Controller
             $section,
             (int) $data['academic_term_id'],
             $data['enrollment_ids']
+        );
+
+        $this->activityLogs->record(
+            $request,
+            'assigned',
+            'Sections',
+            "Assigned {$count} student(s) to section {$section->name}.",
+            $section,
+            ['student_count' => $count, 'academic_term_id' => $data['academic_term_id']]
         );
 
         return back()->with('success', "{$count} student(s) assigned to {$section->name}.");

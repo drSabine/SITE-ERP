@@ -36,6 +36,7 @@ export { MdDownload        as DownloadIcon    } from 'react-icons/md';
 export { MdPrint           as PrintIcon       } from 'react-icons/md';
 export { MdUploadFile      as UploadIcon      } from 'react-icons/md';
 export { MdHistory         as HistoryIcon     } from 'react-icons/md';
+export { MdManageSearch    as ActivityLogsIcon } from 'react-icons/md';
 
 // Status / Feedback
 export { MdCheckCircle     as CheckIcon       } from 'react-icons/md';
