@@ -57,7 +57,6 @@ export default function Index({ activityLogs, filters = {}, filterOptions = {} }
         { key: 'module', label: 'Module', className: 'text-gray-600' },
         { key: 'action', label: 'Action', className: 'font-mono text-xs uppercase text-gray-500' },
         { key: 'description', label: 'Description', className: 'text-gray-700' },
-        { key: 'ip_address', label: 'IP Address', className: 'font-mono text-xs text-gray-500' },
     ];
 
     return (

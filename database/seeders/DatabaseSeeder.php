@@ -23,7 +23,6 @@ class DatabaseSeeder extends Seeder
             SectionSeeder::class,
             EnrollmentSeeder::class,
             SubmissionCategorySeeder::class,
-            AnalyticsDemoSeeder::class,
         ]);
     }
 }

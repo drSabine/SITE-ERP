@@ -24,7 +24,6 @@ class ActivityLogService
             'description'  => $description,
             'subject_type' => $subject?->getMorphClass(),
             'subject_id'   => $subject?->getKey(),
-            'ip_address'   => $request->ip(),
             'user_agent'   => $request->userAgent(),
             'properties'   => $properties !== [] ? $properties : null,
         ]);
@@ -42,7 +41,6 @@ class ActivityLogService
             'description',
             'subject_type',
             'subject_id',
-            'ip_address',
             'created_at',
         ]);
 
