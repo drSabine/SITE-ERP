@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Program;
+use App\Services\ActivityLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,6 +12,8 @@ use Inertia\Response;
 
 class ProgramController extends Controller
 {
+    public function __construct(private ActivityLogService $activityLogs) {}
+
     public function index(): Response
     {
         return Inertia::render('Admin/Programs/Index', [
@@ -26,7 +29,15 @@ class ProgramController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        Program::create($data);
+        $program = Program::create($data);
+
+        $this->activityLogs->record(
+            $request,
+            'created',
+            'Programs',
+            "Created program {$program->code}.",
+            $program
+        );
 
         return back();
     }
@@ -42,16 +53,32 @@ class ProgramController extends Controller
 
         $program->update($data);
 
+        $this->activityLogs->record(
+            $request,
+            'updated',
+            'Programs',
+            "Updated program {$program->code}.",
+            $program
+        );
+
         return back();
     }
 
-    public function destroy(Program $program): RedirectResponse
+    public function destroy(Request $request, Program $program): RedirectResponse
     {
         if ($program->courses()->exists()) {
             return back()->with('error', 'Cannot delete program with courses.');
         }
 
         $program->delete();
+
+        $this->activityLogs->record(
+            $request,
+            'deleted',
+            'Programs',
+            "Deleted program {$program->code}.",
+            $program
+        );
 
         return back()->with('success', 'Program deleted successfully.');
     }

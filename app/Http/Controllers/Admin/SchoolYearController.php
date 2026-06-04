@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SchoolYear;
+use App\Services\ActivityLogService;
 use App\Services\SchoolYearService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,7 +13,10 @@ use Inertia\Response;
 
 class SchoolYearController extends Controller
 {
-    public function __construct(private SchoolYearService $service) {}
+    public function __construct(
+        private SchoolYearService $service,
+        private ActivityLogService $activityLogs,
+    ) {}
 
     public function index(): Response
     {
@@ -33,7 +37,15 @@ class SchoolYearController extends Controller
             'summer_end_date'   => 'nullable|date|after:summer_start_date',
         ]);
 
-        $this->service->create($data);
+        $schoolYear = $this->service->create($data);
+
+        $this->activityLogs->record(
+            $request,
+            'created',
+            'School Years',
+            "Created school year {$schoolYear->name}.",
+            $schoolYear
+        );
 
         return back();
     }
@@ -48,22 +60,48 @@ class SchoolYearController extends Controller
 
         $schoolYear->update($data);
 
+        $this->activityLogs->record(
+            $request,
+            'updated',
+            'School Years',
+            "Updated school year {$schoolYear->name}.",
+            $schoolYear
+        );
+
         return back();
     }
 
-    public function activate(SchoolYear $schoolYear): RedirectResponse
+    public function activate(Request $request, SchoolYear $schoolYear): RedirectResponse
     {
         $this->service->activate($schoolYear);
+
+        $this->activityLogs->record(
+            $request,
+            'activated',
+            'School Years',
+            "Activated school year {$schoolYear->name}.",
+            $schoolYear
+        );
+
         return back();
     }
 
-    public function finalize(SchoolYear $schoolYear): RedirectResponse
+    public function finalize(Request $request, SchoolYear $schoolYear): RedirectResponse
     {
         $this->service->finalize($schoolYear);
+
+        $this->activityLogs->record(
+            $request,
+            'finalized',
+            'School Years',
+            "Finalized school year {$schoolYear->name}.",
+            $schoolYear
+        );
+
         return back();
     }
 
-    public function destroy(SchoolYear $schoolYear): RedirectResponse
+    public function destroy(Request $request, SchoolYear $schoolYear): RedirectResponse
     {
         if ($schoolYear->is_active) {
             return back()->with('error', 'Cannot delete active school year.');
@@ -78,6 +116,14 @@ class SchoolYearController extends Controller
         }
 
         $schoolYear->delete();
+
+        $this->activityLogs->record(
+            $request,
+            'deleted',
+            'School Years',
+            "Deleted school year {$schoolYear->name}.",
+            $schoolYear
+        );
 
         return back()->with('success', 'School year deleted successfully.');
     }

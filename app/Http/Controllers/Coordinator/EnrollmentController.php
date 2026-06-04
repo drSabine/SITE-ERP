@@ -8,6 +8,7 @@ use App\Models\Enrollment;
 use App\Models\Program;
 use App\Models\SchoolYear;
 use App\Models\Student;
+use App\Services\ActivityLogService;
 use App\Services\EnrollmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,10 @@ use Inertia\Response;
 
 class EnrollmentController extends Controller
 {
-    public function __construct(private EnrollmentService $service) {}
+    public function __construct(
+        private EnrollmentService $service,
+        private ActivityLogService $activityLogs,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -123,6 +127,15 @@ class EnrollmentController extends Controller
             }
         }
 
+        $this->activityLogs->record(
+            $request,
+            'created',
+            'Enrollments',
+            "Enrolled {$student->first_name} {$student->last_name} in an academic term.",
+            $enrollment,
+            ['load_curriculum' => ! empty($data['load_curriculum'])]
+        );
+
         return back();
     }
 
@@ -145,6 +158,8 @@ class EnrollmentController extends Controller
         $student = Student::findOrFail($data['student_id']);
         $terms   = AcademicTerm::findMany($data['term_ids']);
 
+        $createdCount = 0;
+
         foreach ($terms as $term) {
             if (Enrollment::where('student_id', $student->id)
                 ->where('academic_term_id', $term->id)
@@ -162,7 +177,18 @@ class EnrollmentController extends Controller
                     // Non-fatal — enrollment row is created regardless
                 }
             }
+
+            $createdCount++;
         }
+
+        $this->activityLogs->record(
+            $request,
+            'created',
+            'Enrollments',
+            "Enrolled {$student->first_name} {$student->last_name} in {$createdCount} term(s) for the school year.",
+            $student,
+            ['created_terms' => $createdCount, 'load_curriculum' => ! empty($data['load_curriculum'])]
+        );
 
         return back();
     }
@@ -171,18 +197,36 @@ class EnrollmentController extends Controller
      * Auto-populate courses from the standard BSIT/BSCE curriculum
      * for the student's current year_level + this term's semester.
      */
-    public function loadCurriculum(Enrollment $enrollment): RedirectResponse
+    public function loadCurriculum(Request $request, Enrollment $enrollment): RedirectResponse
     {
         $enrollment->load(['student', 'academicTerm']);
 
         $count = $this->service->loadStandardCurriculum($enrollment);
 
+        $this->activityLogs->record(
+            $request,
+            'loaded_curriculum',
+            'Enrollments',
+            "Loaded {$count} curriculum course(s) for an enrollment.",
+            $enrollment,
+            ['course_count' => $count]
+        );
+
         return back()->with('success', "{$count} course(s) loaded from the standard curriculum.");
     }
 
-    public function drop(Enrollment $enrollment): RedirectResponse
+    public function drop(Request $request, Enrollment $enrollment): RedirectResponse
     {
         $this->service->dropEnrollment($enrollment);
+
+        $this->activityLogs->record(
+            $request,
+            'dropped',
+            'Enrollments',
+            'Dropped an enrollment.',
+            $enrollment
+        );
+
         return back();
     }
 }

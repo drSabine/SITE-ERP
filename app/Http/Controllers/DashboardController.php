@@ -5,11 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\AcademicTerm;
 use App\Models\EnrollmentCourse;
 use App\Models\Student;
+use App\Services\DashboardAnalyticsService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private DashboardAnalyticsService $dashboardAnalyticsService
+    ) {}
+
     public function index(): Response
     {
         $user = auth()->user();
@@ -19,9 +24,9 @@ class DashboardController extends Controller
             ->with(['schoolYear:id,name'])
             ->first(['id', 'school_year_id', 'semester', 'is_active']);
 
-        // Admin, coordinator, and teacher can all carry a teaching load for the active term.
+        // Admin, coordinators, and teachers can all carry a teaching load for the active term.
         // The frontend shows the Teaching section only when this is true (or role === teacher).
-        $hasTeachingLoad = in_array($role, ['admin', 'coordinator', 'teacher']) && $activeTerm
+        $hasTeachingLoad = in_array($role, ['admin', 'coordinator_it', 'coordinator_engineering', 'teacher']) && $activeTerm
             ? $user->teacherAssignments()->where('academic_term_id', $activeTerm->id)->exists()
             : false;
 
@@ -35,9 +40,10 @@ class DashboardController extends Controller
             $props['enrolledCount'] = $activeTerm
                 ? $activeTerm->enrollments()->where('status', 'enrolled')->count()
                 : 0;
+            $props['analytics'] = $this->dashboardAnalyticsService->adminAnalytics();
         }
 
-        if ($role === 'coordinator') {
+        if (in_array($role, ['coordinator_it', 'coordinator_engineering'])) {
             $props['incCount'] = $activeTerm
                 ? EnrollmentCourse::withInc()
                     ->whereHas('enrollment', fn($query) => $query->where('academic_term_id', $activeTerm->id))

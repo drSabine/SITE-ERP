@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\EnrollmentCourse;
+use App\Services\ActivityLogService;
 use App\Services\EnrollmentService;
 use App\Services\GradeService;
 use Illuminate\Http\RedirectResponse;
@@ -15,7 +16,8 @@ class EnrollmentCourseController extends Controller
 {
     public function __construct(
         private EnrollmentService $enrollmentService,
-        private GradeService $gradeService
+        private GradeService $gradeService,
+        private ActivityLogService $activityLogs,
     ) {}
 
     public function store(Request $request): RedirectResponse
@@ -39,20 +41,48 @@ class EnrollmentCourseController extends Controller
             }
         }
 
-        $this->enrollmentService->addCourse($enrollment, $course);
+        $enrollmentCourse = $this->enrollmentService->addCourse($enrollment, $course);
+
+        $this->activityLogs->record(
+            $request,
+            'added',
+            'Course Loads',
+            "Added {$course->course_code} to a student load.",
+            $enrollmentCourse
+        );
 
         return back();
     }
 
-    public function destroy(EnrollmentCourse $enrollmentCourse): RedirectResponse
+    public function destroy(Request $request, EnrollmentCourse $enrollmentCourse): RedirectResponse
     {
+        $enrollmentCourse->loadMissing('course:id,course_code');
         $this->enrollmentService->removeCourse($enrollmentCourse);
+
+        $this->activityLogs->record(
+            $request,
+            'dropped',
+            'Course Loads',
+            "Dropped {$enrollmentCourse->course?->course_code} from a student load.",
+            $enrollmentCourse
+        );
+
         return back();
     }
 
-    public function restore(EnrollmentCourse $enrollmentCourse): RedirectResponse
+    public function restore(Request $request, EnrollmentCourse $enrollmentCourse): RedirectResponse
     {
+        $enrollmentCourse->loadMissing('course:id,course_code');
         $this->enrollmentService->restoreCourse($enrollmentCourse);
+
+        $this->activityLogs->record(
+            $request,
+            'restored',
+            'Course Loads',
+            "Restored {$enrollmentCourse->course?->course_code} to a student load.",
+            $enrollmentCourse
+        );
+
         return back();
     }
 
@@ -66,7 +96,15 @@ class EnrollmentCourseController extends Controller
         $enrollment = Enrollment::findOrFail($data['enrollment_id']);
         $course     = Course::findOrFail($data['course_id']);
 
-        $this->enrollmentService->creditCourse($enrollment, $course);
+        $enrollmentCourse = $this->enrollmentService->creditCourse($enrollment, $course);
+
+        $this->activityLogs->record(
+            $request,
+            'credited',
+            'Course Loads',
+            "Credited {$course->course_code} for a student load.",
+            $enrollmentCourse
+        );
 
         return back();
     }
@@ -83,6 +121,15 @@ class EnrollmentCourseController extends Controller
         $this->gradeService->overrideGrade(
             $enrollmentCourse,
             isset($data['final_grade']) ? (float) $data['final_grade'] : null
+        );
+
+        $this->activityLogs->record(
+            $request,
+            'overrode_grade',
+            'Course Loads',
+            'Overrode a student course grade.',
+            $enrollmentCourse,
+            ['final_grade' => $data['final_grade'] ?? null]
         );
 
         return back();

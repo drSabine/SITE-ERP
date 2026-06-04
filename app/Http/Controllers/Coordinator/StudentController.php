@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\Program;
 use App\Models\SchoolYear;
 use App\Models\Student;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +16,8 @@ use Inertia\Response;
 
 class StudentController extends Controller
 {
+    public function __construct(private ActivityLogService $activityLogs) {}
+
     private function scopedPrograms(): ?array
     {
         return auth()->user()->coordinatorProgramCodes();
@@ -120,16 +123,32 @@ class StudentController extends Controller
 
         $student->update($data);
 
+        $this->activityLogs->record(
+            $request,
+            'updated',
+            'Students',
+            "Updated student record for {$student->first_name} {$student->last_name}.",
+            $student
+        );
+
         return back();
     }
 
-    public function destroy(Student $student): RedirectResponse
+    public function destroy(Request $request, Student $student): RedirectResponse
     {
         if ($student->enrollments()->exists()) {
             return back()->with('error', 'Cannot delete student with enrollment records.');
         }
 
         $student->delete();
+
+        $this->activityLogs->record(
+            $request,
+            'deleted',
+            'Students',
+            "Deleted student record for {$student->first_name} {$student->last_name}.",
+            $student
+        );
 
         return back()->with('success', 'Student deleted successfully.');
     }

@@ -2,19 +2,21 @@ import { useState } from 'react';
 import { router, usePage } from '@inertiajs/react';
 
 export const ROLE_LABEL = {
-    admin:       'Administrator',
-    coordinator: 'Program Coordinator',
-    teacher:     'Teacher',
-    student:     'Student',
+    admin:                   'Administrator',
+    coordinator_it:          'IT Coordinator',
+    coordinator_engineering: 'Engineering Coordinator',
+    teacher:                 'Teacher',
+    student:                 'Student',
 };
 
 export const TABLE_FILTERS = [
-    { label: 'All',         value: 'all',         role: '',            status: 'active' },
-    { label: 'Admin',       value: 'admin',       role: 'admin',       status: 'active' },
-    { label: 'Coordinator', value: 'coordinator', role: 'coordinator', status: 'active' },
-    { label: 'Teacher',     value: 'teacher',     role: 'teacher',     status: 'active' },
-    { label: 'Student',     value: 'student',     role: 'student',     status: 'active' },
-    { label: 'Inactive',    value: 'inactive',    role: '',            status: 'inactive' },
+    { label: 'All',         value: 'all',                     role: '',                         status: 'active' },
+    { label: 'Admin',       value: 'admin',                   role: 'admin',                    status: 'active' },
+    { label: 'IT Coord.',   value: 'coordinator_it',          role: 'coordinator_it',           status: 'active' },
+    { label: 'Eng. Coord.', value: 'coordinator_engineering', role: 'coordinator_engineering',  status: 'active' },
+    { label: 'Teacher',     value: 'teacher',                 role: 'teacher',                  status: 'active' },
+    { label: 'Student',     value: 'student',                 role: 'student',                  status: 'active' },
+    { label: 'Inactive',    value: 'inactive',                role: '',                         status: 'inactive' },
 ];
 
 export function useUsers(filters = {}) {

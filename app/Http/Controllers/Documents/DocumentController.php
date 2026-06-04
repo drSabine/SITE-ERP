@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\DocumentFile;
 use App\Models\SubmissionCategory;
+use App\Services\ActivityLogService;
 use App\Services\DocumentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -19,9 +20,10 @@ class DocumentController extends Controller
     /** Accepted upload types — office docs, PDFs and images, capped at 10 MB. */
     private const FILE_RULES = 'required|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png';
 
-    public function __construct(private readonly DocumentService $documents)
-    {
-    }
+    public function __construct(
+        private readonly DocumentService $documents,
+        private readonly ActivityLogService $activityLogs,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -77,7 +79,15 @@ class DocumentController extends Controller
             ? trim((string) $data['custom_category'])
             : null;
 
-        $this->documents->create($request->user(), $data, $request->file('file'));
+        $document = $this->documents->create($request->user(), $data, $request->file('file'));
+
+        $this->activityLogs->record(
+            $request,
+            'uploaded',
+            'Documents',
+            "Uploaded document {$document->title}.",
+            $document
+        );
 
         return back()->with('success', 'Document submitted for verification.');
     }
@@ -91,7 +101,16 @@ class DocumentController extends Controller
             'note' => 'nullable|string|max:500',
         ]);
 
-        $this->documents->addVersion($request->user(), $document, $request->file('file'), $data['note'] ?? null);
+        $documentFile = $this->documents->addVersion($request->user(), $document, $request->file('file'), $data['note'] ?? null);
+
+        $this->activityLogs->record(
+            $request,
+            'uploaded_version',
+            'Documents',
+            "Uploaded version {$documentFile->version} for document {$document->title}.",
+            $document,
+            ['version' => $documentFile->version]
+        );
 
         return back()->with('success', 'New version uploaded. Document is awaiting re-verification.');
     }
@@ -114,6 +133,14 @@ class DocumentController extends Controller
     public function destroy(Request $request, Document $document): RedirectResponse
     {
         $this->authorizeOwnerOrAdmin($request, $document);
+
+        $this->activityLogs->record(
+            $request,
+            'deleted',
+            'Documents',
+            "Deleted document {$document->title}.",
+            $document
+        );
 
         $this->documents->delete($document);
 

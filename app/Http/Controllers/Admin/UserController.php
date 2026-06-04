@@ -7,6 +7,7 @@ use App\Models\Program;
 use App\Models\Student;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Services\ActivityLogService;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,8 @@ use Inertia\Response;
 
 class UserController extends Controller
 {
+    public function __construct(private ActivityLogService $activityLogs) {}
+
     private function mergeGeneratedIdentity(Request $request, ?User $user = null): void
     {
         $request->merge([
@@ -58,7 +61,7 @@ class UserController extends Controller
     {
         $request->validate([
             'search' => 'nullable|string|max:100',
-            'role' => 'nullable|in:admin,coordinator,teacher,student',
+            'role' => 'nullable|in:admin,coordinator_it,coordinator_engineering,teacher,student',
             'status' => 'nullable|in:active,inactive',
         ]);
 
@@ -129,7 +132,7 @@ class UserController extends Controller
             'sex'            => $isStudent ? 'required|in:Male,Female' : 'nullable',
         ]);
 
-        DB::transaction(function () use ($data, $isStudent) {
+        $createdUser = DB::transaction(function () use ($data, $isStudent) {
             $user = User::create([
                 'name'      => $data['name'],
                 'email'     => $data['email'],
@@ -154,7 +157,18 @@ class UserController extends Controller
                     'status'     => 'active',
                 ]);
             }
+
+            return $user;
         });
+
+        $this->activityLogs->record(
+            $request,
+            'created',
+            'User Management',
+            "Created user account for {$createdUser->name}.",
+            $createdUser,
+            ['role' => $createdUser->role]
+        );
 
         return back();
     }
@@ -182,6 +196,8 @@ class UserController extends Controller
             'year_level'     => $isStudent ? 'required|integer|min:1|max:4' : 'nullable',
             'sex'            => $isStudent ? 'required|in:Male,Female' : 'nullable',
         ]);
+
+        $before = $user->only(['name', 'email', 'role', 'is_active']);
 
         DB::transaction(function () use ($user, $data, $isStudent) {
             $userUpdate = [
@@ -221,22 +237,52 @@ class UserController extends Controller
             }
         });
 
+        $user->refresh();
+
+        $this->activityLogs->record(
+            $request,
+            'updated',
+            'User Management',
+            "Updated user account for {$user->name}.",
+            $user,
+            [
+                'before' => $before,
+                'after' => $user->only(['name', 'email', 'role', 'is_active']),
+            ]
+        );
+
         return back();
     }
 
-    public function destroy(User $user): RedirectResponse
+    public function destroy(Request $request, User $user): RedirectResponse
     {
         abort_if($user->id === auth()->id(), 403, 'Cannot deactivate your own account.');
 
         $user->update(['is_active' => false]);
 
+        $this->activityLogs->record(
+            $request,
+            'deactivated',
+            'User Management',
+            "Deactivated user account for {$user->name}.",
+            $user
+        );
+
         return back();
     }
 
-    public function reactivate(User $user): RedirectResponse
+    public function reactivate(Request $request, User $user): RedirectResponse
     {
         UserProfile::withTrashed()->where('user_id', $user->id)->restore();
         $user->update(['is_active' => true]);
+
+        $this->activityLogs->record(
+            $request,
+            'reactivated',
+            'User Management',
+            "Reactivated user account for {$user->name}.",
+            $user
+        );
 
         return back();
     }
