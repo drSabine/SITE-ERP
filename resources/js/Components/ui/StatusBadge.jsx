@@ -9,6 +9,9 @@ const variants = {
     inc:          'bg-orange-100 text-orange-800',
     credited:     'bg-teal-100 text-teal-800',
     not_enrolled: 'bg-amber-100 text-amber-700',
+    pending:      'bg-amber-100 text-amber-700',
+    verified:     'bg-emerald-100 text-emerald-800',
+    rejected:     'bg-red-100 text-red-800',
 };
 
 const defaultLabels = {
@@ -22,6 +25,9 @@ const defaultLabels = {
     inc:          'INC',
     credited:     'Credited',
     not_enrolled: 'Not Enrolled',
+    pending:      'Pending',
+    verified:     'Verified',
+    rejected:     'Rejected',
 };
 
 export default function StatusBadge({ status, label }) {

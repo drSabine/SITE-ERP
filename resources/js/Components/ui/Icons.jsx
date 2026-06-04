@@ -21,6 +21,8 @@ export { MdAssignment      as EnrollmentsIcon } from 'react-icons/md';
 export { MdGrade           as GradesIcon      } from 'react-icons/md';
 export { MdWarning         as DeficienciesIcon } from 'react-icons/md';
 export { MdAssignmentInd   as AssignmentsIcon } from 'react-icons/md';
+export { MdFolderShared    as DocumentsIcon   } from 'react-icons/md';
+export { MdVerified        as VerifyIcon      } from 'react-icons/md';
 
 // CRUD Actions
 export { MdAdd             as AddIcon         } from 'react-icons/md';
@@ -32,6 +34,8 @@ export { MdSearch          as SearchIcon      } from 'react-icons/md';
 export { MdFilterList      as FilterIcon      } from 'react-icons/md';
 export { MdDownload        as DownloadIcon    } from 'react-icons/md';
 export { MdPrint           as PrintIcon       } from 'react-icons/md';
+export { MdUploadFile      as UploadIcon      } from 'react-icons/md';
+export { MdHistory         as HistoryIcon     } from 'react-icons/md';
 
 // Status / Feedback
 export { MdCheckCircle     as CheckIcon       } from 'react-icons/md';
