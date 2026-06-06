@@ -96,6 +96,9 @@ ActionsButton, ActionsDropdown
 | Planned features | `docs/plans/roadmap.md` |
 | BSIT curriculum | `docs/curriculum/bsit.md` |
 | BSCE curriculum | `docs/curriculum/bsce.md` |
+| BSENSE curriculum | `docs/curriculum/bsense.md` |
+| BSCpE curriculum | `docs/curriculum/bscpe.md` |
+| BLIS curriculum | `docs/curriculum/blis.md` |
 
 ---
 
