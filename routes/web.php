@@ -102,6 +102,12 @@ Route::prefix('coordinator')->middleware(['auth', 'role:admin,coordinator_it,coo
     Route::get('deficiencies/{academicTerm}', [Coordinator\DeficiencyController::class, 'index'])->name('deficiencies.index');
     Route::get('grading-monitor', [Coordinator\GradingMonitorController::class, 'index'])->name('grading-monitor.index');
     Route::get('grading-monitor/{teacherAssignment}/students', [Coordinator\GradingMonitorController::class, 'students'])->name('grading-monitor.students');
+
+    // Passing Rates
+    Route::get('passing-rates', [Coordinator\PassingRateController::class, 'index'])->name('passing-rates.index');
+    Route::post('passing-rates', [Coordinator\PassingRateController::class, 'store'])->name('passing-rates.store');
+    Route::put('passing-rates/{passingRate}', [Coordinator\PassingRateController::class, 'update'])->name('passing-rates.update');
+    Route::delete('passing-rates/{passingRate}', [Coordinator\PassingRateController::class, 'destroy'])->name('passing-rates.destroy');
 });
 
 // ─────────────────────────────────────────────────────────────

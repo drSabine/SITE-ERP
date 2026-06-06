@@ -10,7 +10,6 @@ export { default as SecondaryButton } from './SecondaryButton';
 export { default as TextInput } from './TextInput';
 export { default as StatusBadge } from './StatusBadge';
 export { default as ConfirmModal } from './ConfirmModal';
-export { default as Icons } from './Icons';
 export { default as InputField } from './InputField';
 export { default as DetailField } from './DetailField';
 export { default as DataTable } from './DataTable';

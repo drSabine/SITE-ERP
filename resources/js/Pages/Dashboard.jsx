@@ -8,6 +8,7 @@ import {
     EvaluationOutcomeTrend,
     ProgramDistributionChart,
     SchoolYearEvaluationTrend,
+    PassingRatePreview,
 } from '@/Components/Dashboard';
 
 const ROLE_LABELS = {
@@ -61,6 +62,7 @@ export default function Dashboard({
     enrolledCount,
     incCount,
     analytics = {},
+    passingRatePreview = {},
 }) {
     const { auth } = usePage().props;
     const user = auth.user;
@@ -114,7 +116,12 @@ export default function Dashboard({
                                     <ProgramDistributionChart data={analytics.programDistribution ?? []} />
                                 </div>
                                 <EvaluationOutcomeTrend data={analytics.evaluationOutcomeTrend ?? []} />
+                                <PassingRatePreview preview={passingRatePreview} />
                             </div>
+                        )}
+
+                        {isCoordinator && (
+                            <PassingRatePreview preview={passingRatePreview} />
                         )}
 
                         {sections.map(({ title, cols, cards }) => (

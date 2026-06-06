@@ -7,11 +7,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Program extends Model
 {
-    protected $fillable = ['code', 'name', 'description', 'is_active'];
+    protected $fillable = ['code', 'name', 'description', 'is_active', 'has_board_exam'];
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return [
+            'is_active'      => 'boolean',
+            'has_board_exam' => 'boolean',
+        ];
+    }
+
+    public function scopeWithBoardExam($query)
+    {
+        return $query->where('has_board_exam', true);
     }
 
     public function scopeActive($query)

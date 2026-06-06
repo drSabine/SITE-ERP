@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('name', 191);            // Bachelor of Science in Information Technology
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->boolean('has_board_exam')->default(false);
             $table->timestamps();
         });
     }

@@ -23,6 +23,7 @@ export { MdWarning         as DeficienciesIcon } from 'react-icons/md';
 export { MdAssignmentInd   as AssignmentsIcon } from 'react-icons/md';
 export { MdFolderShared    as DocumentsIcon   } from 'react-icons/md';
 export { MdVerified        as VerifyIcon      } from 'react-icons/md';
+export { MdTrendingUp      as PassingRatesIcon } from 'react-icons/md';
 
 // CRUD Actions
 export { MdAdd             as AddIcon         } from 'react-icons/md';

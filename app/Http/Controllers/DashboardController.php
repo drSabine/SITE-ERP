@@ -6,13 +6,15 @@ use App\Models\AcademicTerm;
 use App\Models\EnrollmentCourse;
 use App\Models\Student;
 use App\Services\DashboardAnalyticsService;
+use App\Services\PassingRateService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
     public function __construct(
-        private DashboardAnalyticsService $dashboardAnalyticsService
+        private DashboardAnalyticsService $dashboardAnalyticsService,
+        private PassingRateService $passingRateService,
     ) {}
 
     public function index(): Response
@@ -40,7 +42,8 @@ class DashboardController extends Controller
             $props['enrolledCount'] = $activeTerm
                 ? $activeTerm->enrollments()->where('status', 'enrolled')->count()
                 : 0;
-            $props['analytics'] = $this->dashboardAnalyticsService->adminAnalytics();
+            $props['analytics']          = $this->dashboardAnalyticsService->adminAnalytics();
+            $props['passingRatePreview'] = $this->passingRateService->getDashboardPreview();
         }
 
         if (in_array($role, ['coordinator_it', 'coordinator_engineering'])) {
@@ -49,6 +52,7 @@ class DashboardController extends Controller
                     ->whereHas('enrollment', fn($query) => $query->where('academic_term_id', $activeTerm->id))
                     ->count()
                 : 0;
+            $props['passingRatePreview'] = $this->passingRateService->getDashboardPreview();
         }
 
         return Inertia::render('Dashboard', $props);

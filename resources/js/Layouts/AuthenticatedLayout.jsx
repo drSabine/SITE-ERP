@@ -13,6 +13,7 @@ import {
     DocumentsIcon,
     VerifyIcon,
     ActivityLogsIcon,
+    PassingRatesIcon,
 } from '@/Components/ui/Icons';
 
 const ROLE_LABEL = {
@@ -39,6 +40,7 @@ function buildNavSections(role, hasTeachingLoad, documentsPendingCount) {
                 { label: 'Programs', href: route('admin.programs.index'), match: '/admin/programs', Icon: ProgramsIcon },
                 { label: 'Teacher Assignment', href: route('admin.assignments.index'), match: '/admin/assignments', Icon: AssignmentsIcon },
                 { label: 'Grading Monitor', href: route('admin.grading-monitor.index'), match: '/admin/grading-monitor', Icon: GradesIcon },
+                { label: 'Passing Rates', href: route('coordinator.passing-rates.index'), match: '/coordinator/passing-rates', Icon: PassingRatesIcon },
                 { label: 'Activity Logs', href: route('admin.activity-logs.index'), match: '/admin/activity-logs', Icon: ActivityLogsIcon },
             ],
         });
@@ -52,6 +54,7 @@ function buildNavSections(role, hasTeachingLoad, documentsPendingCount) {
                 { label: 'Evaluations', href: route('coordinator.enrollments.index'), match: '/coordinator/enrollments', Icon: EnrollmentsIcon },
                 { label: 'Section Assignment', href: route('coordinator.sections.index'), match: '/coordinator/sections', Icon: AssignmentsIcon },
                 { label: 'Grading Monitor', href: route('coordinator.grading-monitor.index'), match: '/coordinator/grading-monitor', Icon: GradesIcon },
+                { label: 'Passing Rates', href: route('coordinator.passing-rates.index'), match: '/coordinator/passing-rates', Icon: PassingRatesIcon },
             ],
         });
     }

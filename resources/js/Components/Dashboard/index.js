@@ -7,4 +7,5 @@ export {
 export { default as EvaluationOutcomeTrend } from './EvaluationOutcomeTrend';
 export { default as ProgramDistributionChart } from './ProgramDistributionChart';
 export { default as SchoolYearEvaluationTrend } from './SchoolYearEvaluationTrend';
+export { default as PassingRatePreview } from './PassingRatePreview';
 export * from '@/Components/Charts';
