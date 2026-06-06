@@ -20,6 +20,21 @@ class ProgramSeeder extends Seeder
                 'name'      => 'Bachelor of Science in Civil Engineering',
                 'is_active' => true,
             ],
+            [
+                'code'      => 'BSENSE',
+                'name'      => 'Bachelor of Science in Environmental & Sanitary Engineering',
+                'is_active' => true,
+            ],
+            [
+                'code'      => 'BSCpE',
+                'name'      => 'Bachelor of Science in Computer Engineering',
+                'is_active' => true,
+            ],
+            [
+                'code'      => 'BLIS',
+                'name'      => 'Bachelor of Library and Information Science',
+                'is_active' => true,
+            ],
         ];
 
         foreach ($programs as $program) {

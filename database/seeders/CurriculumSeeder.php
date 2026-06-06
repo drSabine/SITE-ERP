@@ -11,15 +11,19 @@ use RuntimeException;
 class CurriculumSeeder extends Seeder
 {
     private const PROGRAM_DOCS = [
-        'BSIT' => 'docs/curriculum/bsit.md',
-        'BSCE' => 'docs/curriculum/bsce.md',
+        'BSIT'   => 'docs/curriculum/bsit.md',
+        'BSCE'   => 'docs/curriculum/bsce.md',
+        'BSENSE' => 'docs/curriculum/bsense.md',
+        'BSCpE'  => 'docs/curriculum/bscpe.md',
+        'BLIS'   => 'docs/curriculum/blis.md',
     ];
 
     private const YEAR_LEVELS = [
-        'First Year' => 1,
+        'First Year'  => 1,
         'Second Year' => 2,
-        'Third Year' => 3,
+        'Third Year'  => 3,
         'Fourth Year' => 4,
+        'Fifth Year'  => 5,
     ];
 
     private const SEMESTERS = [
