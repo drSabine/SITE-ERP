@@ -1,16 +1,27 @@
 import { DataTable, StatusBadge } from '@/Components/ui';
 
+function gradeDisplay(studentRow) {
+    if (studentRow.status === 'dropped') return '—';
+    if (studentRow.final_grade !== null && studentRow.final_grade !== undefined) {
+        return Number(studentRow.final_grade).toFixed(2);
+    }
+    if (studentRow.status === 'inc') return 'INC';
+    return '—';
+}
+
 export default function StudentGradeTable({ students }) {
     const columns = [
         {
             key: 'student',
             label: 'Student',
-            render: (studentRow) => `${studentRow.enrollment?.student?.last_name}, ${studentRow.enrollment?.student?.first_name}`,
+            render: (studentRow) =>
+                `${studentRow.enrollment?.student?.last_name ?? '-'}, ${studentRow.enrollment?.student?.first_name ?? '-'}`,
         },
         {
             key: 'grade',
             label: 'Grade',
-            render: (studentRow) => studentRow.final_grade !== null ? Number(studentRow.final_grade).toFixed(2) : 'INC',
+            className: 'tabular-nums',
+            render: (studentRow) => gradeDisplay(studentRow),
         },
         {
             key: 'status',
@@ -21,8 +32,11 @@ export default function StudentGradeTable({ students }) {
 
     return (
         <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Students under this teacher</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Students under this teacher
+            </p>
             <DataTable
+                compact
                 columns={columns}
                 rows={students}
                 emptyMessage="No students under this teacher assignment."

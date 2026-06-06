@@ -27,8 +27,6 @@ return new class extends Migration
             $table->foreignId('course_id')->constrained('courses')->onDelete('restrict');
             $table->foreignId('academic_term_id')->constrained('academic_terms')->onDelete('restrict');
             $table->foreignId('section_id')->constrained('sections')->onDelete('restrict');
-            $table->timestamp('finalized_at')->nullable();
-            $table->foreignId('finalized_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
             // One teacher per section-course per term for this department.

@@ -11,6 +11,13 @@ use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
+    private const STUDENT_POPULATION_PLAN = [
+        'BSIT' => [1 => 28, 2 => 24, 3 => 21, 4 => 16],
+        'BSCE' => [1 => 24, 2 => 20, 3 => 17, 4 => 13],
+    ];
+
+    private ?string $passwordHash = null;
+
     public function run(): void
     {
         $bsit = Program::updateOrCreate(
@@ -27,11 +34,11 @@ class UserSeeder extends Seeder
             $this->seedProfiledUser($profileData);
         }
 
-        foreach ($this->bsitStudents() as $studentData) {
+        foreach ($this->generateStudents($bsit, $this->bsitLastNames()) as $studentData) {
             $this->seedStudent($studentData, $bsit);
         }
 
-        foreach ($this->bsceStudents() as $studentData) {
+        foreach ($this->generateStudents($bsce, $this->bsceLastNames()) as $studentData) {
             $this->seedStudent($studentData, $bsce);
         }
     }
@@ -39,70 +46,92 @@ class UserSeeder extends Seeder
     private function profiledUsers(): array
     {
         return [
-            ['first_name' => 'Marifel Grace', 'middle_name' => 'C', 'last_name' => 'Kummer', 'suffix' => '', 'sex' => 'Female', 'birthdate' => '1985-03-12', 'degree' => 'MIT', 'specialization' => '', 'role' => 'admin'],
-            ['first_name' => 'Rucelj', 'middle_name' => '', 'last_name' => 'Pugeda', 'suffix' => '', 'sex' => 'Male', 'birthdate' => '1987-07-08', 'degree' => 'MIT', 'specialization' => 'Information Technology', 'role' => 'coordinator_it'],
-            ['first_name' => 'Cirilio', 'middle_name' => 'M', 'last_name' => 'Gazzingan', 'suffix' => '', 'sex' => 'Male', 'birthdate' => '1983-11-19', 'degree' => 'MSCE', 'specialization' => 'Engineering', 'role' => 'coordinator_engineering'],
-            ['first_name' => 'Justine Vince', 'middle_name' => '', 'last_name' => 'Tan', 'suffix' => '', 'sex' => 'Male', 'birthdate' => '1990-02-24', 'degree' => 'MIT', 'specialization' => 'Web Development', 'role' => 'teacher'],
-            ['first_name' => 'Luigie', 'middle_name' => '', 'last_name' => 'Cagurangan', 'suffix' => '', 'sex' => 'Male', 'birthdate' => '1991-09-14', 'degree' => 'MIT', 'specialization' => 'Network Systems', 'role' => 'teacher'],
-            ['first_name' => 'Reychelle Ann', 'middle_name' => 'M', 'last_name' => 'Antonio', 'suffix' => '', 'sex' => 'Female', 'birthdate' => '1992-05-06', 'degree' => 'MIT', 'specialization' => 'Software Engineering', 'role' => 'teacher'],
+            // Admin
+            ['first_name' => 'Marifel Grace', 'middle_name' => 'C', 'last_name' => 'Kummer',    'suffix' => '', 'sex' => 'Female', 'birthdate' => '1985-03-12', 'degree' => 'MIT',  'specialization' => '',                       'role' => 'admin'],
+            // Coordinators
+            ['first_name' => 'Rucelj',        'middle_name' => '', 'last_name' => 'Pugeda',    'suffix' => '', 'sex' => 'Male',   'birthdate' => '1987-07-08', 'degree' => 'MIT',  'specialization' => 'Information Technology', 'role' => 'coordinator_it'],
+            ['first_name' => 'Cirilio',        'middle_name' => 'M', 'last_name' => 'Gazzingan','suffix' => '', 'sex' => 'Male',   'birthdate' => '1983-11-19', 'degree' => 'MSCE', 'specialization' => 'Engineering',            'role' => 'coordinator_engineering'],
+            // Teachers (5 total)
+            ['first_name' => 'Justine Vince',  'middle_name' => '', 'last_name' => 'Tan',       'suffix' => '', 'sex' => 'Male',   'birthdate' => '1990-02-24', 'degree' => 'MIT',  'specialization' => 'Web Development',        'role' => 'teacher'],
+            ['first_name' => 'Luigie',         'middle_name' => '', 'last_name' => 'Cagurangan','suffix' => '', 'sex' => 'Male',   'birthdate' => '1991-09-14', 'degree' => 'MIT',  'specialization' => 'Network Systems',        'role' => 'teacher'],
+            ['first_name' => 'Reychelle Ann',  'middle_name' => 'M', 'last_name' => 'Antonio',  'suffix' => '', 'sex' => 'Female', 'birthdate' => '1992-05-06', 'degree' => 'MIT',  'specialization' => 'Software Engineering',   'role' => 'teacher'],
+            ['first_name' => 'Arvin Roldan',   'middle_name' => 'C', 'last_name' => 'Macaraeg', 'suffix' => '', 'sex' => 'Male',   'birthdate' => '1988-04-15', 'degree' => 'MIT',  'specialization' => 'Database Systems',       'role' => 'teacher'],
+            ['first_name' => 'Josephine Ynez', 'middle_name' => 'B', 'last_name' => 'Dela Cruz','suffix' => '', 'sex' => 'Female', 'birthdate' => '1993-08-22', 'degree' => 'MSCE', 'specialization' => 'Structural Engineering', 'role' => 'teacher'],
         ];
     }
 
-    private function bsitStudents(): array
+    private function bsitLastNames(): array
     {
         return [
-            // 1st Year
-            ['first_name' => 'Alyssa Mae',    'middle_name' => 'T', 'last_name' => 'Soriano',    'suffix' => '', 'sex' => 'Male',   'year_level' => 1],
-            ['first_name' => 'John Paulo',    'middle_name' => 'R', 'last_name' => 'Ramos',       'suffix' => '', 'sex' => 'Male',   'year_level' => 1],
-            ['first_name' => 'Shiela Marie',  'middle_name' => 'C', 'last_name' => 'Cabrera',     'suffix' => '', 'sex' => 'Female', 'year_level' => 1],
-            ['first_name' => 'Renz Carlo',    'middle_name' => 'A', 'last_name' => 'Aguillon',    'suffix' => '', 'sex' => 'Male',   'year_level' => 1],
-            // 2nd Year
-            ['first_name' => 'Bianca Claire', 'middle_name' => 'M', 'last_name' => 'Mendoza',     'suffix' => '', 'sex' => 'Female', 'year_level' => 2],
-            ['first_name' => 'Kevin Luis',    'middle_name' => 'A', 'last_name' => 'Navarro',     'suffix' => '', 'sex' => 'Male',   'year_level' => 2],
-            ['first_name' => 'Jessa Ann',     'middle_name' => 'B', 'last_name' => 'Bernardo',    'suffix' => '', 'sex' => 'Female', 'year_level' => 2],
-            ['first_name' => 'Lance Gabriel', 'middle_name' => 'O', 'last_name' => 'Obispo',      'suffix' => '', 'sex' => 'Male',   'year_level' => 2],
-            // 3rd Year
-            ['first_name' => 'Denise Marie',  'middle_name' => 'L', 'last_name' => 'Villanueva',  'suffix' => '', 'sex' => 'Female', 'year_level' => 3],
-            ['first_name' => 'Aaron Miguel',  'middle_name' => 'P', 'last_name' => 'Flores',      'suffix' => '', 'sex' => 'Male',   'year_level' => 3],
-            ['first_name' => 'Kristine Joy',  'middle_name' => 'E', 'last_name' => 'Estoquia',    'suffix' => '', 'sex' => 'Female', 'year_level' => 3],
-            ['first_name' => 'Harold James',  'middle_name' => 'N', 'last_name' => 'Natividad',   'suffix' => '', 'sex' => 'Male',   'year_level' => 3],
-            // 4th Year
-            ['first_name' => 'Patricia Anne', 'middle_name' => 'D', 'last_name' => 'Dela Cruz',   'suffix' => '', 'sex' => 'Female', 'year_level' => 4],
-            ['first_name' => 'Jomarie',       'middle_name' => 'S', 'last_name' => 'Santos',      'suffix' => '', 'sex' => 'Male',   'year_level' => 4],
-            ['first_name' => 'Lovely Grace',  'middle_name' => 'F', 'last_name' => 'Fernando',    'suffix' => '', 'sex' => 'Female', 'year_level' => 4],
-            ['first_name' => 'Aldrin Paul',   'middle_name' => 'G', 'last_name' => 'Guzman',      'suffix' => '', 'sex' => 'Male',   'year_level' => 4],
+            1 => ['Soriano', 'Aguillon', 'Cabrera', 'Navarro', 'Obispo', 'Natividad', 'De Leon', 'Bernardo', 'Ramos', 'Flores', 'Valdez', 'Manalo', 'Imperial', 'Domingo'],
+            2 => ['Santos', 'Bautista', 'Fernando', 'Salcedo', 'Guzman', 'Aquino', 'Capuno', 'Reyes', 'Ventura', 'Tungol', 'Castro', 'Mendoza'],
+            3 => ['Paras', 'Imperial', 'Domingo', 'Valdez', 'Manalo', 'Arenas', 'Mendoza', 'Lacap', 'Cortez', 'Blanca', 'Lim'],
+            4 => ['Garcia', 'Cruz', 'Torres', 'Villanueva', 'Perez', 'Aguilar', 'Lim', 'Castro'],
         ];
     }
 
-    private function bsceStudents(): array
+    private function bsceLastNames(): array
     {
         return [
-            // 1st Year
-            ['first_name' => 'Carla Joy',     'middle_name' => 'B', 'last_name' => 'Bautista',    'suffix' => '', 'sex' => 'Female', 'year_level' => 1],
-            ['first_name' => 'Mark Anthony',  'middle_name' => 'R', 'last_name' => 'Reyes',       'suffix' => '', 'sex' => 'Male',   'year_level' => 1],
-            ['first_name' => 'Angela Rose',   'middle_name' => 'S', 'last_name' => 'Salcedo',     'suffix' => '', 'sex' => 'Female', 'year_level' => 1],
-            ['first_name' => 'Rico James',    'middle_name' => 'T', 'last_name' => 'Tungol',      'suffix' => '', 'sex' => 'Male',   'year_level' => 1],
-            // 2nd Year
-            ['first_name' => 'Elaine Marie',  'middle_name' => 'Q', 'last_name' => 'Aquino',      'suffix' => '', 'sex' => 'Female', 'year_level' => 2],
-            ['first_name' => 'Joshua Neil',   'middle_name' => 'V', 'last_name' => 'Ventura',     'suffix' => '', 'sex' => 'Male',   'year_level' => 2],
-            ['first_name' => 'Mylene Grace',  'middle_name' => 'C', 'last_name' => 'Capuno',      'suffix' => '', 'sex' => 'Female', 'year_level' => 2],
-            ['first_name' => 'Daven Carlo',   'middle_name' => 'P', 'last_name' => 'Paras',       'suffix' => '', 'sex' => 'Male',   'year_level' => 2],
-            // 3rd Year
-            ['first_name' => 'Faith Louise',  'middle_name' => 'D', 'last_name' => 'Domingo',     'suffix' => '', 'sex' => 'Female', 'year_level' => 3],
-            ['first_name' => 'Carl Adrian',   'middle_name' => 'M', 'last_name' => 'Manalo',      'suffix' => '', 'sex' => 'Male',   'year_level' => 3],
-            ['first_name' => 'Ivy Rose',      'middle_name' => 'L', 'last_name' => 'Lacap',       'suffix' => '', 'sex' => 'Female', 'year_level' => 3],
-            ['first_name' => 'Rommel Jay',    'middle_name' => 'I', 'last_name' => 'Imperial',    'suffix' => '', 'sex' => 'Male',   'year_level' => 3],
-            // 4th Year
-            ['first_name' => 'Hannah Grace',  'middle_name' => 'V', 'last_name' => 'Valdez',      'suffix' => '', 'sex' => 'Female', 'year_level' => 4],
-            ['first_name' => 'Patrick Sean',  'middle_name' => 'C', 'last_name' => 'Cortez',      'suffix' => '', 'sex' => 'Male',   'year_level' => 4],
-            ['first_name' => 'Rosemarie',     'middle_name' => 'A', 'last_name' => 'Arenas',      'suffix' => '', 'sex' => 'Female', 'year_level' => 4],
-            ['first_name' => 'Lemuel John',   'middle_name' => 'B', 'last_name' => 'Blanca',      'suffix' => '', 'sex' => 'Male',   'year_level' => 4],
+            1 => ['Abreu', 'Dalisay', 'Bugarin', 'Escoto', 'Canlas', 'Hipolito', 'Fuentes', 'Ilagan', 'Guarino', 'Jimenez', 'Legaspi', 'Pascual'],
+            2 => ['Kapuno', 'Ocampo', 'Legaspi', 'Pascual', 'Montoya', 'Resurreccion', 'Narciso', 'Simeon', 'Quinto', 'Tinio'],
+            3 => ['Umali', 'Zabala', 'Vidal', 'Alcantara', 'Yap', 'Casimiro', 'Guerrero', 'Ejercito', 'Balderama'],
+            4 => ['Hufano', 'Javier', 'Intal', 'Lagramada', 'Katmon', 'Nazareno', 'Mallari'],
         ];
+    }
+
+    private function generateStudents(Program $program, array $lastNamesByYear): array
+    {
+        $femaleFirstNames = [
+            'Alyssa Mae', 'Bianca Claire', 'Carla Joy', 'Denise Marie', 'Elaine Rose',
+            'Faith Louise', 'Gabrielle Ann', 'Hannah Grace', 'Iris Mae', 'Janine Marie',
+            'Katrina Joy', 'Lara Nicole', 'Mikaela Faye', 'Nadine Bea', 'Olivia Anne',
+        ];
+
+        $maleFirstNames = [
+            'Aaron Miguel', 'Bryan Carlo', 'Carlos Luis', 'Daniel Jose', 'Eduardo Nino',
+            'Francis Mark', 'Gabriel Josh', 'Harold James', 'Ivan Carlo', 'Julius Marc',
+            'Kenneth Paul', 'Lance Gabriel', 'Marco Andrei', 'Nathaniel John', 'Oscar Miguel',
+        ];
+
+        $middleInitials = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+                           'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'V',
+                           'W', 'Y', 'Z'];
+
+        $students = [];
+        $populationPlan = self::STUDENT_POPULATION_PLAN[$program->code] ?? [];
+
+        foreach ($populationPlan as $yearLevel => $targetPopulation) {
+            $lastNames = $lastNamesByYear[$yearLevel] ?? $lastNamesByYear[array_key_first($lastNamesByYear)];
+
+            for ($index = 0; $index < $targetPopulation; $index++) {
+                $isFemale = $index % 2 === 0;
+                $firstNamePool = $isFemale ? $femaleFirstNames : $maleFirstNames;
+                $nameCycle = intdiv($index, count($firstNamePool));
+                $firstName = $firstNamePool[$index % count($firstNamePool)];
+
+                if ($nameCycle > 0) {
+                    $firstName .= ' ' . chr(64 + $nameCycle);
+                }
+
+                $students[] = [
+                    'first_name'  => $firstName,
+                    'middle_name' => $middleInitials[$index % count($middleInitials)],
+                    'last_name'   => $lastNames[$index % count($lastNames)],
+                    'suffix'      => '',
+                    'sex'         => $isFemale ? 'Female' : 'Male',
+                    'year_level'  => $yearLevel,
+                    'email'       => strtolower($program->code) . '.y' . $yearLevel . '.' . str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT) . '@site.spup',
+                ];
+            }
+        }
+
+        return $students;
     }
 
     private function seedProfiledUser(array $profileData): User
     {
-        $email = UserService::buildEmail($profileData['first_name'], $profileData['last_name']);
+        $email = $profileData['email'] ?? UserService::buildEmail($profileData['first_name'], $profileData['last_name']);
         $displayName = UserService::buildDisplayName(
             $profileData['first_name'],
             $profileData['middle_name'],
@@ -114,7 +143,7 @@ class UserSeeder extends Seeder
             ['email' => $email],
             [
                 'name'      => $displayName,
-                'password'  => Hash::make('password'),
+                'password'  => $this->passwordHash(),
                 'role'      => $profileData['role'],
                 'is_active' => true,
             ]
@@ -123,13 +152,13 @@ class UserSeeder extends Seeder
         $user->userProfile()->updateOrCreate(
             ['user_id' => $user->id],
             [
-                'first_name' => $profileData['first_name'],
-                'middle_name' => $profileData['middle_name'] !== '' ? $profileData['middle_name'] : null,
-                'last_name' => $profileData['last_name'],
-                'suffix' => $profileData['suffix'] !== '' ? $profileData['suffix'] : null,
-                'sex' => $profileData['sex'],
-                'birthdate' => $profileData['birthdate'],
-                'degree' => $profileData['degree'] !== '' ? $profileData['degree'] : null,
+                'first_name'     => $profileData['first_name'],
+                'middle_name'    => $profileData['middle_name'] !== '' ? $profileData['middle_name'] : null,
+                'last_name'      => $profileData['last_name'],
+                'suffix'         => $profileData['suffix'] !== '' ? $profileData['suffix'] : null,
+                'sex'            => $profileData['sex'],
+                'birthdate'      => $profileData['birthdate'],
+                'degree'         => $profileData['degree'] !== '' ? $profileData['degree'] : null,
                 'specialization' => $profileData['specialization'] !== '' ? $profileData['specialization'] : null,
             ]
         );
@@ -141,25 +170,31 @@ class UserSeeder extends Seeder
     {
         $user = $this->seedProfiledUser([
             ...$studentData,
-            'birthdate'     => null,
-            'degree'        => '',
+            'birthdate'      => null,
+            'degree'         => '',
             'specialization' => '',
-            'role'          => 'student',
+            'role'           => 'student',
+            'email'          => $studentData['email'],
         ]);
 
         Student::updateOrCreate(
             ['user_id' => $user->id],
             [
-                'first_name'     => $studentData['first_name'],
-                'middle_name'    => $studentData['middle_name'] !== '' ? $studentData['middle_name'] : null,
-                'last_name'      => $studentData['last_name'],
-                'suffix'         => $studentData['suffix'] !== '' ? $studentData['suffix'] : null,
-                'sex'            => $studentData['sex'],
-                'email'          => $user->email,
-                'program_id'     => $program->id,
-                'year_level'     => $studentData['year_level'],
-                'status'         => 'active',
+                'first_name'  => $studentData['first_name'],
+                'middle_name' => $studentData['middle_name'] !== '' ? $studentData['middle_name'] : null,
+                'last_name'   => $studentData['last_name'],
+                'suffix'      => $studentData['suffix'] !== '' ? $studentData['suffix'] : null,
+                'sex'         => $studentData['sex'],
+                'email'       => $user->email,
+                'program_id'  => $program->id,
+                'year_level'  => $studentData['year_level'],
+                'status'      => 'active',
             ]
         );
+    }
+
+    private function passwordHash(): string
+    {
+        return $this->passwordHash ??= Hash::make('password');
     }
 }

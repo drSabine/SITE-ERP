@@ -6,37 +6,61 @@ import { getSemesterLabel, getYearLabel } from '@/Components/Coordinator/Shared'
 export default function Index({ activeTerm, assignments = [] }) {
     const columns = [
         {
+            key: 'subject',
+            label: 'Subject',
+            render: (row) => (
+                <div>
+                    <p className="font-semibold text-gray-900">{row.course?.course_code ?? '-'}</p>
+                    <p className="text-xs text-gray-500">{row.course?.title ?? '-'}</p>
+                </div>
+            ),
+        },
+        {
             key: 'section',
             label: 'Section',
-            className: 'font-semibold text-gray-900',
-            render: (row) => `${row.section?.name ?? '-'} (${row.section?.program?.code ?? '-'} ${getYearLabel(row.section?.year_level)})`,
+            render: (row) =>
+                `${row.section?.name ?? '-'} (${row.section?.program?.code ?? '-'} ${getYearLabel(row.section?.year_level)})`,
         },
         {
-            key: 'course',
-            label: 'Subject',
-            render: (row) => `${row.course?.course_code ?? '-'} - ${row.course?.title ?? '-'}`,
+            key: 'progress',
+            label: 'Progress',
+            render: (row) => {
+                const metrics = row.grading_metrics ?? {};
+                const graded = metrics.graded_count ?? 0;
+                const total = metrics.total_students ?? 0;
+                const rate = metrics.completion_rate ?? 0;
+                return (
+                    <span className="tabular-nums text-sm text-gray-700">
+                        {graded}/{total}
+                        <span className="ml-1 text-xs text-gray-400">({rate}%)</span>
+                    </span>
+                );
+            },
         },
         {
-            key: 'units',
-            label: 'Units',
-            className: 'text-center text-gray-600',
-            headerClass: 'text-center',
-            render: (row) => row.course?.units ?? '-',
-        },
-        {
-            key: 'finalization',
-            label: 'Finalization',
-            render: (row) => (
-                <StatusBadge
-                    status={row.finalized_at ? 'finalized' : 'active'}
-                    label={row.finalized_at ? 'Finalized' : 'Open'}
-                />
-            ),
+            key: 'issues',
+            label: 'Flags',
+            render: (row) => {
+                const metrics = row.grading_metrics ?? {};
+                const incCount = metrics.inc_count ?? 0;
+                const droppedCount = metrics.dropped_count ?? 0;
+                const failedCount = metrics.failed_count ?? 0;
+                return (
+                    <div className="flex flex-wrap gap-1.5">
+                        {incCount > 0 && <StatusBadge status="inc" label={`${incCount} INC`} />}
+                        {droppedCount > 0 && <StatusBadge status="dropped" label={`${droppedCount} Drop`} />}
+                        {failedCount > 0 && <StatusBadge status="failed" label={`${failedCount} Failed`} />}
+                        {incCount === 0 && droppedCount === 0 && failedCount === 0 && (
+                            <span className="text-xs text-gray-400">—</span>
+                        )}
+                    </div>
+                );
+            },
         },
     ];
 
     const termDescription = activeTerm
-        ? `${getSemesterLabel(activeTerm.semester)} - Active Term`
+        ? `${getSemesterLabel(activeTerm.semester)} — Active Term`
         : 'No active academic term';
 
     return (
@@ -45,10 +69,7 @@ export default function Index({ activeTerm, assignments = [] }) {
 
             <div className="py-8">
                 <div className="mx-auto max-w-6xl px-6">
-                    <PagePanel
-                        title="My Gradebooks"
-                        description={termDescription}
-                    >
+                    <PagePanel title="My Gradebooks" description={termDescription}>
                         <DataTable
                             columns={columns}
                             rows={assignments}
@@ -56,9 +77,9 @@ export default function Index({ activeTerm, assignments = [] }) {
                             actions={(row) => (
                                 <Link
                                     href={route('teacher.grades.show', row.id)}
-                                    className="inline-flex items-center border border-transparent bg-emerald-700 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-emerald-800"
+                                    className="inline-flex items-center border border-transparent bg-emerald-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-emerald-800"
                                 >
-                                    {row.finalized_at ? 'View Gradebook' : 'Open Gradebook'}
+                                    Open Gradebook
                                 </Link>
                             )}
                         />

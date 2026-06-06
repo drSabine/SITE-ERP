@@ -75,7 +75,7 @@ class GradingMonitorController extends Controller
                 ->where('academic_term_id', $teacherAssignment->academic_term_id)
                 ->where('section_id', $teacherAssignment->section_id)
                 ->where('status', 'enrolled'))
-            ->whereIn('status', ['active', 'inc', 'passed', 'failed'])
+            ->whereIn('status', ['active', 'inc', 'passed', 'failed', 'dropped'])
             ->with([
                 'enrollment' => fn ($query) => $query->select('id', 'student_id')
                     ->with(['student' => fn ($studentQuery) => $studentQuery->select('id', 'first_name', 'last_name')]),

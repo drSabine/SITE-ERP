@@ -37,6 +37,11 @@ class DashboardAnalyticsService
             ->all();
     }
 
+    /**
+     * Return student counts per program and year level for the active school year.
+     * BSCE counts are negated so the frontend can render a population-pyramid layout
+     * (BSIT bars go right, BSCE bars go left).
+     */
     public function programDistribution(): array
     {
         $activeSchoolYear = SchoolYear::active()->first(['id']);
@@ -45,7 +50,7 @@ class DashboardAnalyticsService
             return [];
         }
 
-        return SchoolYear::query()
+        $rows = \Illuminate\Support\Facades\DB::table('school_years')
             ->where('school_years.id', $activeSchoolYear->id)
             ->join('academic_terms', 'academic_terms.school_year_id', '=', 'school_years.id')
             ->join('enrollments', function ($join) {
@@ -53,15 +58,25 @@ class DashboardAnalyticsService
                     ->whereIn('enrollments.status', ['enrolled', 'completed']);
             })
             ->join('programs', 'programs.id', '=', 'enrollments.program_id')
-            ->select('programs.code')
-            ->selectRaw('COUNT(DISTINCT enrollments.student_id) as student_count')
-            ->groupBy('programs.id', 'programs.code')
-            ->orderBy('programs.code')
-            ->get()
-            ->map(fn($program) => [
-                'program'  => $program->code,
-                'students' => (int) $program->student_count,
-            ])
+            ->selectRaw('programs.code, enrollments.year_level, COUNT(DISTINCT enrollments.student_id) as student_count')
+            ->groupBy('programs.code', 'enrollments.year_level')
+            ->orderBy('enrollments.year_level')
+            ->get();
+
+        $yearLabels = [1 => '1st Year', 2 => '2nd Year', 3 => '3rd Year', 4 => '4th Year', 5 => '5th Year'];
+
+        return $rows->pluck('year_level')->unique()->sort()->values()
+            ->map(function ($level) use ($rows, $yearLabels) {
+                $bsitRow = $rows->first(fn ($row) => $row->year_level == $level && $row->code === 'BSIT');
+                $bsceRow = $rows->first(fn ($row) => $row->year_level == $level && $row->code === 'BSCE');
+
+                return [
+                    'yearLevel' => $yearLabels[$level] ?? "Year {$level}",
+                    'bsit'      => $bsitRow ? (int) $bsitRow->student_count : 0,
+                    'bsce'      => $bsceRow ? -(int) $bsceRow->student_count : 0,
+                ];
+            })
+            ->values()
             ->all();
     }
 

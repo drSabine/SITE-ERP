@@ -20,8 +20,9 @@ export default function GradingMonitorFilters({
     const termsForSelectedSchoolYear = selectedSchoolYear?.academic_terms ?? [];
 
     return (
-        <div className="mb-4 grid grid-cols-1 gap-3 border border-gray-200 p-4 md:grid-cols-5">
-            <div>
+        <div className="border-b border-gray-200 p-4">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-[220px_1fr]">
+                <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">School Year</label>
                 <select
                     className="mt-1 w-full border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
@@ -40,23 +41,29 @@ export default function GradingMonitorFilters({
                 </select>
             </div>
 
-            <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Term</label>
-                <select
-                    className="mt-1 w-full border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                    value={filters.term_id ?? ''}
-                    onChange={(event) => onApplyFilters({ term_id: event.target.value })}
-                >
-                    <option value="">All terms</option>
+                <div>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Academic Term</label>
+                    <div className="mt-1 flex flex-wrap gap-2">
                     {termsForSelectedSchoolYear.map((academicTerm) => (
-                        <option key={academicTerm.id} value={academicTerm.id}>
+                        <button
+                            key={academicTerm.id}
+                            type="button"
+                            onClick={() => onApplyFilters({ term_id: academicTerm.id })}
+                            className={`border px-4 py-2 text-xs font-semibold uppercase tracking-widest ${
+                                academicTerm.id === Number(filters.term_id)
+                                    ? 'border-emerald-700 bg-emerald-700 text-white'
+                                    : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+                            }`}
+                        >
                             {getSemesterLabel(academicTerm.semester)}
-                        </option>
+                        </button>
                     ))}
-                </select>
+                    </div>
+                </div>
             </div>
 
-            <div>
+            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
+                <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Program</label>
                 <select
                     className="mt-1 w-full border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
@@ -72,7 +79,23 @@ export default function GradingMonitorFilters({
                 </select>
             </div>
 
-            <div>
+                <div>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Year Level</label>
+                    <select
+                        className="mt-1 w-full border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                        value={filters.year_level ?? ''}
+                        onChange={(event) => onApplyFilters({ year_level: event.target.value })}
+                    >
+                        <option value="">All year levels</option>
+                        {[1, 2, 3, 4].map((yearLevel) => (
+                            <option key={yearLevel} value={yearLevel}>
+                                {getYearLabel(yearLevel)}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Teacher</label>
                 <select
                     className="mt-1 w-full border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
@@ -88,7 +111,7 @@ export default function GradingMonitorFilters({
                 </select>
             </div>
 
-            <div>
+                <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Section</label>
                 <select
                     className="mt-1 w-full border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
@@ -104,6 +127,7 @@ export default function GradingMonitorFilters({
                             </option>
                         ))}
                 </select>
+                </div>
             </div>
         </div>
     );

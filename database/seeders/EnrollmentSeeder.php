@@ -32,16 +32,37 @@ class EnrollmentSeeder extends Seeder
         $syName = $activeTerm->schoolYear?->name ?? 'N/A';
         $this->command->info("Enrolling all active students in: {$semesterLabel} (S.Y. {$syName})");
 
-        $students = Student::active()->get();
+        // Build section map keyed by "program_id_year_level"
+        $sectionMap = [];
+        foreach (Section::active()->orderBy('name')->get() as $section) {
+            $key = "{$section->program_id}_{$section->year_level}";
+            $sectionMap[$key][] = $section;
+        }
+
+        // Group students by program+year_level to distribute evenly across sections
+        $students = Student::active()
+            ->orderBy('program_id')
+            ->orderBy('year_level')
+            ->orderBy('id')
+            ->get();
+
+        $sectionCounters = [];
         $enrolled = 0;
         $skipped  = 0;
 
         foreach ($students as $student) {
-            $section = Section::active()
-                ->where('program_id', $student->program_id)
-                ->where('year_level', $student->year_level)
-                ->orderBy('name')
-                ->first();
+            $key = "{$student->program_id}_{$student->year_level}";
+
+            if (! isset($sectionCounters[$key])) {
+                $sectionCounters[$key] = 0;
+            }
+
+            $sectionList = $sectionMap[$key] ?? [];
+            $section = empty($sectionList)
+                ? null
+                : $sectionList[$sectionCounters[$key] % count($sectionList)];
+
+            $sectionCounters[$key]++;
 
             $existingEnrollment = Enrollment::where('student_id', $student->id)
                 ->where('academic_term_id', $activeTerm->id)
@@ -51,7 +72,6 @@ class EnrollmentSeeder extends Seeder
                 if (! $existingEnrollment->section_id && $section) {
                     $existingEnrollment->update(['section_id' => $section->id]);
                 }
-
                 $skipped++;
                 continue;
             }

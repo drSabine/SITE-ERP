@@ -5,28 +5,53 @@ import { DataTable, PagePanel, StatusBadge } from '@/Components/ui';
 import { getSemesterLabel, getYearLabel } from '@/Components/Coordinator/Shared';
 
 export default function Show({ assignment, enrollmentCourses = [], validGrades = [] }) {
-    function normalizeGradeValue(value) {
-        if (value === null || value === undefined || value === '') return '';
-        return Number(value).toFixed(2);
+    const isLocked = !assignment.academic_term?.is_active;
+
+    function initialSelectValue(enrollmentCourse) {
+        if (enrollmentCourse.status === 'dropped') return '__drop__';
+        if (enrollmentCourse.status === 'inc') return '__inc__';
+        if (enrollmentCourse.final_grade !== null && enrollmentCourse.final_grade !== undefined) {
+            return Number(enrollmentCourse.final_grade).toFixed(2);
+        }
+        return '';
     }
 
     const [grades, setGrades] = useState(() => {
         const initialValues = {};
         enrollmentCourses.forEach((enrollmentCourse) => {
-            initialValues[enrollmentCourse.id] = normalizeGradeValue(enrollmentCourse.final_grade);
+            initialValues[enrollmentCourse.id] = initialSelectValue(enrollmentCourse);
         });
         return initialValues;
     });
     const [processingId, setProcessingId] = useState(null);
 
+    function getSaveButtonLabel(enrollmentCourseId) {
+        const raw = grades[enrollmentCourseId] ?? '';
+        if (raw === '__inc__') return 'Mark INC';
+        if (raw === '__drop__') return 'Mark Dropped';
+        return 'Save Grade';
+    }
+
     function submitGrade(enrollmentCourseId) {
-        if (assignment.finalized_at) return;
+        if (isLocked) return;
         setProcessingId(enrollmentCourseId);
 
-        const rawGrade = grades[enrollmentCourseId];
+        const raw = grades[enrollmentCourseId] ?? '';
+        let gradeToSubmit = null;
+        let markAs = null;
+
+        if (raw === '__inc__') {
+            markAs = 'inc';
+        } else if (raw === '__drop__') {
+            markAs = 'dropped';
+        } else if (raw !== '') {
+            gradeToSubmit = Number(raw);
+        }
+
         router.post(route('teacher.grades.store'), {
             enrollment_course_id: enrollmentCourseId,
-            grade: rawGrade === '' ? null : Number(rawGrade),
+            grade: gradeToSubmit,
+            mark_as: markAs,
         }, {
             preserveScroll: true,
             onFinish: () => setProcessingId(null),
@@ -53,9 +78,11 @@ export default function Show({ assignment, enrollmentCourses = [], validGrades =
                     className="w-full border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
                     value={grades[row.id] ?? ''}
                     onChange={(event) => setGrades((previous) => ({ ...previous, [row.id]: event.target.value }))}
-                    disabled={Boolean(assignment.finalized_at)}
+                    disabled={isLocked}
                 >
-                    <option value="">INC</option>
+                    <option value="">— Not graded yet —</option>
+                    <option value="__inc__">INC (Incomplete)</option>
+                    <option value="__drop__">DROP (Dropped)</option>
                     {validGrades.map((gradeValue) => (
                         <option key={gradeValue} value={Number(gradeValue).toFixed(2)}>
                             {Number(gradeValue).toFixed(2)}
@@ -87,12 +114,16 @@ export default function Show({ assignment, enrollmentCourses = [], validGrades =
                             </Link>
                         }
                     >
-                        {assignment.finalized_at && (
+                        {isLocked && (
                             <div className="mb-4 border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
-                                <span className="font-semibold">Finalized:</span> This assignment is locked.
-                                {assignment.finalizer?.name ? ` Finalized by ${assignment.finalizer.name}.` : ''}
+                                <span className="font-semibold">Finalized:</span> This academic term is locked.
                             </div>
                         )}
+
+                        <div className="mb-4 border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs text-emerald-800">
+                            Select <strong>INC (Incomplete)</strong> to flag a student immediately — the coordinator will see this in the Grading Monitor.
+                            Select <strong>DROP (Dropped)</strong> to remove the student from your grade sheet — only the coordinator can reverse a drop.
+                        </div>
 
                         <DataTable
                             columns={columns}
@@ -103,9 +134,9 @@ export default function Show({ assignment, enrollmentCourses = [], validGrades =
                                     type="button"
                                     className="inline-flex items-center border border-transparent bg-emerald-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-emerald-800 disabled:opacity-25"
                                     onClick={() => submitGrade(row.id)}
-                                    disabled={processingId === row.id || Boolean(assignment.finalized_at)}
+                                    disabled={processingId === row.id || isLocked}
                                 >
-                                    {assignment.finalized_at ? 'Locked' : processingId === row.id ? 'Saving...' : 'Save Grade'}
+                                    {isLocked ? 'Locked' : processingId === row.id ? 'Saving...' : getSaveButtonLabel(row.id)}
                                 </button>
                             )}
                         />

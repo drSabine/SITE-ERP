@@ -27,6 +27,7 @@ class AcademicTermController extends Controller
         $request->validate(['school_year_id' => 'required|exists:school_years,id']);
 
         $terms = AcademicTerm::where('school_year_id', $request->school_year_id)
+            ->orderByRaw("FIELD(semester, 'first', 'second', 'summer')")
             ->get(['id', 'school_year_id', 'semester', 'is_active', 'start_date', 'end_date']);
 
         return response()->json($terms);

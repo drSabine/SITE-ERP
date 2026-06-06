@@ -108,9 +108,11 @@ export default function Dashboard({
                         )}
 
                         {role === 'admin' && (
-                            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                                <SchoolYearEvaluationTrend data={analytics.schoolYearEvaluationTrend ?? []} />
-                                <ProgramDistributionChart data={analytics.programDistribution ?? []} />
+                            <div className="space-y-4">
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <SchoolYearEvaluationTrend data={analytics.schoolYearEvaluationTrend ?? []} />
+                                    <ProgramDistributionChart data={analytics.programDistribution ?? []} />
+                                </div>
                                 <EvaluationOutcomeTrend data={analytics.evaluationOutcomeTrend ?? []} />
                             </div>
                         )}

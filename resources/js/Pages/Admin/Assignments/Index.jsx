@@ -9,7 +9,6 @@ import {
     InputLabel,
     PagePanel,
     PrimaryButton,
-    StatusBadge,
 } from '@/Components/ui';
 import { getSemesterLabel, getYearLabel } from '@/Components/Coordinator/Shared';
 
@@ -19,7 +18,7 @@ function buildTeacherName(teacher) {
     return `${profile.last_name}, ${profile.first_name}`;
 }
 
-export default function Index({ term, schoolYears, assignments, sections, teachers, courses }) {
+export default function Index({ term, selectedSchoolYear, schoolYears, assignments, sections, teachers, courses }) {
     const [confirm, setConfirm] = useState(null);
 
     const assignmentForm = useForm({
@@ -29,16 +28,16 @@ export default function Index({ term, schoolYears, assignments, sections, teache
         section_id: '',
     });
 
-    const [selectedSchoolYearId, setSelectedSchoolYearId] = useState(term.school_year_id);
-    const selectedSchoolYear = schoolYears.find((schoolYear) => schoolYear.id === Number(selectedSchoolYearId));
     const selectedSchoolYearTerms = selectedSchoolYear?.academic_terms ?? [];
+    const selectedTerm = selectedSchoolYearTerms.find((academicTerm) => academicTerm.id === Number(term.id)) ?? term;
 
     const selectedAssignmentSection = sections.find((section) => section.id === Number(assignmentForm.data.section_id));
     const filteredCourses = (() => {
         if (!selectedAssignmentSection) return [];
         return courses.filter((course) =>
             course.program_id === selectedAssignmentSection.program_id &&
-            Number(course.year_level) === Number(selectedAssignmentSection.year_level)
+            Number(course.year_level) === Number(selectedAssignmentSection.year_level) &&
+            course.semester_type === selectedTerm.semester
         );
     })();
 
@@ -65,17 +64,34 @@ export default function Index({ term, schoolYears, assignments, sections, teache
             headerClass: 'text-center',
             render: (row) => row.course?.units ?? '-',
         },
-        {
-            key: 'finalized',
-            label: 'Finalization',
-            render: (row) => (
-                <StatusBadge
-                    status={row.finalized_at ? 'finalized' : 'active'}
-                    label={row.finalized_at ? 'Finalized' : 'Open'}
-                />
-            ),
-        },
     ];
+
+    function visitAssignmentContext(overrides = {}) {
+        router.get(route('admin.assignments.index'), {
+            school_year_id: selectedSchoolYear.id,
+            academic_term_id: term.id,
+            ...overrides,
+        }, { preserveScroll: true });
+    }
+
+    function changeSchoolYear(event) {
+        const schoolYear = schoolYears.find((item) => item.id === Number(event.target.value));
+        const firstTerm = schoolYear?.academic_terms?.[0];
+
+        if (!firstTerm) return;
+
+        assignmentForm.setData('academic_term_id', firstTerm.id);
+        visitAssignmentContext({
+            school_year_id: schoolYear.id,
+            academic_term_id: firstTerm.id,
+        });
+    }
+
+    function changeTerm(academicTerm) {
+        assignmentForm.setData('academic_term_id', academicTerm.id);
+        assignmentForm.reset('course_id');
+        visitAssignmentContext({ academic_term_id: academicTerm.id });
+    }
 
     function submitAssignmentForm(event) {
         event.preventDefault();
@@ -97,30 +113,6 @@ export default function Index({ term, schoolYears, assignments, sections, teache
         });
     }
 
-    function finalizeAssignment(assignment) {
-        setConfirm({
-            title: 'Finalize Assignment',
-            message: `Finalize ${assignment.course?.course_code} for ${assignment.section?.name}? Teachers cannot edit grades after this.`,
-            confirmLabel: 'Finalize',
-            onConfirm: () => router.post(route('admin.assignments.finalize', assignment.id), {}, {
-                preserveScroll: true,
-                onSuccess: () => setConfirm(null),
-            }),
-        });
-    }
-
-    function reopenAssignment(assignment) {
-        setConfirm({
-            title: 'Reopen Assignment',
-            message: `Reopen ${assignment.course?.course_code} for ${assignment.section?.name}? Teachers will be able to edit grades again.`,
-            confirmLabel: 'Reopen',
-            onConfirm: () => router.post(route('admin.assignments.reopen', assignment.id), {}, {
-                preserveScroll: true,
-                onSuccess: () => setConfirm(null),
-            }),
-        });
-    }
-
     const pageDescription = `${getSemesterLabel(term.semester)} > S.Y. ${term.school_year?.name}`;
 
     return (
@@ -130,14 +122,15 @@ export default function Index({ term, schoolYears, assignments, sections, teache
             <div className="py-8">
                 <div className="mx-auto max-w-6xl px-6">
                     <PagePanel title="Teacher Subject Assignment" description={pageDescription}>
-                        <form onSubmit={submitAssignmentForm} className="grid grid-cols-1 gap-4 border border-gray-200 p-4 md:grid-cols-4">
-                            <div>
-                                <InputLabel htmlFor="assignment_term_id" value="School Year / Term" />
-                                <div className="mt-1 flex gap-2">
+                        <div className="border-b border-gray-200 px-4 py-4">
+                            <div className="grid gap-4 md:grid-cols-[280px_1fr] md:items-end">
+                                <div>
+                                    <InputLabel htmlFor="assignment_school_year_id" value="School Year" />
                                     <select
-                                        className="w-full border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                                        value={selectedSchoolYearId}
-                                        onChange={(event) => setSelectedSchoolYearId(event.target.value)}
+                                        id="assignment_school_year_id"
+                                        className="mt-1 w-full border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                        value={selectedSchoolYear.id}
+                                        onChange={changeSchoolYear}
                                     >
                                         {schoolYears.map((schoolYear) => (
                                             <option key={schoolYear.id} value={schoolYear.id}>
@@ -145,22 +138,28 @@ export default function Index({ term, schoolYears, assignments, sections, teache
                                             </option>
                                         ))}
                                     </select>
-                                    <select
-                                        id="assignment_term_id"
-                                        className="w-full border-gray-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                                        value={assignmentForm.data.academic_term_id}
-                                        onChange={(event) => assignmentForm.setData('academic_term_id', event.target.value)}
-                                    >
-                                        {selectedSchoolYearTerms.map((academicTerm) => (
-                                            <option key={academicTerm.id} value={academicTerm.id}>
-                                                {getSemesterLabel(academicTerm.semester)}
-                                            </option>
-                                        ))}
-                                    </select>
                                 </div>
-                                <InputError message={assignmentForm.errors.academic_term_id} className="mt-2" />
-                            </div>
 
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedSchoolYearTerms.map((academicTerm) => (
+                                        <button
+                                            key={academicTerm.id}
+                                            type="button"
+                                            onClick={() => changeTerm(academicTerm)}
+                                            className={`border px-4 py-2 text-xs font-semibold uppercase tracking-widest ${
+                                                academicTerm.id === Number(term.id)
+                                                    ? 'border-emerald-700 bg-emerald-700 text-white'
+                                                    : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            {getSemesterLabel(academicTerm.semester)}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <form onSubmit={submitAssignmentForm} className="grid grid-cols-1 gap-4 border-b border-gray-200 p-4 md:grid-cols-4">
                             <div>
                                 <InputLabel htmlFor="assignment_section_id" value="Section" />
                                 <select
@@ -217,6 +216,7 @@ export default function Index({ term, schoolYears, assignments, sections, teache
                                     ))}
                                 </select>
                                 <InputError message={assignmentForm.errors.course_id} className="mt-2" />
+                                <InputError message={assignmentForm.errors.academic_term_id} className="mt-2" />
                             </div>
 
                             <div className="md:col-span-4">
@@ -226,7 +226,7 @@ export default function Index({ term, schoolYears, assignments, sections, teache
                             </div>
                         </form>
 
-                        <div className="mt-4">
+                        <div className="p-4">
                             <DataTable
                                 columns={assignmentColumns}
                                 rows={assignments.data}
@@ -234,8 +234,6 @@ export default function Index({ term, schoolYears, assignments, sections, teache
                                 emptyMessage="No teacher assignments found for this term."
                                 actions={(row) => (
                                     <ActionsDropdown items={[
-                                        !row.finalized_at && { label: 'Finalize', onClick: () => finalizeAssignment(row) },
-                                        row.finalized_at && { label: 'Reopen', onClick: () => reopenAssignment(row) },
                                         { label: 'Remove', onClick: () => deleteAssignment(row), variant: 'danger' },
                                     ]} />
                                 )}

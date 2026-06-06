@@ -15,13 +15,24 @@ class GradeService
     /**
      * Input or update the final grade for a single enrollment_course row.
      *
-     * $grade = null  â†’ teacher explicitly marks incomplete (INC).
-     * Status remains "active" â€” the term finalize step locks it.
+     * $grade  = null + $status = ‘active’  → grade cleared, awaiting submission
+     * $status = ‘inc’                       → teacher marks INC immediately (no grade)
+     * $status = ‘dropped’                   → teacher marks DROP immediately (no grade)
+     * $grade  = numeric + $status = ‘active’ → grade submitted, locked at finalization
      */
-    public function inputGrade(EnrollmentCourse $ec, ?float $grade): void
+    public function inputGrade(EnrollmentCourse $ec, ?float $grade, string $status = 'active'): void
     {
+        if (in_array($ec->status, ['passed', 'failed', 'credited'])) {
+            throw new InvalidArgumentException('Cannot modify a finalized enrollment course.');
+        }
+
         if ($ec->status === 'dropped') {
-            throw new InvalidArgumentException('Cannot grade a dropped course.');
+            throw new InvalidArgumentException('Cannot modify a dropped enrollment course.');
+        }
+
+        // INC and dropped must carry no grade
+        if (in_array($status, ['inc', 'dropped'])) {
+            $grade = null;
         }
 
         if ($grade !== null && !in_array($grade, self::VALID_GRADES, strict: true)) {
@@ -30,7 +41,10 @@ class GradeService
             );
         }
 
-        $ec->update(['final_grade' => $grade]);
+        $ec->update([
+            'final_grade' => $grade,
+            'status'      => $status,
+        ]);
     }
 
     /**

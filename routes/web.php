@@ -61,8 +61,6 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     Route::get('assignments', [Admin\AssignmentController::class, 'index'])->name('assignments.index');
     Route::post('assignments', [Admin\AssignmentController::class, 'store'])->name('assignments.store');
     Route::delete('assignments/{teacherAssignment}', [Admin\AssignmentController::class, 'destroy'])->name('assignments.destroy');
-    Route::post('assignments/{teacherAssignment}/finalize', [Admin\AssignmentController::class, 'finalize'])->name('assignments.finalize');
-    Route::post('assignments/{teacherAssignment}/reopen', [Admin\AssignmentController::class, 'reopen'])->name('assignments.reopen');
 
     // Grading Monitor
     Route::get('grading-monitor', [Admin\GradingMonitorController::class, 'index'])->name('grading-monitor.index');

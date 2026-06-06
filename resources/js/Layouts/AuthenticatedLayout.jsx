@@ -130,30 +130,30 @@ export default function AuthenticatedLayout({ header, children }) {
 
     return (
         <div className="flex min-h-screen bg-gray-50">
-            <aside className="sticky top-0 flex h-screen w-72 shrink-0 flex-col bg-emerald-900">
-                <div className="shrink-0 border-b border-emerald-700 bg-emerald-950 px-5 py-6">
+            <aside className="sticky top-0 flex h-screen w-72 shrink-0 flex-col bg-emerald-900 select-none">
+                <div className="shrink-0 border-b border-emerald-800 bg-emerald-950 px-5 py-6">
                     <div className="flex flex-col items-center text-center">
                         <img
                             src="/images/SPUP-final-logo.png"
                             alt="SPUP"
                             className="h-14 w-14 object-contain"
                         />
-                        <div className="mt-3 min-w-0">
-                            <p className="text-[13px] font-medium leading-snug text-white" style={{ fontFamily: 'OldEnglish' }}>
+                        <div className="mt-3.5 min-w-0">
+                            <p className="text-[12.5px] font-medium leading-snug text-white/95" style={{ fontFamily: 'OldEnglish' }}>
                                 St. Paul University Philippines
                             </p>
-                            <p className="mt-2 text-sm font-semibold leading-none tracking-[0.35em] text-emerald-300">
-                                SITE
+                            <p className="mt-2.5 text-[9.5px] font-bold uppercase tracking-wider text-emerald-300 leading-tight">
+                                School of Information Technology and Engineering
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <nav className="flex-1 overflow-y-auto px-2 py-3">
+                <nav className="flex-1 overflow-y-auto px-2 py-3 custom-sidebar-scrollbar">
                     {navSections.map(section => (
                         <div key={section.title ?? '_main'} className="mb-4">
                             {section.title && (
-                                <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-yellow-400 opacity-70">
+                                <p className="mb-1.5 mt-3 px-3 text-[10px] font-semibold uppercase tracking-widest text-yellow-400 opacity-70">
                                     {section.title}
                                 </p>
                             )}
@@ -166,16 +166,26 @@ export default function AuthenticatedLayout({ header, children }) {
                                     <Link
                                         key={item.match}
                                         href={item.href}
-                                        className={`mb-0.5 flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${
+                                        className={`group mb-0.5 flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
                                             isActive
                                                 ? 'bg-emerald-700 text-white'
                                                 : 'text-emerald-100 hover:bg-emerald-800 hover:text-white'
                                         }`}
                                     >
-                                        {item.Icon && <item.Icon className="h-[18px] w-[18px] shrink-0 opacity-80" />}
-                                        <span>{item.label}</span>
+                                        {item.Icon && (
+                                            <item.Icon
+                                                className={`h-[18px] w-[18px] shrink-0 transition-all duration-200 ${
+                                                    isActive
+                                                        ? 'opacity-100'
+                                                        : 'opacity-80 group-hover:opacity-100 group-hover:translate-x-[2px]'
+                                                }`}
+                                            />
+                                        )}
+                                        <span className={`transition-transform duration-200 ${isActive ? '' : 'group-hover:translate-x-[2px]'}`}>
+                                            {item.label}
+                                        </span>
                                         {item.badge > 0 && (
-                                            <span className="ml-auto inline-flex min-w-[18px] items-center justify-center bg-yellow-400 px-1.5 text-[10px] font-bold text-emerald-950">
+                                            <span className="ml-auto inline-flex min-w-[18px] items-center justify-center bg-yellow-400 px-1.5 text-[10px] font-bold text-emerald-950 transition-transform duration-200 group-hover:scale-105">
                                                 {item.badge}
                                             </span>
                                         )}
@@ -194,7 +204,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     )}
                     <button
                         onClick={handleSignOut}
-                        className="mt-2.5 block w-full border border-emerald-700 px-3 py-1.5 text-left text-[10px] font-semibold uppercase tracking-widest text-emerald-300 transition-colors hover:bg-emerald-800 hover:text-white"
+                        className="mt-2.5 block w-full border border-emerald-700 bg-transparent px-3 py-1.5 text-left text-[10px] font-semibold uppercase tracking-widest text-emerald-300 transition-all duration-200 hover:bg-emerald-800 hover:text-white"
                     >
                         Sign Out
                     </button>

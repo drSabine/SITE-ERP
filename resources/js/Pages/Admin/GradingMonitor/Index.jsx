@@ -6,7 +6,6 @@ export default function Index(props) {
             {...props}
             indexRouteName="admin.grading-monitor.index"
             studentsRouteName="admin.grading-monitor.students"
-            canManageFinalization
         />
     );
 }
