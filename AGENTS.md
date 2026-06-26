@@ -1,111 +1,70 @@
 # AGENTS.md
-> Quick-reference card. Read before any action. See `CLAUDE.md` for Claude models.
 
-## Session Start
-1. Check `docs/dev-traits/LEARN.md` for past bugs before writing non-trivial logic.
-2. If task touches a domain — read its doc (§ Domain Map below).
-3. If task touches Enrollment or Grading shared boundary — check Two-Team section first.
-4. When unsure: ask max 2–3 questions with choices, not open-ended prompts.
+Read this first. This file is only the routing card; detailed rules live in `docs/`.
 
----
+## Start Every Session
 
-## Hard Rules
+1. Read `docs/dev-traits/LEARN.md` before writing non-trivial logic.
+2. Read the matching doc in the map below before touching that area.
+3. If the change touches `enrollment_courses`, read both `docs/system-design.md` and `docs/notes/grade-flow.md` first.
+4. When blocked, ask at most 2-3 specific questions. Otherwise make the smallest safe change and verify it.
 
-**Backend**
-- Lean controllers: validate → service → `Inertia::render()` / `redirect()`
-- No N+1: `with()` + `select()` closures; ship only columns the frontend reads
-- Always paginate: `->paginate(10)->withQueryString()`
-- Always validate first: `$request->validate([...])` — never `$request->all()`
-- Use model scopes — never raw `where('is_active', true)` or raw `orderBy`
-- Non-prod migrations: edit existing file + `migrate:fresh --seed`
-- PDFs (DOMPDF): inline CSS only, no Tailwind, no flex/grid
+## Project Snapshot
 
-**Frontend**
-- Modal-first CRUD — no separate Create/Edit pages
-- Reset form in `afterLeave`, not `onClose`
-- `useForm` for forms; `axios` for one-shot data loads
-- Inertia navigation only — never `window.location`
-- Icons from `Components/ui/Icons.jsx` only
-- No abbreviated variable names: `event` not `e`, `response` not `res`, `error` not `err`
-- **No rounded edges** on structural elements (cards, modals, panels, tables). Square only. Inputs may use `rounded`.
-- Emerald color scheme. NEVER indigo/blue. See `docs/notes/design.md`.
-- DRY: use `DataTable` for all table views — never repeat `th/td` markup manually
+- Stack: Laravel 11, Inertia.js, React 18, Tailwind CSS v3, Headless UI, Recharts.
+- Auth roles: `admin`, `coordinator_it`, `coordinator_engineering`, `teacher`, `student`.
+- Academic hierarchy: `school_years -> academic_terms`; current term is `AcademicTerm::active()->first()`.
+- Frontend entry shape: `Pages/<Role>/<Feature>/Index.jsx` orchestrates state, layout, handlers, and modal wiring.
+- Shared UI imports come from `resources/js/Components/ui/index.js`.
 
-**Build**: `npm run build` after every change. `php artisan optimize:clear` after route/config changes.
+## Non-Negotiables
 
----
+- Controllers stay lean: validate, call a service, then `Inertia::render()` or redirect.
+- Validate with `$request->validate([...])`; never pass `$request->all()` to writes.
+- Prevent N+1s with eager loads and select only fields the frontend reads.
+- Paginate index views with `->paginate(10)->withQueryString()`.
+- Use model scopes for common state/order filters; do not repeat raw `is_active` and ordering clauses.
+- CRUD is modal-first. Do not create separate Create/Edit pages.
+- Reset modal forms in `afterLeave`, not `onClose`.
+- Use Inertia navigation. Do not use `window.location`.
+- Use `DataTable`, `StatusBadge`, `ActionsDropdown`, and icons from `Components/ui/Icons.jsx` instead of hand-rolled duplicates.
+- Structural UI is square: no rounded cards, panels, modals, table wrappers, or structural buttons. Inputs may use `rounded`.
+- Use the emerald SPUP/SITE design language. Do not reintroduce Breeze indigo/blue defaults.
 
-## Stack
-Laravel 11 + Inertia.js + React 18 + Tailwind CSS v3. Headless UI, Recharts, `ui/Icons.jsx`.
-Auth: `users.role` — `admin` | `coordinator` | `teacher` | `student`
-Schema: `school_years → academic_terms`. Current term = `AcademicTerm::active()->first()`.
-
----
-
-## Frontend Structure
-```
-Pages/<Role>/<Feature>/Index.jsx  ← thin orchestration only (state + handlers + layout)
-Components/ui/index.js            ← ALL primitives barrel
-Components/<Role>/<Feature>/index.js  ← barrel per feature
-utils/format.js                   ← formatDate(), formatDateRange()
-```
-- Never create `components/` inside `Pages/`
-- Components < ~30 lines → inline in page file
-- Every extracted folder has `index.js` barrel
-
-**ui/ exports:** ApplicationLogo, Checkbox, DangerButton, Dropdown, InputError, InputLabel,
-Modal, NavLink, PrimaryButton, SecondaryButton, TextInput, StatusBadge, ConfirmModal, Icons,
-InputField, DetailField, DataTable
-
-**Admin component folders:** `SchoolYears/`, `Users/`, `Programs/`, `Courses/`
-**Admin sidebar nav:** Dashboard, School Years, Users, Programs. Courses via Programs → Manage Courses.
-
----
-
-## Domain Map
+## Read The Right Doc
 
 | Touching | Read |
 |---|---|
-| UI, colors, design | `docs/notes/design.md` |
-| Roles, auth, middleware | `docs/notes/domain-rules.md` |
-| React state, forms, modals | `docs/notes/react-rules.md` |
-| Queries, controllers, services | `docs/notes/backend-rules.md` |
-| Security, input handling | `docs/dev-traits/SECURITY.md` |
-| Built components / hooks | `docs/dev-traits/SKILLS.md` |
-| Planned features | `docs/plans/roadmap.md` |
-| BSIT curriculum | `docs/curriculum/bsit.md` |
-| BSCE curriculum | `docs/curriculum/bsce.md` |
-| BSENSE curriculum | `docs/curriculum/bsense.md` |
-| BSCpE curriculum | `docs/curriculum/bscpe.md` |
-| BLIS curriculum | `docs/curriculum/blis.md` |
+| Past bugs / project memory | `docs/dev-traits/LEARN.md` |
+| Debugging broken behavior | `docs/DEBUG.md` |
+| Roles, schema, core domain, two-team boundary | `docs/system-design.md` |
+| Grading, INC, DROP, finalization, `enrollment_courses` status | `docs/notes/grade-flow.md` |
+| Backend controllers, services, queries, migrations, PDFs | `docs/notes/backend-rules.md` |
+| React state, forms, modals, Inertia behavior | `docs/notes/react-rules.md` |
+| UI colors, layout, statuses, tables, copy | `docs/notes/design.md` |
+| Reusable components, hooks, utilities | `docs/dev-traits/SKILLS.md` |
+| Auth, policies, validation, user input | `docs/dev-traits/SECURITY.md` |
+| UI/UX design role playbooks copied from BEU-AIS React | `docs/design/` |
+| Curriculum seeders or curriculum data | `docs/curriculum/*.md` |
+| Prerequisite / co-requisite work | `docs/plans/curriculum-prereq-plan.md` |
 
----
+## Two-Team Boundary
 
-## Two-Team Architecture
+- Enrollment owns `students`, `enrollments`, enrollment-course add/remove, and academic-term activation.
+- Grading owns `teacher_assignments`, `enrollment_courses.final_grade`, status transitions, and finalization.
+- `enrollment_courses` is shared. Any edit there must preserve both enrollment load management and grading status flow.
 
-**Enrollment team** owns: `students`, `enrollments`, `enrollment_courses` (add/remove), `academic_terms` (activate).
-**Grading team** owns: `enrollment_courses.final_grade/status`, `teacher_assignments`, finalization.
-Shared file: `enrollment_courses` — editing it impacts both teams. Check both before committing.
+## Verification
 
----
+- Run `npm run build` after every change.
+- Run `php artisan optimize:clear` after route, config, service-provider, or cache-sensitive changes.
+- For schema changes in this non-production app, edit the existing migration when appropriate and run `php artisan migrate:fresh --seed`.
 
-## Model Scopes
+## Required Session Report
 
-| Model | Scopes |
-|---|---|
-| `User` | `::active()` `::teachers()` `::coordinators()` |
-| `Program`, `Course`, `SchoolYear`, `AcademicTerm` | `::active()` |
-| `SchoolYear` | `::ordered()` |
-| `Course` | `::forSemester($year, $type)` |
-| `Student` | `::active()` `::ordered()` |
-| `Enrollment` | `::active()` |
-| `EnrollmentCourse` | `::active()` `::passed()` `::withInc()` |
+End every work session with:
 
----
-
-## Session Report (REQUIRED)
-
-**CHANGES MADE** — `[file]`: what + why (every file touched)
-**LEFT UNCHANGED** — what and why
-**CONFLICTS/INACCURACIES** — or "None found"
-**FUTURE DEV NOTES** — next steps, cross-team impact
+- **CHANGES MADE** - `[file]`: what changed and why.
+- **LEFT UNCHANGED** - what stayed as-is and why.
+- **CONFLICTS/INACCURACIES** - list issues found, or "None found".
+- **FUTURE DEV NOTES** - next steps, risks, and cross-team impact.

@@ -1,185 +1,150 @@
-# System Design — SITE Department AIS
+# System Design - SITE AIS
 
-> Reference for developers. Update when schema or behavior changes.
-> **Stack:** Laravel 11 · Inertia.js · React 18 · Tailwind v3 · MySQL
+Canonical architecture and domain reference for the Laravel/Inertia academic information system.
 
----
+## Stack
 
-## Roles
+- Laravel 11, MySQL, Inertia.js, React 18, Tailwind CSS v3.
+- Auth is stored on `users.role`.
+- Current term lookup: `AcademicTerm::active()->first()`.
 
-| Role | Who | What they can do |
+## Roles And Access
+
+| Role key | Meaning | Main access |
 |---|---|---|
-| `admin` | Dean / Secretary | Create/manage School Years, Academic Terms. Finalize terms. Manage all users. Full visibility. Can also carry a teaching load. |
-| `coordinator` | Program Coordinator | Manage students, enrollments, course loads, teacher assignments. See INC deficiency list. Can also carry a teaching load. |
-| `teacher` | Faculty | Input grades for their assigned courses only. |
-| `student` | Student | Portal access — view enrollment and grades. (Portal in progress.) |
+| `admin` | Dean / secretary / system admin | Admin modules, coordinator modules, teacher grading, documents, finalization |
+| `coordinator_it` | IT program coordinator | Coordinator modules scoped to BSIT, BSCpE, BLIS; teacher grading when assigned |
+| `coordinator_engineering` | Engineering program coordinator | Coordinator modules scoped to BSCE, BSENSE; teacher grading when assigned |
+| `teacher` | Faculty | Assigned grade sheets and document submission |
+| `student` | Student account | Dashboard / portal-facing access as implemented |
 
-Route guards: `middleware('role:admin')`, `middleware('role:admin,coordinator')`, `middleware('role:teacher')`.
+Route groups:
 
-> **Teaching load**: Any user (admin, coordinator, teacher) with a `teacher_assignments` row for the active term will see the Teaching section on the dashboard. Role stays the same — teaching is additive.
+- `/admin/*`: `role:admin`
+- `/coordinator/*`: `role:admin,coordinator_it,coordinator_engineering`
+- `/teacher/*`: `role:admin,coordinator_it,coordinator_engineering,teacher`
+- `/documents/*`: staff roles; verification is admin-only
 
----
+Teaching load is additive. Admins and coordinators may still appear in `teacher_assignments` and see teaching actions.
 
-## Schema — Entity Hierarchy
+## Entity Map
 
-```
+```text
 users
-  └─ user_profiles (shared account profile metadata)
+  user_profiles
 
-programs (BSIT, BSCE)
-  └─ courses (year_level + semester_type = reference only, not an enrollment gate)
-       └─ course_prerequisites (soft-enforced at service layer, coordinator can override)
+programs
+  courses
+    course_prerequisites
 
-school_years  [e.g. "2025-2026"]
-  └─ academic_terms  (first | second | summer)
+school_years
+  academic_terms
+    sections
 
-students  (program_id, year_level = coordinator-maintained)
-  └─ enrollments → academic_term  [unique: one enrollment per student per term]
-       └─ enrollment_courses → course  [the student's load for that term]
-            └─ final_grade  decimal(3,2) nullable  [one grade per course per semester, stored directly on this row]
+students
+  enrollments
+    enrollment_courses
 
-teacher_assignments  (teacher_id → course_id → academic_term_id)  [unique: one teacher per course per term]
+teacher_assignments
+
+submission_categories
+  documents
+    uploaded_files
+    verification_records
 ```
 
----
+## Academic Model
 
-## Key Decisions
+- `school_years` contain `academic_terms`.
+- Students enroll into academic terms through `enrollments`.
+- Course load lives in `enrollment_courses`.
+- Sections are term/year/program placement records and are assigned by coordinators.
+- Courses are curriculum reference data; coordinators can still add allowed irregular loads through services.
+- A student has no stored `is_regular` flag. Regular/irregular is inferred from how the load was built.
 
-### 1. Enrollment is per academic_term (semester), not per school year
-A student enrolls once per semester. Their course load (enrollment_courses) is built for that semester.
-A student who skips summer simply has no enrollment row for the summer academic_term — nothing else changes.
+## Enrollment And Grading Boundary
 
-### 2. Regular vs Irregular is not a stored label
-There is no `is_regular` flag on students or enrollments. The distinction is only in how the coordinator *builds* the load:
-- **Regular path:** Coordinator clicks "Load Standard Curriculum" → service auto-populates courses from the BSIT curriculum for `(program, year_level, semester)`.
-- **Irregular path:** Coordinator manually adds courses one by one.
-Both paths produce identical `enrollment_courses` rows. The DB has no opinion on which path was used.
+Enrollment owns:
 
-### 3. Courses are reference data, not enrollment gates
-`courses.year_level` and `courses.semester_type` come from the curriculum doc and are used by the
-"Load Standard Curriculum" feature. They are not DB foreign key constraints. A coordinator can assign
-any course to any student at any time.
+- `students`
+- `enrollments`
+- adding, crediting, dropping, restoring enrollment-course load rows
+- section assignment
+- academic-term activation context
 
-### 4. 26-unit cap is a service-layer soft rule
-`EnrollmentService::addCourse()` sums current active enrollment_course units and throws a `ValidationException`
-if adding the new course would exceed 26. This can be overridden by simply bypassing the service (not exposed in UI).
+Grading owns:
 
-### 5. Flat grading — one grade per course per semester
-- Teacher inputs one final grade directly on `enrollment_courses.final_grade` for each student in their assigned course.
-- **No periods.** No Prelim / Midterm / Finals breakdown. The `term_periods` and `grades` tables do not exist.
-- **Valid grade values:** 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00 (passing) · 5.00 (failed) · `null` = INC (shown red).
-- Grade is held in `enrollment_courses.final_grade`. Status stays `active` until the term is finalized.
-- **Finalize term** (admin action): locks all active rows — `null` → `inc`, ≤ 3.00 → `passed`, 5.00 → `failed`. Term `is_active` → false.
-- Coordinator can override `final_grade` at any time (INC resolution or correction).
+- `teacher_assignments`
+- `enrollment_courses.final_grade`
+- `enrollment_courses.status`
+- grade submission, INC/DROP marking, override, and finalization
 
-### 6. Dropping
-- **Drop a course:** `EnrollmentCourse::status = 'dropped'`. Only coordinator does this.
-- **Drop the whole semester:** `Enrollment::status = 'dropped'`, `dropped_at` timestamp set.
-- **Transfer to another school:** `Student::status = 'transferred'`. Record is kept for history.
+Shared table: `enrollment_courses`. Read `docs/notes/grade-flow.md` before changing its status or grade behavior.
 
-### 7. Summer is just another academic_term
-`academic_terms.semester = 'summer'` — no special logic. Admin creates it optionally.
-Students enroll if needed. Courses offered in summer are those with `courses.semester_type = 'summer'` in the curriculum
-(reference only). Coordinator can add any course to a summer enrollment.
+## Grade Model
 
-### 8. Graduation check (service layer only, no DB constraint)
-```php
-$required = Course::where('program_id', $student->program_id)->pluck('id');
-$passed   = EnrollmentCourse::passed()->whereHas('enrollment', fn($q) => $q->where('student_id', $student->id))->pluck('course_id');
-$missing  = $required->diff($passed);  // empty = eligible
-```
+- One grade per student/course/term lives on `enrollment_courses.final_grade`.
+- Valid numeric grades are passing scale values `1.00` through `3.00`, and `5.00` for failed.
+- `null` means no numeric grade submitted; status determines whether that is pending, INC, dropped, or final.
+- Finalization converts active rows into `passed`, `failed`, or `inc`.
+- Coordinator override can resolve or correct grades outside the normal teacher flow.
 
----
+## Current Feature Map
 
-## Frontend Pages (built)
+| Area | Pages / controllers |
+|---|---|
+| Dashboard | `DashboardController`, `resources/js/Pages/Dashboard.jsx` |
+| Admin school years and terms | `Admin/SchoolYearController`, `Admin/AcademicTermController` |
+| Admin users | `Admin/UserController` |
+| Admin programs and courses | `Admin/ProgramController`, `Admin/CourseController` |
+| Admin assignments | `Admin/AssignmentController` |
+| Admin/coordinator grading monitor | `Admin/GradingMonitorController`, `Coordinator/GradingMonitorController` |
+| Activity logs | `Admin/ActivityLogController` |
+| Coordinator students | `Coordinator/StudentController` |
+| Coordinator enrollments and course loads | `Coordinator/EnrollmentController`, `Coordinator/EnrollmentCourseController` |
+| Coordinator sections | `Coordinator/SectionController` |
+| Teacher grades | `Teacher/GradeController` |
+| Documents | `Documents/DocumentController`, `Documents/VerificationController` |
 
-| Page | File | Notes |
-|---|---|---|
-| Login | `Pages/Auth/Login.jsx` | Split layout, SPUP branding, dev quick-login panel, forgot password tip modal |
-| Dashboard | `Pages/Dashboard.jsx` | Single page for all roles, dynamic sections via shared props |
-| School Years | `Pages/Admin/SchoolYears/Index.jsx` | Table + expand → TermsPanel, CRUD modals, confirm modals |
-| Users | `Pages/Admin/Users/Index.jsx` | Paginated table, user profile inline, deactivate confirm |
-| Programs | `Pages/Admin/Programs/Index.jsx` | Table with Manage Courses link, CRUD modal |
-| Courses | `Pages/Admin/Courses/Index.jsx` | Grouped by year level + semester, back-link to Programs, CRUD + delete confirm |
-
-**UI Primitives** (`Components/ui/`):
-`InputField`, `DetailField`, `Modal`, `ConfirmModal`, `PrimaryButton`, `SecondaryButton`, `StatusBadge`, `TextInput`, `InputLabel`, `InputError`
-
-**Utilities** (`utils/format.js`):
-`formatDate(dateString)`, `formatDateRange(start, end)` — locale `en-PH`, UTC timezone
-
----
-
-## Feature → Controller Map
-
-| Feature | Controller | Role |
-|---|---|---|
-| Manage School Years | `Admin\SchoolYearController` | admin |
-| Manage Semesters (Academic Terms) | `Admin\AcademicTermController` | admin |
-| Finalize Academic Term | `Admin\AcademicTermController` (finalize action) | admin |
-| Manage User Accounts | `Admin\UserController` | admin |
-| Manage Programs | `Admin\ProgramController` | admin |
-| Manage Courses | `Admin\CourseController` | admin |
-| Dashboard | `DashboardController` | all |
-| Student list + profiles | `Coordinator\StudentController` | admin, coordinator |
-| Enrollments + load management | `Coordinator\EnrollmentController` | admin, coordinator |
-| Add/remove courses from load | `Coordinator\EnrollmentCourseController` | admin, coordinator |
-| Teacher assignments | `Coordinator\TeacherAssignmentController` | admin, coordinator |
-| Input grades | `Teacher\GradeController` | teacher |
-
----
-
-## Service Layer
+## Services
 
 | Service | Responsibility |
 |---|---|
-| `SchoolYearService` | Create SY + default terms, activate/deactivate |
-| `EnrollmentService` | Enroll student, load curriculum, add/remove courses, 26-unit cap |
-| `GradeService` | Input/override `final_grade` on enrollment_course, finalize term (locks statuses) |
+| `ActivityLogService` | activity logging |
+| `DashboardAnalyticsService` | dashboard counts and trends |
+| `DocumentService` | document upload/version/verification behavior |
+| `EnrollmentService` | enrollment creation, curriculum loading, load changes |
+| `GradeService` | teacher grade input, status changes, finalization/override support |
+| `GradingMonitorService` | grading progress and student rows for monitors |
+| `SchoolYearService` | school year and term lifecycle |
+| `SectionAssignmentService` | section creation and student assignment |
+| `UserService` | user/profile account writes |
 
----
+## Frontend Shape
 
-## INC / Deficiency
+- Page files live in `resources/js/Pages/<Role>/<Feature>/Index.jsx`.
+- State-heavy pages may use co-located `useFeature.jsx` hooks.
+- Shared UI primitives live in `resources/js/Components/ui/` and are exported by the barrel.
+- Feature components live under `resources/js/Components/<Role>/<Feature>/` with an `index.js` barrel.
+- Tables use `DataTable`; statuses use `StatusBadge`; row actions use `ActionsDropdown`.
 
-A student has an INC when `enrollment_courses.status = 'inc'` after term finalization.
-The coordinator's deficiency view queries:
-```sql
-SELECT students.*, enrollment_courses.*, courses.*
-FROM enrollment_courses
-JOIN enrollments ON enrollments.id = enrollment_courses.enrollment_id
-JOIN students ON students.id = enrollments.student_id
-JOIN courses ON courses.id = enrollment_courses.course_id
-WHERE enrollment_courses.status = 'inc'
-ORDER BY students.last_name
-```
-Resolution: coordinator inputs the resolved grade, triggering a re-compute that updates `final_grade` and `status`.
+## Dev Accounts
 
----
+Seeded accounts use password `password`.
 
-## PDF Export (Enrollment Analytics)
+| Role | Email |
+|---|---|
+| `admin` | `marifelgrace.kummer@site.spup` |
+| `coordinator_it` | `rucelj.pugeda@site.spup` |
+| `coordinator_engineering` | `cirilio.gazzingan@site.spup` |
+| `teacher` | `justinevince.tan@site.spup` |
+| `student` | `bsit.y1.01@site.spup` |
 
-Scope: enrollment counts per term, per program, per year level. No grade PDFs.
-Controller: `Admin\ReportController` (build when needed — not yet implemented).
+## Related Docs
 
----
-
-## What Is NOT Built Yet
-
-- BSCE curriculum seeder
-- PDF enrollment report
-- Prerequisite soft-warning UI (table exists, seeder deferred)
-- Student portal / self-service (placeholder exists at `/dashboard` for role=student)
-
----
-
-## Dev Accounts (seeded via `UserSeeder`)
-
-| Role | Email | Password |
-|---|---|---|
-| admin | marifelgrace.kummer@site.spup | password |
-| coordinator | rucelj.pugeda@site.spup | password |
-| teacher | justinevince.tan@site.spup | password |
-| student | alyssamae.soriano@site.spup | password |
-
-Sample student record: Alyssa Mae Soriano, 2025-0001, BSIT Year 1.
-Dev login panel visible on `/login` when `appEnv !== 'production'` (shared via `HandleInertiaRequests`).
+- Backend implementation rules: `docs/notes/backend-rules.md`
+- React and modal rules: `docs/notes/react-rules.md`
+- Design rules: `docs/notes/design.md`
+- Grade lifecycle: `docs/notes/grade-flow.md`
+- Reusable UI inventory: `docs/dev-traits/SKILLS.md`
+- Security checklist: `docs/dev-traits/SECURITY.md`

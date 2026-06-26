@@ -1,104 +1,91 @@
-# SKILLS.md — Component & Hook Inventory
+# SKILLS.md - Component, Hook, And Utility Inventory
 
-> What exists and where it lives. Update when adding reusable pieces.
-> **Last updated:** 2026-05-29
->
-> **Pre-coding checklist — read top to bottom before building anything new:**
-> 1. Icons → `Components/ui/Icons.jsx` (never import `react-icons/*` directly)
-> 2. UI primitives → `import { X } from '@/Components/ui'` (barrel — see table below)
-> 3. Shared components → `import { X } from '@/Components/<Role>/<Feature>'` (barrel — see table below)
-> 4. Shared hooks → `hooks/` table below
-> 5. Shared utils → `utils/` (pure JS helpers)
-> If what you need exists, use it. If it's close but not quite right, extend it here instead of duplicating.
+Update this file when adding reusable frontend building blocks. Check it before creating a new component, hook, or utility.
 
----
+## Import Rules
 
-## Shared Hooks (`resources/js/Hooks/`)
+- UI primitives: `import { X } from '@/Components/ui'`.
+- Feature components: import from the feature barrel, for example `@/Components/Admin/Users`.
+- Icons: use `Icons` from `@/Components/ui`; do not import icon libraries directly in pages.
+- Utilities: use `resources/js/utils`.
+- Components inside `resources/js/Components/ui` may use relative imports to avoid circular barrel imports.
 
-| Hook | File | Purpose |
-|---|---|---|
-| _(none yet)_ | | |
+Do not create one-line `.jsx` re-export shims. Export moved components from the nearest `index.js` barrel.
 
----
+## UI Primitives
 
-## UI Primitives (`resources/js/Components/ui/`)
-
-> All primitive components live here. Every consumer uses the barrel.
-> **Import via barrel:** `import { X, Y } from '@/Components/ui'`
-> **Exception:** Components *inside* `ui/` that import siblings must use relative imports (`./Modal`) to avoid circular references.
+All primitives live in `resources/js/Components/ui/` and are exported by `resources/js/Components/ui/index.js`.
 
 | Component | Purpose |
 |---|---|
-| `ApplicationLogo` | SVG app logo (used in layouts) |
-| `Checkbox` | Styled checkbox input |
-| `DangerButton` | Red destructive action button |
+| `ActionsButton` | Small action trigger button |
+| `ActionsDropdown` | Standard row action menu; supports default, primary, and danger variants |
+| `ApplicationLogo` | App logo |
+| `CardHeader` | Standard panel header |
+| `Checkbox` | Styled checkbox |
+| `ConfirmModal` | Confirmation modal |
+| `DangerButton` | Destructive action button |
+| `DataTable` | Standard table renderer with pagination, compact mode, and expandable rows |
+| `DetailField` | Label/value display field |
 | `Dropdown` | Headless UI dropdown wrapper |
-| `InputError` | Displays a validation error string |
-| `InputLabel` | Form field label |
-| `Modal` | Headless UI dialog wrapper — use `afterLeave` to reset form state |
-| `NavLink` | Inertia nav link with active state |
-| `PrimaryButton` | Blue/dark submit / action button |
-| `ResponsiveNavLink` | Mobile nav link with active state |
-| `SecondaryButton` | Gray cancel / neutral button |
+| `Icons` | Central icon registry |
+| `InputError` | Validation error text |
+| `InputField` | Label, input, and error wrapper |
+| `InputLabel` | Form label |
+| `Modal` | Headless UI modal; pass `afterLeave` for cleanup |
+| `PagePanel` | Square bordered page panel with `CardHeader` |
+| `Pagination` | Laravel paginator links |
+| `PrimaryButton` | Emerald primary action |
+| `SearchBar` | Standard search input shell |
+| `SecondaryButton` | Neutral action button |
+| `SegmentedTabs` | Tab/filter bar |
+| `StatusBadge` | Standard status indicator |
 | `TextInput` | Styled text input |
-| `StatusBadge` | `status` prop (`active`\|`inactive`\|`finalized`\|`enrolled`\|`passed`\|`failed`\|`dropped`\|`inc`) — colored pill |
-| `ConfirmModal` | `show`, `title`, `message`, `confirmLabel`, `onConfirm`, `onClose` — generic danger confirm dialog |
-| `Icons` | Central icon registry — re-exports all `react-icons` with semantic names. Never import from `react-icons/*` directly. |
 
----
+## Required Reuse
 
-## Charts (`resources/js/Components/Charts/`)
+- Tables use `DataTable`; do not repeat raw `<table>`, `<thead>`, `<th>`, and `<td>` markup manually.
+- Status indicators use `StatusBadge`; do not hand-roll inline status spans.
+- Table row actions use `ActionsDropdown`.
+- Page-level bordered panels use `PagePanel`.
+- Filter tabs use `SegmentedTabs`.
+- Student number cells use `className: 'font-mono text-xs text-gray-500'`.
 
-> Uses Recharts. Add entries as chart components are created.
+## StatusBadge Keys
 
-| Component | Chart type | Data shape |
-|---|---|---|
-| _(none yet)_ | | |
+`active`, `inactive`, `finalized`, `enrolled`, `passed`, `failed`, `dropped`, `inc`, `credited`, `not_enrolled`, `pending`, `verified`, `rejected`.
 
----
+## Feature Component Barrels
 
-## Dashboard Components (`resources/js/Components/Dashboard/`)
+| Area | Barrel |
+|---|---|
+| Admin school years | `resources/js/Components/Admin/SchoolYears/index.js` |
+| Admin users | `resources/js/Components/Admin/Users/index.js` |
+| Admin programs | `resources/js/Components/Admin/Programs/index.js` |
+| Admin courses | `resources/js/Components/Admin/Courses/index.js` |
+| Coordinator students | `resources/js/Components/Coordinator/Students/index.js` |
+| Coordinator enrollments | `resources/js/Components/Coordinator/Enrollments/index.js` |
+| Coordinator shared | `resources/js/Components/Coordinator/Shared/index.js` |
+| Dashboard | `resources/js/Components/Dashboard/index.js` |
+| Auth | `resources/js/Components/Auth/index.js` |
 
-> Shared components and section builders for the unified dashboard.
-> **Import via barrel:** `import { buildAdminSections, buildTeachingSections, ... } from '@/Components/Dashboard'`
-> **Rule:** To add a new role's dashboard cards, add `buildXxxSections()` to `dashboardSections.js`. Never create a new Dashboard page for a role.
+## Co-Located Page Hooks
 
-| Export | Type | Purpose |
-|---|---|---|
-| `buildAdminSections()` | Function | Card section descriptors for the admin role |
-| `buildCoordinatorSections()` | Function | Card section descriptors for the coordinator role |
-| `buildTeachingSections({ hasActiveTerm })` | Function | Teaching cards — used by teacher role AND admin/coordinator with a teaching load |
-| `buildStudentSections()` | Function | Student academics cards |
+Use co-located hooks for pages with enough state/handlers to bury the JSX. Keep them in the page folder and use `.jsx` when they may contain JSX in confirm messages.
 
-`WelcomeHeader` and `ActionCard` are inlined inside `Pages/Dashboard.jsx` (both under 30 lines, single use).
+| Hook | Page area |
+|---|---|
+| `Pages/Admin/SchoolYears/useSchoolYears.jsx` | Admin school years |
+| `Pages/Admin/Users/useUsers.jsx` | Admin users |
+| `Pages/Admin/Programs/usePrograms.jsx` | Admin programs |
+| `Pages/Admin/Courses/useCourses.jsx` | Admin courses |
+| `Pages/Coordinator/Students/useStudents.jsx` | Coordinator students |
+| `Pages/Coordinator/Enrollments/useEnrollments.jsx` | Coordinator enrollments |
 
----
+## Utilities
 
-## Auth Components (`resources/js/Components/Auth/`)
+`resources/js/utils/format.js` owns shared formatting helpers such as `formatDate()` and `formatDateRange()`.
 
-> Auth-flow components used on the login screen.
-> **Import via barrel:** `import { X } from '@/Components/Auth'`
+## Extraction Rule
 
-| Component | Props | Purpose |
-|---|---|---|
-| `ForgotPasswordModal` | `show`, `onClose` | Modal that requests a password reset link; shows confirmation on success |
-
----
-
-## Feature Components (`resources/js/Components/Admin/`)
-
-> Extracted page-specific components, organized by role and feature.
-> **Import via barrel:** `import { X } from '@/Components/Admin/SchoolYears'`
-
-| Component | Barrel | Purpose |
-|---|---|---|
-| `SchoolYearFormModal` | `Admin/SchoolYears` | Create / edit school year form modal |
-| `TermsPanel` | `Admin/SchoolYears` | Expandable academic terms list for a school year row |
-
----
-
-## Pages Inventory
-
-| Page | Path | Notes |
-|---|---|---|
-| Admin: School Years | `Pages/Admin/SchoolYears/Index.jsx` | Thin (~100 lines). Extracted components in `Components/Admin/SchoolYears/`. UI primitives from `@/Components/ui`. |
+Inline components under roughly 30 lines when they are single-use. Extract only when reuse, readability, or a clear feature boundary justifies it.

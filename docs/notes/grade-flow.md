@@ -79,8 +79,6 @@ The `final_grade` column stores the numeric grade (1.00–3.00 or 5.00); `null` 
 - Views **Grading Monitor** (`GET /coordinator/grading-monitor`)
   - Shows all statuses including `active`, `inc`, `passed`, `failed`, **`dropped`**
   - INC and DROP flags from teachers appear here **in real-time**
-- Views **Deficiency List** (`GET /coordinator/deficiencies/{academicTerm}`)
-  - Lists all students with `status='inc'` for the term
 - Can **override grade** (`POST /coordinator/enrollment-courses/{ec}/override-grade`): sets grade AND locks status immediately (bypasses finalization)
 - Can **remove course** (`DELETE /coordinator/enrollment-courses/{ec}`): sets `status='dropped'`
 - Can **restore dropped course** (`POST /coordinator/enrollment-courses/{ec}/restore`): back to `status='active'`
@@ -116,7 +114,7 @@ The `final_grade` column stores the numeric grade (1.00–3.00 or 5.00); `null` 
    → enrollment_courses.status = 'inc'   (set IMMEDIATELY)
    → enrollment_courses.final_grade = null
 2. Coordinator sees the INC flag in real-time via Grading Monitor
-3. Coordinator sees the student in the Deficiency List
+3. Coordinator tracks the student through the Grading Monitor INC status.
 4. Resolution paths:
    a) Coordinator overrides grade → status becomes 'passed' or 'failed' (locked immediately)
    b) Teacher (while the academic term is active) selects a grade for the INC row

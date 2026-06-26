@@ -1,64 +1,70 @@
-# backend-rules.md
+# Backend Rules
 
-> Laravel/PHP rules for this project.
-> **Last updated:** [date]
-
----
-
-## Queries
-
-- No N+1. Every `->get()` or `->paginate()` must be preceded by the correct `with()` calls.
-- Every `with('relation')` on a paginated/index query must use a `select()` closure — ship only what the frontend reads.
-- Always `->paginate(15)->withQueryString()` on index queries. No bare `->get()` to the frontend.
+Laravel rules for controllers, services, queries, migrations, and PDF output.
 
 ## Controllers
 
-- Validate first: `$request->validate([...])`.
-- Call Service. Return `Inertia::render()` or `redirect()->back()`.
-- No business logic. No direct Model queries beyond lookup.
+- Validate first with `$request->validate([...])`.
+- Authorize row-level actions with a policy, gate, or explicit ownership check.
+- Call a service for business logic.
+- Return `Inertia::render()` for pages or `redirect()->back()` / named redirects after mutations.
+- Do not put business logic or multi-step writes in controllers.
+- Do not pass `$request->all()` into `create()` or `update()`.
 
-## Services (`app/Services/`)
+## Services
 
-- All business logic lives here.
-- One service per domain area (e.g. `UserService`, `ReportService`).
+- Put non-trivial domain work in `app/Services/`.
+- Keep one service per domain area where possible.
+- Use transactions for multi-row writes that must succeed or fail together.
+- Throw `ValidationException` for domain-rule failures that should show as form errors.
+- Preserve the Enrollment/Grading boundary when touching `enrollment_courses`.
+
+## Queries
+
+- No N+1s. Eager-load relations needed by the frontend.
+- On index queries, use relation `select()` closures and ship only columns the page reads.
+- Paginate index views with `->paginate(10)->withQueryString()`.
+- Use model scopes for common active/order filters.
+- Do not return broad `get()` results to Inertia table pages.
+
+```php
+Model::query()
+    ->with([
+        'relation' => fn ($query) => $query->select('id', 'model_id', 'display_name'),
+    ])
+    ->paginate(10)
+    ->withQueryString();
+```
 
 ## Migrations
 
-**This project is not production.** Prefer editing existing migration files and re-running:
+This project is not production. During iterative development, edit the existing migration when the feature is still in motion, then run:
 
-```bash
+```powershell
 php artisan migrate:fresh --seed
 ```
 
-Only create a new migration file when you need to make a schema change that must be tracked (e.g. after a feature is considered "done" and tested). For all other iterative changes during development, just edit the existing file and re-run `migrate:fresh`.
+Create a new migration only when the schema change must be tracked as a forward-only change.
 
-### Naming Convention
+Use Laravel `snake_case` names:
 
-Laravel uses `snake_case` — this IS the industry standard and it is readable. Each word is separated by `_` and reads naturally:
+| Pattern | Example |
+|---|---|
+| `create_{table}` | `create_users` |
+| `add_{column}_to_{table}` | `add_phone_to_users` |
+| `drop_{column}_from_{table}` | `drop_avatar_from_users` |
+| `rename_{table}` | `rename_orders_to_purchases` |
 
-| Pattern | Example | Reads as |
-|---|---|---|
-| `create_{table}` | `create_users` | "create users" |
-| `add_{col}_to_{table}` | `add_phone_to_users` | "add phone to users" |
-| `drop_{col}_from_{table}` | `drop_avatar_from_users` | "drop avatar from users" |
-| `rename_{table}` | `rename_orders_to_purchases` | "rename orders to purchases" |
+Do not add a redundant `_table` suffix.
 
-**No `_table` suffix needed** — it's redundant. `create_users` is clearer than `create_users_table`.
+## PDFs
 
-Timestamp is auto-prefixed by Laravel (e.g. `2024_01_01_000000_create_users.php`). You only write the descriptive part.
+- DOMPDF views use inline CSS only.
+- Do not use Tailwind classes, flexbox, or CSS grid in PDF templates.
+- Test the expected paper size before delivery.
 
-## PDFs (DOMPDF)
+## Required Verification
 
-- Inline CSS only — no Tailwind classes, no flexbox, no CSS grid.
-- Test rendering at the expected paper size.
-
-## Pagination
-
-```php
-// Required pattern
-Model::with([
-    'relation' => fn($q) => $q->select('id', 'fk_col', 'display_field'),
-])
-->paginate(15)
-->withQueryString();
-```
+- `npm run build` after every change.
+- `php artisan optimize:clear` after route, config, service-provider, or cache-sensitive changes.
+- `php artisan migrate:fresh --seed` after schema changes in active development.
