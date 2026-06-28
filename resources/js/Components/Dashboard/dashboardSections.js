@@ -67,7 +67,7 @@ export function buildStudentSections() {
             title: 'Academics',
             cols: 'grid-cols-1 sm:grid-cols-2',
             cards: [
-                { title: 'My Enrollment', description: 'View your enrolled subjects and status', href: '#', disabled: true },
+                { title: 'My Grades', description: 'View your grades and GWA across all terms', href: route('student.grades.index') },
             ],
         },
     ];

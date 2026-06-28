@@ -5,9 +5,13 @@ import {
     buildCoordinatorSections,
     buildTeachingSections,
     buildStudentSections,
+    CoordinatorIncAnalytics,
     EvaluationOutcomeTrend,
+    GraduateTrendChart,
     ProgramDistributionChart,
     SchoolYearEvaluationTrend,
+    StudentSummary,
+    TeacherTeachingPanel,
 } from '@/Components/Dashboard';
 
 const ROLE_LABELS = {
@@ -59,8 +63,9 @@ export default function Dashboard({
     hasTeachingLoad = false,
     studentCount,
     enrolledCount,
-    incCount,
     analytics = {},
+    studentSummary = null,
+    teaching = null,
 }) {
     const { auth } = usePage().props;
     const user = auth.user;
@@ -73,7 +78,7 @@ export default function Dashboard({
     const sections = [
         ...(role === 'admin'       ? buildAdminSections() : []),
         ...(isCoordinator          ? buildCoordinatorSections() : []),
-        ...(showTeaching           ? buildTeachingSections({ hasActiveTerm }) : []),
+        ...(showTeaching && !teaching ? buildTeachingSections({ hasActiveTerm }) : []),
         ...(role === 'student'     ? buildStudentSections() : []),
     ];
 
@@ -81,9 +86,6 @@ export default function Dashboard({
         ...(role === 'admin' ? [
             { label: 'Total Students', value: studentCount ?? 0 },
             { label: 'Currently Enrolled', value: enrolledCount ?? 0 },
-        ] : []),
-        ...(isCoordinator ? [
-            { label: 'INC / Deficiency Count', value: incCount ?? 0 },
         ] : []),
     ];
 
@@ -114,8 +116,15 @@ export default function Dashboard({
                                     <ProgramDistributionChart data={analytics.programDistribution ?? []} />
                                 </div>
                                 <EvaluationOutcomeTrend data={analytics.evaluationOutcomeTrend ?? []} />
+                                <GraduateTrendChart data={analytics.graduateTrend ?? []} />
                             </div>
                         )}
+
+                        {isCoordinator && <CoordinatorIncAnalytics analytics={analytics} />}
+
+                        {showTeaching && teaching && <TeacherTeachingPanel teaching={teaching} />}
+
+                        {role === 'student' && studentSummary && <StudentSummary summary={studentSummary} />}
 
                         {sections.map(({ title, cols, cards }) => (
                             <div key={title}>

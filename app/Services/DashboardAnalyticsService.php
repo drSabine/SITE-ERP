@@ -2,7 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\Program;
 use App\Models\SchoolYear;
+use App\Models\Student;
+use Illuminate\Support\Facades\DB;
 
 class DashboardAnalyticsService
 {
@@ -12,6 +15,138 @@ class DashboardAnalyticsService
             'schoolYearEvaluationTrend' => $this->schoolYearEvaluationTrend(),
             'programDistribution'       => $this->programDistribution(),
             'evaluationOutcomeTrend'    => $this->evaluationOutcomeTrend(),
+            'graduateTrend'             => $this->graduateTrend(),
+        ];
+    }
+
+    /**
+     * Graduates per school year (last 3) plus a "needed to grow" target.
+     * Target = previous school year's graduates + 1; gray bar = max(0, target − graduates),
+     * so stacking the gray on the solid reaches the year-over-year growth goal.
+     */
+    public function graduateTrend(): array
+    {
+        $gradCounts = Student::where('status', 'graduated')
+            ->whereNotNull('graduated_school_year_id')
+            ->selectRaw('graduated_school_year_id, count(*) as total')
+            ->groupBy('graduated_school_year_id')
+            ->pluck('total', 'graduated_school_year_id');
+
+        // Chronological (oldest → newest) so "previous year" is the element before.
+        $ordered = SchoolYear::ordered()->get(['id', 'name'])->reverse()->values();
+
+        $rows = [];
+        $previousGraduates = 0;
+        foreach ($ordered as $schoolYear) {
+            $graduates = (int) ($gradCounts[$schoolYear->id] ?? 0);
+            $target = $previousGraduates + 1;
+            $rows[] = [
+                'schoolYear' => $schoolYear->name,
+                'graduates'  => $graduates,
+                'target'     => $target,
+                'needed'     => max(0, $target - $graduates),
+            ];
+            $previousGraduates = $graduates;
+        }
+
+        return array_slice($rows, -3);
+    }
+
+    /**
+     * INC / deficiency analytics scoped to a coordinator's programs.
+     * Pass the coordinator's program codes (null = unscoped / all programs).
+     */
+    public function coordinatorAnalytics(?array $programCodes): array
+    {
+        $programIds = $programCodes !== null
+            ? Program::whereIn('code', $programCodes)->pluck('id')->all()
+            : null;
+
+        return [
+            'incTrend'     => $this->incTrendBySchoolYear($programIds),
+            'incByProgram' => $this->incByProgram($programIds),
+            'summary'      => $this->incSummary($programIds),
+        ];
+    }
+
+    private function incTrendBySchoolYear(?array $programIds): array
+    {
+        return SchoolYear::query()
+            ->ordered()
+            ->leftJoin('academic_terms', 'academic_terms.school_year_id', '=', 'school_years.id')
+            ->leftJoin('enrollments', function ($join) use ($programIds) {
+                $join->on('enrollments.academic_term_id', '=', 'academic_terms.id');
+                if ($programIds !== null) {
+                    $join->whereIn('enrollments.program_id', $programIds);
+                }
+            })
+            ->leftJoin('enrollment_courses', function ($join) {
+                $join->on('enrollment_courses.enrollment_id', '=', 'enrollments.id')
+                    ->where('enrollment_courses.status', '=', 'inc');
+            })
+            ->select('school_years.id', 'school_years.name')
+            ->selectRaw('COUNT(enrollment_courses.id) as inc_count')
+            ->groupBy('school_years.id', 'school_years.name')
+            ->get()
+            ->reverse()
+            ->values()
+            ->map(fn ($schoolYear) => [
+                'schoolYear' => $schoolYear->name,
+                'inc'        => (int) $schoolYear->inc_count,
+            ])
+            ->all();
+    }
+
+    private function incByProgram(?array $programIds): array
+    {
+        $activeSchoolYear = SchoolYear::active()->first(['id']);
+
+        if (! $activeSchoolYear) {
+            return [];
+        }
+
+        return DB::table('enrollment_courses')
+            ->join('enrollments', 'enrollments.id', '=', 'enrollment_courses.enrollment_id')
+            ->join('academic_terms', 'academic_terms.id', '=', 'enrollments.academic_term_id')
+            ->join('programs', 'programs.id', '=', 'enrollments.program_id')
+            ->where('academic_terms.school_year_id', $activeSchoolYear->id)
+            ->where('enrollment_courses.status', 'inc')
+            ->when($programIds !== null, fn ($query) => $query->whereIn('enrollments.program_id', $programIds))
+            ->groupBy('programs.code')
+            ->orderBy('programs.code')
+            ->selectRaw('programs.code, COUNT(*) as inc_count')
+            ->get()
+            ->map(fn ($row) => ['program' => $row->code, 'inc' => (int) $row->inc_count])
+            ->all();
+    }
+
+    private function incSummary(?array $programIds): array
+    {
+        $activeSchoolYear = SchoolYear::active()->first(['id']);
+
+        if (! $activeSchoolYear) {
+            return ['totalInc' => 0, 'evaluatedStudents' => 0, 'avgIncPerStudent' => 0];
+        }
+
+        $base = DB::table('enrollments')
+            ->join('academic_terms', 'academic_terms.id', '=', 'enrollments.academic_term_id')
+            ->where('academic_terms.school_year_id', $activeSchoolYear->id)
+            ->when($programIds !== null, fn ($query) => $query->whereIn('enrollments.program_id', $programIds));
+
+        $evaluatedStudents = (clone $base)
+            ->whereIn('enrollments.status', ['enrolled', 'completed'])
+            ->distinct()
+            ->count('enrollments.student_id');
+
+        $totalInc = (clone $base)
+            ->join('enrollment_courses', 'enrollment_courses.enrollment_id', '=', 'enrollments.id')
+            ->where('enrollment_courses.status', 'inc')
+            ->count();
+
+        return [
+            'totalInc'          => (int) $totalInc,
+            'evaluatedStudents' => (int) $evaluatedStudents,
+            'avgIncPerStudent'  => $evaluatedStudents > 0 ? round($totalInc / $evaluatedStudents, 2) : 0,
         ];
     }
 
