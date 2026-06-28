@@ -35,7 +35,7 @@ Do **not** use it for any UI text other than the university name.
 |---|---|
 | University name | **St. Paul University Philippines** |
 | Department | **School of Information Technology and Engineering** |
-| Footer | **Project created by BSIT-3B Major in Website Development. S.Y 2025-2026.** |
+| Footer | **Project created by BSIT-3B Major in Website Development as a requirement for ITE 125. S.Y 2025-2026.** |
 
 No "Portal", no "System", no "AIS" appended to the department name.
 
@@ -48,12 +48,14 @@ No "Portal", no "System", no "AIS" appended to the department name.
 | `public/images/SPUP-final-logo.png` | Sidebar icon, login seal ring |
 | `public/images/spup-site.png` | Available for larger display contexts |
 
+**Don't over-repeat the seal.** One hero/branding placement per page is enough — don't also stamp it in a nav bar and a footer on the same page. Use text (university/department name) for secondary brand mentions instead of another logo image.
+
 ---
 
 ## Login Page
 
-- **Desktop:** Split. Left `lg:w-2/5` = `bg-emerald-900` branding panel (logo, OldEnglish title, dept name). Right = `bg-gray-50` form.
-- **Mobile:** Stacked — compact branding header then form.
+- **Desktop:** Split. Left `lg:w-2/5` = campus photo (`spup-bg-landing-page.jpg`) with `bg-emerald-950/80` overlay — same treatment as the landing hero — holding the seal, OldEnglish title (`emerald-300` dept line, not yellow), and a "Back to Site" link to `/` in the top-left corner. Right = `bg-gray-50` form.
+- **Mobile:** Stacked — "Back to Site" link, then a compact inline branding row (small logo + title), then the form.
 - **Dev quick-login panel:** `bg-amber-50 ring-amber-200`, 2×2 grid. Guard: `appEnv !== 'production'` (shared via `HandleInertiaRequests`).
 - **Forgot password:** Advisory tip modal only — no email form. See `ForgotPasswordModal.jsx`.
 

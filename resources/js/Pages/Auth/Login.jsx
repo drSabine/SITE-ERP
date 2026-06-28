@@ -1,6 +1,7 @@
 import { Checkbox, InputError, InputLabel, TextInput } from '@/Components/ui';
 import { ForgotPasswordModal } from '@/Components/Auth';
-import { Head, useForm } from '@inertiajs/react';
+import { BackIcon } from '@/Components/ui/Icons';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function Login({ status, appEnv }) {
@@ -17,7 +18,7 @@ export default function Login({ status, appEnv }) {
             admin:       { email: 'marifelgrace.kummer@site.spup', password: 'password' },
             coordinator: { email: 'rucelj.pugeda@site.spup',       password: 'password' },
             teacher:     { email: 'justinevince.tan@site.spup',    password: 'password' },
-            student:     { email: 'alyssamae.soriano@site.spup',   password: 'password' },
+            student:     { email: 'bsit.y1.01@site.spup',          password: 'password' },
         };
         setData('email', credentials[role].email);
         setData('password', credentials[role].password);
@@ -32,32 +33,32 @@ export default function Login({ status, appEnv }) {
         <div className="flex min-h-screen">
             <Head title="Log In" />
 
-            <div className="relative hidden overflow-hidden lg:flex lg:w-2/5 flex-col items-center justify-center bg-emerald-900 px-12 py-16">
-                {/* Dot-grid texture */}
-                <div
-                    className="absolute inset-0 opacity-[0.04]"
-                    style={{ backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '28px 28px' }}
-                />
-                {/* Corner accents */}
-                <div className="absolute bottom-0 left-0 h-48 w-48 rounded-tr-full bg-yellow-400 opacity-10" />
-                <div className="absolute right-0 top-0 h-32 w-32 rounded-bl-full bg-yellow-400 opacity-10" />
+            <div className="relative hidden overflow-hidden lg:flex lg:w-2/5 flex-col items-center justify-center bg-[url('/images/spup-bg-landing-page.jpg')] bg-cover bg-center px-12 py-16">
+                <div className="absolute inset-0 bg-emerald-950/80" aria-hidden="true" />
+
+                <Link
+                    href="/"
+                    className="absolute left-6 top-6 z-10 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-emerald-100 transition-colors hover:text-white"
+                >
+                    <BackIcon className="h-4 w-4" />
+                    Back to Site
+                </Link>
 
                 <div className="relative z-10 text-center">
-                    {/* SPUP Seal (White background to prevent camouflage) */}
-                    <div className="mb-8 flex justify-center">
-                        <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-yellow-400 bg-white p-2.5 shadow-lg transition-transform duration-300 hover:scale-105">
-                            <img src="/images/SPUP-final-logo.png" alt="SPUP Seal" className="h-full w-full object-contain" />
-                        </div>
-                    </div>
+                    <img
+                        src="/images/SPUP-final-logo.png"
+                        alt="SPUP Seal"
+                        className="mx-auto h-28 w-28 object-contain drop-shadow-xl"
+                    />
 
                     <h1
-                        className="text-3xl font-normal leading-snug text-white tracking-wide"
+                        className="mt-8 whitespace-nowrap text-2xl font-normal leading-snug text-white tracking-wide"
                         style={{ fontFamily: "'OldEnglish', serif" }}
                     >
-                        St. Paul University<br />Philippines
+                        St. Paul University Philippines
                     </h1>
 
-                    <p className="mt-8 text-xs font-bold uppercase tracking-widest text-yellow-400 leading-relaxed">
+                    <p className="mt-6 text-xs font-bold uppercase tracking-widest text-emerald-300 leading-relaxed">
                         School of Information Technology<br />and Engineering
                     </p>
                 </div>
@@ -66,22 +67,28 @@ export default function Login({ status, appEnv }) {
             {/* ── Right panel: Login form ── */}
             <div className="flex flex-1 flex-col items-center justify-center bg-gray-50 px-6 py-12 sm:px-12">
 
-                {/* Mobile-only compact header */}
-                <div className="mb-8 text-center lg:hidden">
-                    <div className="mb-4 flex justify-center">
-                        <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-yellow-400 bg-white p-1.5 shadow-md">
-                            <img src="/images/SPUP-final-logo.png" alt="SPUP" className="h-full w-full object-contain" />
-                        </div>
+                {/* Mobile-only back link + compact header */}
+                <Link
+                    href="/"
+                    className="mb-6 inline-flex items-center gap-1.5 self-start text-xs font-semibold uppercase tracking-widest text-emerald-700 lg:hidden"
+                >
+                    <BackIcon className="h-4 w-4" />
+                    Back to Site
+                </Link>
+
+                <div className="mb-8 flex items-center gap-3 lg:hidden">
+                    <img src="/images/SPUP-final-logo.png" alt="SPUP" className="h-12 w-12 object-contain" />
+                    <div className="leading-tight">
+                        <h1
+                            className="text-lg font-normal text-emerald-900"
+                            style={{ fontFamily: "'OldEnglish', serif" }}
+                        >
+                            St. Paul University Philippines
+                        </h1>
+                        <p className="mt-0.5 text-xs font-semibold text-emerald-700">
+                            School of Information Technology and Engineering
+                        </p>
                     </div>
-                    <h1
-                        className="text-2xl font-normal leading-tight text-emerald-900"
-                        style={{ fontFamily: "'OldEnglish', serif" }}
-                    >
-                        St. Paul University Philippines
-                    </h1>
-                    <p className="mt-2 text-sm font-semibold text-emerald-700">
-                        School of Information Technology and Engineering
-                    </p>
                 </div>
 
                 <div className="w-full max-w-md border border-gray-200 bg-white p-8 sm:p-10 shadow-sm">
@@ -155,8 +162,8 @@ export default function Login({ status, appEnv }) {
                     </form>
 
                     {appEnv !== 'production' && (
-                        <div className="mt-8 border border-amber-200 bg-amber-50/50 p-5 shadow-sm">
-                            <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-amber-800">
+                        <div className="mt-8 border border-gray-200 bg-gray-50 p-5">
+                            <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">
                                 Dev Quick Login
                             </p>
                             <div className="grid grid-cols-2 gap-2.5">
@@ -165,7 +172,7 @@ export default function Login({ status, appEnv }) {
                                         key={role}
                                         type="button"
                                         onClick={() => quickFill(role)}
-                                        className="border border-amber-200 bg-white px-3 py-2 text-xs font-semibold capitalize text-amber-800 shadow-sm transition-all hover:bg-amber-100 hover:text-amber-900 active:scale-[0.98]"
+                                        className="border border-gray-200 bg-white px-3 py-2 text-xs font-semibold capitalize text-gray-600 shadow-sm transition-all hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800 active:scale-[0.98]"
                                     >
                                         {role}
                                     </button>
