@@ -32,20 +32,95 @@ class SectionController extends Controller
         $term = AcademicTerm::with(['schoolYear:id,name'])
             ->findOrFail($termId, ['id', 'school_year_id', 'semester']);
 
+        $scopedCodes = auth()->user()->coordinatorProgramCodes();
+        $scopedProgramIds = $scopedCodes !== null
+            ? Program::whereIn('code', $scopedCodes)->pluck('id')
+            : null;
+
+        $sectionsQuery = Section::active()
+            ->with(['program:id,code,name'])
+            ->withCount(['enrollments as students_count' => fn ($query) => $query
+                ->where('academic_term_id', $term->id)
+                ->where('status', 'enrolled')])
+            ->orderBy('year_level')
+            ->orderBy('name');
+
+        if ($scopedProgramIds !== null) {
+            $sectionsQuery->whereIn('program_id', $scopedProgramIds);
+        }
+
+        $programs = $scopedCodes !== null
+            ? Program::active()->whereIn('code', $scopedCodes)->get(['id', 'code', 'name'])
+            : Program::active()->get(['id', 'code', 'name']);
+
         return Inertia::render('Coordinator/Sections/Index', [
-            'term' => $term,
-            'sections' => Section::active()
-                ->with(['program:id,code,name'])
-                ->orderBy('year_level')
-                ->orderBy('name')
-                ->get(['id', 'program_id', 'year_level', 'name', 'is_active']),
-            'programs' => Program::active()->get(['id', 'code', 'name']),
-            'schoolYears' => \App\Models\SchoolYear::with([
-                'academicTerms' => fn ($query) => $query
-                    ->orderByRaw("FIELD(semester, 'first', 'second', 'summer')")
-                    ->select('id', 'school_year_id', 'semester', 'is_active'),
-            ])->ordered()->get(['id', 'name']),
+            'term'     => $term,
+            'sections' => $sectionsQuery->get(['id', 'program_id', 'year_level', 'name', 'is_active']),
+            'programs' => $programs,
         ]);
+    }
+
+    /**
+     * Per-section roster page — view, add, and remove students after the section exists.
+     */
+    public function manage(Section $section): Response
+    {
+        $section->load('program:id,code,name');
+
+        $termId = AcademicTerm::active()->value('id');
+        abort_if(! $termId, 404, 'No active academic term found.');
+        $term = AcademicTerm::with(['schoolYear:id,name'])
+            ->findOrFail($termId, ['id', 'school_year_id', 'semester']);
+
+        $scopedCodes = auth()->user()->coordinatorProgramCodes();
+        if ($scopedCodes !== null) {
+            abort_unless(in_array($section->program->code, $scopedCodes, true), 403);
+        }
+
+        $studentSelect = fn ($query) => $query->select('id', 'first_name', 'middle_name', 'last_name', 'suffix');
+
+        $roster = Enrollment::with(['student' => $studentSelect])
+            ->where('section_id', $section->id)
+            ->where('academic_term_id', $term->id)
+            ->where('status', 'enrolled')
+            ->orderByRaw('(SELECT last_name FROM students WHERE students.id = enrollments.student_id) ASC')
+            ->get(['id', 'student_id', 'year_level', 'status', 'section_id']);
+
+        $assignable = Enrollment::with(['student' => $studentSelect])
+            ->where('academic_term_id', $term->id)
+            ->where('program_id', $section->program_id)
+            ->where('year_level', $section->year_level)
+            ->where('status', 'enrolled')
+            ->whereNull('section_id')
+            ->orderByRaw('(SELECT last_name FROM students WHERE students.id = enrollments.student_id) ASC')
+            ->get(['id', 'student_id', 'year_level']);
+
+        return Inertia::render('Coordinator/Sections/Manage', [
+            'section'    => $section,
+            'term'       => $term,
+            'roster'     => $roster,
+            'assignable' => $assignable,
+        ]);
+    }
+
+    public function unassignStudent(Request $request, Section $section): RedirectResponse
+    {
+        $data = $request->validate([
+            'enrollment_id' => 'required|integer|exists:enrollments,id',
+        ]);
+
+        $this->service->unassignStudentFromSection($section, (int) $data['enrollment_id']);
+
+        $this->activityLogs->record(
+            $request,
+            'unassigned',
+            'Sections',
+            "Removed a student from section {$section->name}.",
+            $section,
+            ['enrollment_id' => $data['enrollment_id']]
+        );
+
+        return back();
     }
 
     public function store(Request $request): RedirectResponse

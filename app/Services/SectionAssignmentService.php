@@ -21,6 +21,13 @@ class SectionAssignmentService
         return $updated;
     }
 
+    public function unassignStudentFromSection(Section $section, int $enrollmentId): void
+    {
+        Enrollment::where('id', $enrollmentId)
+            ->where('section_id', $section->id)
+            ->update(['section_id' => null]);
+    }
+
     public function validateCourseFitsSection(Section $section, int $courseId): void
     {
         $course = Course::active()
