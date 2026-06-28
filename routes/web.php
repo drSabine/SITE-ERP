@@ -4,11 +4,17 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\Coordinator;
 use App\Http\Controllers\Documents;
+use App\Http\Controllers\Student;
 use App\Http\Controllers\Teacher;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
-Route::redirect('/', '/login');
+Route::get('/', function () {
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : Inertia::render('Landing');
+})->name('home');
 
 // Dashboard — role-aware, single route
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -30,7 +36,6 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
 
     // Academic Terms (JSON endpoint for axios — no Inertia page)
     Route::get('academic-terms', [Admin\AcademicTermController::class, 'index'])->name('academic-terms.index');
-    Route::post('school-years/{schoolYear}/academic-terms', [Admin\AcademicTermController::class, 'store'])->name('academic-terms.store');
     Route::put('academic-terms/{academicTerm}', [Admin\AcademicTermController::class, 'update'])->name('academic-terms.update');
     Route::post('academic-terms/{academicTerm}/activate', [Admin\AcademicTermController::class, 'activate'])->name('academic-terms.activate');
     Route::post('academic-terms/{academicTerm}/finalize', [Admin\AcademicTermController::class, 'finalize'])->name('academic-terms.finalize');
@@ -60,6 +65,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     // Teacher Assignments
     Route::get('assignments', [Admin\AssignmentController::class, 'index'])->name('assignments.index');
     Route::post('assignments', [Admin\AssignmentController::class, 'store'])->name('assignments.store');
+    Route::put('assignments/{teacherAssignment}', [Admin\AssignmentController::class, 'update'])->name('assignments.update');
     Route::delete('assignments/{teacherAssignment}', [Admin\AssignmentController::class, 'destroy'])->name('assignments.destroy');
 
     // Grading Monitor
@@ -80,6 +86,9 @@ Route::prefix('coordinator')->middleware(['auth', 'role:admin,coordinator_it,coo
 
     // Enrollments
     Route::get('enrollments', [Coordinator\EnrollmentController::class, 'index'])->name('enrollments.index');
+    Route::get('enrollments/evaluate', [Coordinator\EnrollmentController::class, 'evaluate'])->name('enrollments.evaluate');
+    Route::get('enrollments/recommendation', [Coordinator\EnrollmentController::class, 'recommendation'])->name('enrollments.recommendation');
+    Route::get('enrollments/{enrollment}/course-load', [Coordinator\EnrollmentController::class, 'courseLoad'])->name('enrollments.course-load');
     Route::post('enrollments/school-year', [Coordinator\EnrollmentController::class, 'storeForSchoolYear'])->name('enrollments.store-school-year');
     Route::post('enrollments', [Coordinator\EnrollmentController::class, 'store'])->name('enrollments.store');
     Route::post('enrollments/{enrollment}/load-curriculum', [Coordinator\EnrollmentController::class, 'loadCurriculum'])->name('enrollments.load-curriculum');
@@ -95,13 +104,17 @@ Route::prefix('coordinator')->middleware(['auth', 'role:admin,coordinator_it,coo
     // Sections
     Route::get('sections', [Coordinator\SectionController::class, 'index'])->name('sections.index');
     Route::get('sections/students-preview', [Coordinator\SectionController::class, 'studentsPreview'])->name('sections.students-preview');
+    Route::get('sections/{section}/manage', [Coordinator\SectionController::class, 'manage'])->name('sections.manage');
     Route::post('sections', [Coordinator\SectionController::class, 'store'])->name('sections.store');
     Route::post('sections/bulk-assign-students', [Coordinator\SectionController::class, 'bulkAssignStudents'])->name('sections.bulk-assign-students');
+    Route::post('sections/{section}/unassign', [Coordinator\SectionController::class, 'unassignStudent'])->name('sections.unassign');
 
-    // INC / Deficiency list
-    Route::get('deficiencies/{academicTerm}', [Coordinator\DeficiencyController::class, 'index'])->name('deficiencies.index');
     Route::get('grading-monitor', [Coordinator\GradingMonitorController::class, 'index'])->name('grading-monitor.index');
     Route::get('grading-monitor/{teacherAssignment}/students', [Coordinator\GradingMonitorController::class, 'students'])->name('grading-monitor.students');
+
+    // Graduation
+    Route::get('graduation', [Coordinator\GraduationController::class, 'index'])->name('graduation.index');
+    Route::post('graduation', [Coordinator\GraduationController::class, 'graduate'])->name('graduation.graduate');
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -111,6 +124,14 @@ Route::prefix('teacher')->middleware(['auth', 'role:admin,coordinator_it,coordin
     Route::get('grades', [Teacher\GradeController::class, 'index'])->name('grades.index');
     Route::get('grades/{teacherAssignment}', [Teacher\GradeController::class, 'show'])->name('grades.show');
     Route::post('grades', [Teacher\GradeController::class, 'store'])->name('grades.store');
+    Route::post('grades/bulk', [Teacher\GradeController::class, 'bulkStore'])->name('grades.bulk');
+});
+
+// ─────────────────────────────────────────────────────────────
+// Student routes
+// ─────────────────────────────────────────────────────────────
+Route::prefix('student')->middleware(['auth', 'role:student'])->name('student.')->group(function () {
+    Route::get('grades', [Student\GradeController::class, 'index'])->name('grades.index');
 });
 
 // ─────────────────────────────────────────────────────────────

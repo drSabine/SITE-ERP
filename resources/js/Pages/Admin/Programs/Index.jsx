@@ -31,7 +31,8 @@ export default function Index({ programs }) {
                     >
                         <DataTable
                             columns={columns}
-                            rows={programs}
+                            rows={programs.data}
+                            pagination={programs}
                             emptyMessage="No programs yet. Create one to get started."
                             actions={program => (
                                 <ActionsDropdown items={[

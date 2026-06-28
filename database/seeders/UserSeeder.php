@@ -94,9 +94,14 @@ class UserSeeder extends Seeder
             'Kenneth Paul', 'Lance Gabriel', 'Marco Andrei', 'Nathaniel John', 'Oscar Miguel',
         ];
 
-        $middleInitials = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                           'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'V',
-                           'W', 'Y', 'Z'];
+        // Full middle (maiden) surnames so names read naturally and the UI can render a
+        // proper "M." initial. Distinct enough from last names to avoid odd repeats.
+        $middleNames = [
+            'Bautista', 'Reyes', 'Santos', 'Mercado', 'Aquino', 'Del Rosario', 'Villaflor',
+            'Salazar', 'Mariano', 'Rivera', 'Velasco', 'Espino', 'Padilla', 'Tolentino',
+            'Marquez', 'Galang', 'Bartolome', 'Magbanua', 'Carpio', 'Hernandez',
+            'Ocampo', 'Sarmiento', 'Tiongson', 'Verzosa', 'Yumul',
+        ];
 
         $students = [];
         $populationPlan = self::STUDENT_POPULATION_PLAN[$program->code] ?? [];
@@ -107,16 +112,11 @@ class UserSeeder extends Seeder
             for ($index = 0; $index < $targetPopulation; $index++) {
                 $isFemale = $index % 2 === 0;
                 $firstNamePool = $isFemale ? $femaleFirstNames : $maleFirstNames;
-                $nameCycle = intdiv($index, count($firstNamePool));
                 $firstName = $firstNamePool[$index % count($firstNamePool)];
-
-                if ($nameCycle > 0) {
-                    $firstName .= ' ' . chr(64 + $nameCycle);
-                }
 
                 $students[] = [
                     'first_name'  => $firstName,
-                    'middle_name' => $middleInitials[$index % count($middleInitials)],
+                    'middle_name' => $middleNames[$index % count($middleNames)],
                     'last_name'   => $lastNames[$index % count($lastNames)],
                     'suffix'      => '',
                     'sex'         => $isFemale ? 'Female' : 'Male',

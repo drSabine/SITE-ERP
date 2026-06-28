@@ -6,7 +6,7 @@ export default function ProgramFormModal({ show, editTarget, onClose }) {
     const isEdit = Boolean(editTarget);
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
-        code: '', name: '', description: '', is_active: true,
+        code: '', name: '', is_active: true,
     });
 
     useEffect(() => {
@@ -14,7 +14,6 @@ export default function ProgramFormModal({ show, editTarget, onClose }) {
             setData({
                 code:        editTarget.code ?? '',
                 name:        editTarget.name ?? '',
-                description: editTarget.description ?? '',
                 is_active:   editTarget.is_active ?? true,
             });
         }
@@ -40,12 +39,13 @@ export default function ProgramFormModal({ show, editTarget, onClose }) {
                 <div className="mt-4 space-y-4">
                     <div className="grid grid-cols-3 gap-4">
                         <InputField
-                            label="Code (e.g. BSIT)"
+                            label="Code"
                             id="prog-code"
                             value={data.code}
                             onChange={event => setData('code', event.target.value.toUpperCase())}
                             error={errors.code}
                             maxLength={20}
+                            placeholder="BSIT"
                             required
                         />
                         <div className="col-span-2">
@@ -55,21 +55,10 @@ export default function ProgramFormModal({ show, editTarget, onClose }) {
                                 value={data.name}
                                 onChange={event => setData('name', event.target.value)}
                                 error={errors.name}
+                                placeholder="Bachelor of Science in Information Technology"
                                 required
                             />
                         </div>
-                    </div>
-
-                    <div>
-                        <label htmlFor="prog-desc" className="block text-sm font-medium text-gray-700">Description</label>
-                        <textarea
-                            id="prog-desc"
-                            rows={3}
-                            value={data.description}
-                            onChange={event => setData('description', event.target.value)}
-                            className="mt-1 block w-full border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm"
-                        />
-                        {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description}</p>}
                     </div>
 
                     {isEdit && (

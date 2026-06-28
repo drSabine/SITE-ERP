@@ -224,12 +224,16 @@ export default function UserFormModal({ show, editTarget, programs = [], onClose
                             id="u-role"
                             value={roleSelection}
                             onChange={event => handleRoleSelection(event.target.value)}
-                            className="mt-1 block w-full border-gray-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+                            disabled={isEdit}
+                            className="mt-1 block w-full border-gray-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                         >
                             {ROLE_SELECT_OPTIONS.map(option => (
                                 <option key={option.value} value={option.value}>{option.label}</option>
                             ))}
                         </select>
+                        {isEdit && (
+                            <p className="mt-1 text-xs text-gray-400">Role is locked after creation and cannot be changed.</p>
+                        )}
                     </div>
 
                     {isEdit ? (

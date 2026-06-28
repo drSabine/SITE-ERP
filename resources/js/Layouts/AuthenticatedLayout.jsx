@@ -8,9 +8,14 @@ import {
     ProgramsIcon,
     StudentsIcon,
     EnrollmentsIcon,
+    SectionsIcon,
     AssignmentsIcon,
+    GradingMonitorIcon,
+    GraduationIcon,
     GradesIcon,
+    MyGradesIcon,
     DocumentsIcon,
+    SubmissionStatusIcon,
     VerifyIcon,
     ActivityLogsIcon,
 } from '@/Components/ui/Icons';
@@ -38,7 +43,7 @@ function buildNavSections(role, hasTeachingLoad, documentsPendingCount) {
                 { label: 'Users', href: route('admin.users.index'), match: '/admin/users', Icon: UsersIcon },
                 { label: 'Programs', href: route('admin.programs.index'), match: '/admin/programs', Icon: ProgramsIcon },
                 { label: 'Teacher Assignment', href: route('admin.assignments.index'), match: '/admin/assignments', Icon: AssignmentsIcon },
-                { label: 'Grading Monitor', href: route('admin.grading-monitor.index'), match: '/admin/grading-monitor', Icon: GradesIcon },
+                { label: 'Grading Monitor', href: route('admin.grading-monitor.index'), match: '/admin/grading-monitor', Icon: GradingMonitorIcon },
                 { label: 'Activity Logs', href: route('admin.activity-logs.index'), match: '/admin/activity-logs', Icon: ActivityLogsIcon },
             ],
         });
@@ -50,8 +55,9 @@ function buildNavSections(role, hasTeachingLoad, documentsPendingCount) {
             items: [
                 { label: 'Students', href: route('coordinator.students.index'), match: '/coordinator/students', Icon: StudentsIcon },
                 { label: 'Evaluations', href: route('coordinator.enrollments.index'), match: '/coordinator/enrollments', Icon: EnrollmentsIcon },
-                { label: 'Section Assignment', href: route('coordinator.sections.index'), match: '/coordinator/sections', Icon: AssignmentsIcon },
-                { label: 'Grading Monitor', href: route('coordinator.grading-monitor.index'), match: '/coordinator/grading-monitor', Icon: GradesIcon },
+                { label: 'Section Assignment', href: route('coordinator.sections.index'), match: '/coordinator/sections', Icon: SectionsIcon },
+                { label: 'Grading Monitor', href: route('coordinator.grading-monitor.index'), match: '/coordinator/grading-monitor', Icon: GradingMonitorIcon },
+                { label: 'Graduation', href: route('coordinator.graduation.index'), match: '/coordinator/graduation', Icon: GraduationIcon },
             ],
         });
     }
@@ -65,23 +71,36 @@ function buildNavSections(role, hasTeachingLoad, documentsPendingCount) {
         });
     }
 
-    // Document Submission & Verification — available to all staff roles.
-    const documentItems = [
-        { label: 'Documents', href: route('documents.index'), match: '/documents', exact: true, Icon: DocumentsIcon },
-        { label: 'Submission Status', href: route('documents.status'), match: '/documents/status', Icon: GradesIcon },
-    ];
-
-    if (role === 'admin') {
-        documentItems.push({
-            label: 'Verification',
-            href: route('documents.verify'),
-            match: '/documents/verify',
-            Icon: VerifyIcon,
-            badge: documentsPendingCount,
+    // Student-facing academics.
+    if (role === 'student') {
+        sections.push({
+            title: 'Academics',
+            items: [
+                { label: 'My Grades', href: route('student.grades.index'), match: '/student/grades', Icon: MyGradesIcon },
+            ],
         });
     }
 
-    sections.push({ title: 'Documents', items: documentItems });
+    // Document Submission & Verification — staff roles only (students never submit documents).
+    const isStaff = ['admin', 'coordinator_it', 'coordinator_engineering', 'teacher'].includes(role);
+    if (isStaff) {
+        const documentItems = [
+            { label: 'Documents', href: route('documents.index'), match: '/documents', exact: true, Icon: DocumentsIcon },
+            { label: 'Submission Status', href: route('documents.status'), match: '/documents/status', Icon: SubmissionStatusIcon },
+        ];
+
+        if (role === 'admin') {
+            documentItems.push({
+                label: 'Verification',
+                href: route('documents.verify'),
+                match: '/documents/verify',
+                Icon: VerifyIcon,
+                badge: documentsPendingCount,
+            });
+        }
+
+        sections.push({ title: 'Documents', items: documentItems });
+    }
 
     return sections;
 }
@@ -130,7 +149,7 @@ export default function AuthenticatedLayout({ header, children }) {
 
     return (
         <div className="flex min-h-screen bg-gray-50">
-            <aside className="sticky top-0 flex h-screen w-72 shrink-0 flex-col bg-emerald-900 select-none">
+            <aside className="sticky top-0 flex h-screen w-72 shrink-0 flex-col bg-emerald-900 select-none print:hidden">
                 <div className="shrink-0 border-b border-emerald-800 bg-emerald-950 px-5 py-6">
                     <div className="flex flex-col items-center text-center">
                         <img
@@ -212,7 +231,7 @@ export default function AuthenticatedLayout({ header, children }) {
             </aside>
 
             <div className="flex min-w-0 flex-1 flex-col">
-                <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6 shadow-sm">
+                <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6 shadow-sm print:hidden">
                     <p className="text-base font-semibold text-gray-800">{header ?? 'Dashboard'}</p>
                     <div className="text-right">
                         <p className="text-sm font-semibold text-gray-700">{currentTime}</p>

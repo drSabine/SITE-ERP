@@ -23,7 +23,8 @@ class SchoolYearController extends Controller
         return Inertia::render('Admin/SchoolYears/Index', [
             'schoolYears' => SchoolYear::ordered()
                 ->withCount('academicTerms')
-                ->get(['id', 'name', 'start_date', 'end_date', 'is_active', 'status']),
+                ->paginate(10)
+                ->withQueryString(),
         ]);
     }
 

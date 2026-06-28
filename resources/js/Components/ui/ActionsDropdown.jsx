@@ -8,6 +8,7 @@ import ActionsButton from './ActionsButton';
  *   label: string,
  *   onClick?: () => void,
  *   href?: string,
+ *   disabled?: boolean,
  *   variant?: 'default' | 'primary' | 'danger',
  * } | false | null | undefined>
  *
@@ -46,7 +47,8 @@ export default function ActionsDropdown({ items = [] }) {
                             key={index}
                             type="button"
                             onClick={item.onClick}
-                            className={`block w-full px-4 py-2 text-start text-sm ${variantClass}`}
+                            disabled={item.disabled}
+                            className={`block w-full px-4 py-2 text-start text-sm disabled:pointer-events-none disabled:opacity-50 ${variantClass}`}
                         >
                             {item.label}
                         </button>

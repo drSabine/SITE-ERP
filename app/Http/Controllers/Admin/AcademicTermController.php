@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AcademicTerm;
-use App\Models\SchoolYear;
 use App\Services\ActivityLogService;
 use App\Services\GradeService;
 use App\Services\SchoolYearService;
@@ -31,27 +30,6 @@ class AcademicTermController extends Controller
             ->get(['id', 'school_year_id', 'semester', 'is_active', 'start_date', 'end_date']);
 
         return response()->json($terms);
-    }
-
-    public function store(Request $request, SchoolYear $schoolYear): RedirectResponse
-    {
-        $request->validate([
-            'semester' => 'required|in:first,second,summer',
-        ]);
-
-        if ($request->semester === 'summer') {
-            $academicTerm = $this->service->createSummerTerm($schoolYear);
-
-            $this->activityLogs->record(
-                $request,
-                'created',
-                'Academic Terms',
-                "Created summer term for {$schoolYear->name}.",
-                $academicTerm
-            );
-        }
-
-        return back();
     }
 
     public function update(Request $request, AcademicTerm $academicTerm): RedirectResponse

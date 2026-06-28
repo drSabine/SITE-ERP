@@ -9,20 +9,24 @@
  *   import { EditIcon, TrashIcon } from '@/Components/ui/Icons';
  */
 
-// Navigation / Sidebar
-export { MdDashboard       as DashboardIcon   } from 'react-icons/md';
-export { MdSchool          as SchoolYearsIcon } from 'react-icons/md';
-export { MdCalendarMonth   as AcademicTermIcon } from 'react-icons/md';
-export { MdPeople          as UsersIcon       } from 'react-icons/md';
-export { MdMenuBook        as CoursesIcon     } from 'react-icons/md';
-export { MdAccountBalance  as ProgramsIcon    } from 'react-icons/md';
-export { MdPerson          as StudentsIcon    } from 'react-icons/md';
-export { MdAssignment      as EnrollmentsIcon } from 'react-icons/md';
-export { MdGrade           as GradesIcon      } from 'react-icons/md';
-export { MdWarning         as DeficienciesIcon } from 'react-icons/md';
-export { MdAssignmentInd   as AssignmentsIcon } from 'react-icons/md';
-export { MdFolderShared    as DocumentsIcon   } from 'react-icons/md';
-export { MdVerified        as VerifyIcon      } from 'react-icons/md';
+// Navigation / Sidebar — one distinct, accurate glyph per destination.
+export { MdSpaceDashboard  as DashboardIcon        } from 'react-icons/md';
+export { MdDateRange       as SchoolYearsIcon      } from 'react-icons/md';
+export { MdCalendarMonth   as AcademicTermIcon     } from 'react-icons/md';
+export { MdGroups          as UsersIcon            } from 'react-icons/md';
+export { MdMenuBook        as CoursesIcon          } from 'react-icons/md';
+export { MdSchool          as ProgramsIcon         } from 'react-icons/md';
+export { MdBadge           as StudentsIcon         } from 'react-icons/md';
+export { MdFactCheck       as EnrollmentsIcon      } from 'react-icons/md'; // Evaluations
+export { MdGridView        as SectionsIcon         } from 'react-icons/md'; // Section Assignment
+export { MdAssignmentInd   as AssignmentsIcon      } from 'react-icons/md'; // Teacher Assignment
+export { MdMonitorHeart    as GradingMonitorIcon   } from 'react-icons/md';
+export { MdWorkspacePremium as GraduationIcon      } from 'react-icons/md';
+export { MdEditNote        as GradesIcon           } from 'react-icons/md'; // Teacher gradebook
+export { MdGrade           as MyGradesIcon         } from 'react-icons/md'; // Student grades
+export { MdFolderShared    as DocumentsIcon        } from 'react-icons/md';
+export { MdChecklist       as SubmissionStatusIcon } from 'react-icons/md';
+export { MdVerified        as VerifyIcon           } from 'react-icons/md';
 
 // CRUD Actions
 export { MdAdd             as AddIcon         } from 'react-icons/md';

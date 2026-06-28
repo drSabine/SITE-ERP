@@ -177,12 +177,12 @@ class UserController extends Controller
     {
         $this->mergeGeneratedIdentity($request, $user);
 
-        $isStudent = $request->input('role') === 'student';
+        // Role is immutable after creation — an admin/coordinator/teacher/student keeps its role.
+        $isStudent = $user->role === 'student';
 
         $data = $request->validate([
             'name'           => 'required|string|max:191',
             'email'          => 'required|email|unique:users,email,' . $user->id,
-            'role'           => 'required|in:admin,coordinator_it,coordinator_engineering,teacher,student',
             'is_active'      => 'boolean',
             'first_name'     => 'required|string|max:100',
             'middle_name'    => 'nullable|string|max:100',
@@ -203,7 +203,7 @@ class UserController extends Controller
             $userUpdate = [
                 'name'      => $data['name'],
                 'email'     => $data['email'],
-                'role'      => $data['role'],
+                'role'      => $user->role, // immutable
                 'is_active' => $data['is_active'] ?? true,
             ];
 

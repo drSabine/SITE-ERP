@@ -95,7 +95,7 @@ export default function Index({ program, courses }) {
                 </div>
             </div>
 
-            <CourseFormModal show={showForm} editTarget={editTarget} programId={program.id} courses={courses} onClose={() => setShowForm(false)} />
+            <CourseFormModal show={showForm} editTarget={editTarget} programId={program.id} programCode={program.code} courses={courses} onClose={() => setShowForm(false)} />
 
             <ConfirmModal
                 show={confirm !== null}

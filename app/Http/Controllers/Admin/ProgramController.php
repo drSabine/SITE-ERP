@@ -17,7 +17,9 @@ class ProgramController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/Programs/Index', [
-            'programs' => Program::withCount('courses')->get(['id', 'code', 'name', 'is_active']),
+            'programs' => Program::withCount('courses')
+                ->paginate(10)
+                ->withQueryString(),
         ]);
     }
 

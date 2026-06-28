@@ -46,11 +46,24 @@ class EnrollmentSeeder extends Seeder
             ->orderBy('id')
             ->get();
 
+        // Leave one student per program+year group unenrolled so coordinators have someone
+        // to evaluate via "New Evaluation" out of the box.
+        $leaveForEvaluation = $students
+            ->groupBy(fn ($student) => "{$student->program_id}_{$student->year_level}")
+            ->flatMap(fn ($group) => $group->sortByDesc('id')->take(1)->pluck('id'))
+            ->flip();
+
         $sectionCounters = [];
         $enrolled = 0;
         $skipped  = 0;
+        $reserved = 0;
 
         foreach ($students as $student) {
+            if ($leaveForEvaluation->has($student->id)) {
+                $reserved++;
+                continue;
+            }
+
             $key = "{$student->program_id}_{$student->year_level}";
 
             if (! isset($sectionCounters[$key])) {
@@ -95,6 +108,6 @@ class EnrollmentSeeder extends Seeder
             $enrolled++;
         }
 
-        $this->command->info("  → Enrolled: {$enrolled} | Skipped (already enrolled): {$skipped}");
+        $this->command->info("  → Enrolled: {$enrolled} | Skipped (already enrolled): {$skipped} | Reserved for evaluation: {$reserved}");
     }
 }
