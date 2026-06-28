@@ -16,10 +16,8 @@ export function useStudents(filters = {}) {
     const [drawerData, setDrawerData]               = useState(null);
     const [drawerLoading, setDrawerLoading]         = useState(false);
 
-    const [showEnrollModal, setShowEnrollModal]               = useState(false);
-    const [showCourseManager, setShowCourseManager]           = useState(false);
-    const [managingEnrollmentId, setManagingEnrollmentId]     = useState(null);
-    const [confirm, setConfirm]                               = useState(null);
+    const [showEnrollModal, setShowEnrollModal] = useState(false);
+    const [confirm, setConfirm]                 = useState(null);
 
     useEffect(() => {
         if (!selectedStudentId) {
@@ -64,8 +62,10 @@ export function useStudents(filters = {}) {
         setSelectedStudentId(null);
         setDrawerData(null);
         setShowEnrollModal(false);
-        setShowCourseManager(false);
-        setManagingEnrollmentId(null);
+    }
+
+    function manageCourseLoad(enrollment) {
+        router.visit(route('coordinator.enrollments.course-load', enrollment.id));
     }
 
     function requestDeleteStudent(student) {
@@ -82,27 +82,21 @@ export function useStudents(filters = {}) {
         });
     }
 
-    const managingEnrollment = managingEnrollmentId && drawerData
-        ? (drawerData.student?.enrollments ?? []).find(enrollment => enrollment.id === managingEnrollmentId)
-        : null;
-
     return {
         search, setSearch,
         programId, setProgramId,
-        yearLevel, status,
+        yearLevel, status, setStatus,
         showStudentForm, setShowStudentForm,
         studentFormTarget, setStudentFormTarget,
         selectedStudentId, setSelectedStudentId,
         drawerData,
         drawerLoading,
         showEnrollModal, setShowEnrollModal,
-        showCourseManager, setShowCourseManager,
-        managingEnrollmentId, setManagingEnrollmentId,
         confirm, setConfirm,
-        managingEnrollment,
         handleYearTab,
         applyFilters,
         closeDrawer,
+        manageCourseLoad,
         requestDeleteStudent,
         refetchDrawerStudent,
     };

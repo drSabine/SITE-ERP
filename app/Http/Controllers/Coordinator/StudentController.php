@@ -11,6 +11,7 @@ use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,9 +26,16 @@ class StudentController extends Controller
 
     public function index(Request $request): Response
     {
+        $filters = $request->validate([
+            'search'     => ['nullable', 'string', 'max:100'],
+            'program_id' => ['nullable', 'integer', 'exists:programs,id'],
+            'year_level' => ['nullable', 'integer', 'min:1', 'max:5'],
+            'status'     => ['nullable', Rule::in(['active', 'graduated', 'transferred', 'dropped', 'leave_of_absence'])],
+        ]);
+
         $scopedCodes = $this->scopedPrograms();
 
-        $activeSchoolYear = SchoolYear::where('is_active', true)
+        $activeSchoolYear = SchoolYear::active()
             ->with(['academicTerms' => fn ($q) => $q
                 ->orderByRaw("FIELD(semester, 'first', 'second', 'summer')")
                 ->select('id', 'school_year_id', 'semester', 'is_active')])
@@ -53,36 +61,41 @@ class StudentController extends Controller
             $query->whereIn('program_id', $scopedProgramIds);
         }
 
-        if ($request->filled('search')) {
-            $search = $request->search;
+        if (filled($filters['search'] ?? null)) {
+            $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('last_name', 'like', "%{$search}%")
                     ->orWhere('first_name', 'like', "%{$search}%");
             });
         }
 
-        if ($request->filled('program_id')) {
-            $query->where('program_id', $request->program_id);
+        if (filled($filters['program_id'] ?? null)) {
+            $query->where('program_id', $filters['program_id']);
         }
 
-        if ($request->filled('year_level')) {
-            $query->where('year_level', $request->year_level);
+        if (filled($filters['year_level'] ?? null)) {
+            $query->where('year_level', $filters['year_level']);
         }
 
-        $query->where('status', $request->filled('status') ? $request->status : 'active');
+        $query->where('status', $filters['status'] ?? 'active');
 
         $programs = $scopedCodes !== null
             ? Program::active()->whereIn('code', $scopedCodes)->get(['id', 'code', 'name'])
             : Program::active()->get(['id', 'code', 'name']);
 
         return Inertia::render('Coordinator/Students/Index', [
-            'students'         => $query->paginate(20)->withQueryString(),
+            'students'         => $query->paginate(10)->withQueryString(),
             'programs'         => $programs,
             'activeSchoolYear' => $activeSchoolYear,
             'schoolYears'      => SchoolYear::with([
                 'academicTerms' => fn ($q) => $q->orderByRaw("FIELD(semester, 'first', 'second', 'summer')")->select('id', 'school_year_id', 'semester', 'is_active'),
             ])->ordered()->get(['id', 'name']),
-            'filters'          => $request->only(['search', 'program_id', 'year_level', 'status']),
+            'filters'          => [
+                'search'     => $filters['search'] ?? '',
+                'program_id' => $filters['program_id'] ?? '',
+                'year_level' => $filters['year_level'] ?? '',
+                'status'     => $filters['status'] ?? 'active',
+            ],
         ]);
     }
 

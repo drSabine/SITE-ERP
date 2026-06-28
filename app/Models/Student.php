@@ -15,11 +15,19 @@ class Student extends Model
         'user_id', 'first_name', 'middle_name', 'last_name',
         'suffix', 'sex', 'address', 'contact_number', 'email',
         'program_id', 'year_level', 'status', 'remarks',
+        'graduated_school_year_id', 'graduated_at',
     ];
 
     protected function casts(): array
     {
-        return [];
+        return [
+            'graduated_at' => 'date',
+        ];
+    }
+
+    public function graduatedSchoolYear(): BelongsTo
+    {
+        return $this->belongsTo(SchoolYear::class, 'graduated_school_year_id');
     }
 
     public function scopeActive($query)

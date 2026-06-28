@@ -9,8 +9,7 @@ use Illuminate\Validation\ValidationException;
 class SchoolYearService
 {
     /**
-     * Create a school year with two default academic terms (1st and 2nd semester).
-     * Summer is created on demand.
+     * Create a school year with first, second, and summer academic terms.
      */
     public function create(array $data): SchoolYear
     {
@@ -51,23 +50,6 @@ class SchoolYearService
     public function finalize(SchoolYear $schoolYear): void
     {
         $schoolYear->update(['status' => 'finalized', 'is_active' => false]);
-    }
-
-    /**
-     * Create a summer term for a school year (optional, on demand).
-     */
-    public function createSummerTerm(SchoolYear $schoolYear): AcademicTerm
-    {
-        if ($schoolYear->academicTerms()->where('semester', 'summer')->exists()) {
-            throw ValidationException::withMessages([
-                'semester' => 'A summer term already exists for this school year.',
-            ]);
-        }
-
-        return $schoolYear->academicTerms()->create([
-            'semester'  => 'summer',
-            'is_active' => false,
-        ]);
     }
 
     /**

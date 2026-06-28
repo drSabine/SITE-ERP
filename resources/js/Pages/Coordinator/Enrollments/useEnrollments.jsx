@@ -1,18 +1,15 @@
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
-import axios from 'axios';
 import { formatStudentName } from '@/Components/Coordinator/Shared';
 
 export function useEnrollments({ selectedTermId, schoolYears, filters = {} }) {
+    const [search, setSearch]       = useState(filters.search ?? '');
     const [programId, setProgramId] = useState(filters.program_id ?? '');
     const [yearLevel, setYearLevel] = useState(filters.year_level ?? '');
+    const [sectionId, setSectionId] = useState(filters.section_id ?? '');
     const [status, setStatus]       = useState(filters.status ?? 'enrolled');
+    const [hasInc, setHasInc]       = useState(Boolean(filters.has_inc));
     const [confirm, setConfirm]     = useState(null);
-
-    const [showAddModal, setShowAddModal]               = useState(false);
-    const [managingRow, setManagingRow]                 = useState(null);
-    const [managingStudentData, setManagingStudentData] = useState(null);
-    const [managingLoading, setManagingLoading]         = useState(false);
 
     const allTerms = schoolYears.flatMap(sy =>
         (sy.academic_terms ?? []).map(term => ({ ...term, school_year: sy }))
@@ -23,7 +20,7 @@ export function useEnrollments({ selectedTermId, schoolYears, filters = {} }) {
 
     function navigate(overrides = {}) {
         router.get(route('coordinator.enrollments.index'), {
-            term_id: selectedTermId ?? '', program_id: programId, year_level: yearLevel, status, ...overrides,
+            search, term_id: selectedTermId ?? '', program_id: programId, year_level: yearLevel, section_id: sectionId, status, has_inc: hasInc ? 1 : '', ...overrides,
         }, { preserveState: true, preserveScroll: true });
     }
 
@@ -47,32 +44,30 @@ export function useEnrollments({ selectedTermId, schoolYears, filters = {} }) {
         navigate({ year_level: value });
     }
 
+    function handleSectionFilter(event) {
+        const value = event.target.value;
+        setSectionId(value);
+        navigate({ section_id: value });
+    }
+
     function handleStatusFilter(event) {
         const value = event.target.value;
         setStatus(value);
         navigate({ status: value });
     }
 
-    function openCourseManager(row) {
-        setManagingRow(row);
-        setManagingStudentData(null);
-        setManagingLoading(true);
-        axios.get(route('coordinator.students.detail', row.student.id))
-            .then(response => setManagingStudentData(response.data))
-            .catch(() => {})
-            .finally(() => setManagingLoading(false));
+    function handleIncFilter(event) {
+        const value = event.target.checked;
+        setHasInc(value);
+        navigate({ has_inc: value ? 1 : '' });
     }
 
-    function closeCourseManager() {
-        setManagingRow(null);
-        setManagingStudentData(null);
+    function manageCourseLoad(enrollment) {
+        router.visit(route('coordinator.enrollments.course-load', enrollment.id));
     }
 
-    function refetchManagingStudent() {
-        if (!managingRow?.student?.id) return;
-        axios.get(route('coordinator.students.detail', managingRow.student.id))
-            .then(response => setManagingStudentData(response.data))
-            .catch(() => {});
+    function assignSection() {
+        router.visit(route('coordinator.sections.index', { academic_term_id: selectedTermId }));
     }
 
     function requestDropEnrollment(enrollment) {
@@ -86,15 +81,26 @@ export function useEnrollments({ selectedTermId, schoolYears, filters = {} }) {
         });
     }
 
+    function handleSearchSubmit(event) {
+        event.preventDefault();
+        navigate({ search });
+    }
+
+    function handleSearchClear() {
+        setSearch('');
+        navigate({ search: '' });
+    }
+
     return {
-        programId, yearLevel, status,
+        search, setSearch, handleSearchSubmit, handleSearchClear,
+        programId, yearLevel, sectionId, status,
+        hasInc, handleIncFilter,
         confirm, setConfirm,
-        showAddModal, setShowAddModal,
-        managingRow, managingStudentData, managingLoading,
         allTerms, selectedTerm, selectedSchoolYear, termsForSelectedYear,
         handleSchoolYearChange, handleTermTabClick,
-        handleProgramFilter, handleYearLevelFilter, handleStatusFilter,
-        openCourseManager, closeCourseManager, refetchManagingStudent,
+        handleProgramFilter, handleYearLevelFilter, handleSectionFilter, handleStatusFilter,
+        manageCourseLoad,
+        assignSection,
         requestDropEnrollment,
     };
 }

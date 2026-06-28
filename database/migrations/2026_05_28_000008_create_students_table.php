@@ -32,6 +32,12 @@ return new class extends Migration
             // transferred = left the school (voluntarily, to another institution)
             // dropped     = left mid-program for non-transfer reasons
             $table->enum('status', ['active', 'graduated', 'transferred', 'dropped', 'leave_of_absence'])->default('active');
+
+            // Graduation record — set when a coordinator confirms a graduation.
+            // The school year is stored so "graduates per S.Y." analytics survive renames.
+            $table->foreignId('graduated_school_year_id')->nullable()->constrained('school_years')->nullOnDelete();
+            $table->date('graduated_at')->nullable();
+
             $table->text('remarks')->nullable();
             $table->softDeletes();
             $table->timestamps();

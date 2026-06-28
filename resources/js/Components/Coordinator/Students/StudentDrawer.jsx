@@ -64,7 +64,7 @@ export default function StudentDrawer({
                                 leaveFrom="translate-x-0"
                                 leaveTo="translate-x-full"
                             >
-                                <DialogPanel className="pointer-events-auto flex w-[480px] flex-col bg-white shadow-xl">
+                                <DialogPanel className="pointer-events-auto flex w-[760px] max-w-[94vw] flex-col bg-white shadow-xl">
                                     <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-5 py-4">
                                         <p className="text-sm font-semibold uppercase tracking-widest text-gray-500">
                                             Student Profile

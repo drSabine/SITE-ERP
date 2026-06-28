@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { StatusBadge, ConfirmModal, DataTable, ActionsDropdown } from '@/Components/ui';
-import { StudentFormModal, StudentDrawer, EnrollmentModal, CourseManagerModal, StudentFilters } from '@/Components/Coordinator/Students';
+import { StudentFormModal, StudentDrawer, EnrollmentModal, StudentFilters } from '@/Components/Coordinator/Students';
 import { PagePanel, SegmentedTabs, YEAR_TABS, getYearLabel, formatStudentName } from '@/Components/Coordinator/Shared';
 import { useStudents } from './useStudents';
 
@@ -9,20 +9,18 @@ export default function Index({ students, programs, activeSchoolYear, schoolYear
     const {
         search, setSearch,
         programId, setProgramId,
-        yearLevel, status,
+        yearLevel, status, setStatus,
         showStudentForm, setShowStudentForm,
         studentFormTarget, setStudentFormTarget,
         selectedStudentId, setSelectedStudentId,
         drawerData,
         drawerLoading,
         showEnrollModal, setShowEnrollModal,
-        showCourseManager, setShowCourseManager,
-        managingEnrollmentId, setManagingEnrollmentId,
         confirm, setConfirm,
-        managingEnrollment,
         handleYearTab,
         applyFilters,
         closeDrawer,
+        manageCourseLoad,
         requestDeleteStudent,
         refetchDrawerStudent,
     } = useStudents(filters);
@@ -117,8 +115,6 @@ export default function Index({ students, programs, activeSchoolYear, schoolYear
                                         onClick: () => {
                                             setSelectedStudentId(student.id);
                                             setShowEnrollModal(false);
-                                            setShowCourseManager(false);
-                                            setManagingEnrollmentId(null);
                                         },
                                         variant: 'primary',
                                     },
@@ -150,10 +146,7 @@ export default function Index({ students, programs, activeSchoolYear, schoolYear
                 loading={drawerLoading}
                 onClose={closeDrawer}
                 onEnrollClick={() => setShowEnrollModal(true)}
-                onManageClick={enrollment => {
-                    setManagingEnrollmentId(enrollment.id);
-                    setShowCourseManager(true);
-                }}
+                onManageClick={manageCourseLoad}
                 onEditClick={student => {
                     setStudentFormTarget(student);
                     setShowStudentForm(true);
@@ -172,16 +165,6 @@ export default function Index({ students, programs, activeSchoolYear, schoolYear
                     setShowEnrollModal(false);
                     refetchDrawerStudent();
                 }}
-            />
-
-            <CourseManagerModal
-                key={`courses-${managingEnrollmentId}`}
-                show={showCourseManager}
-                student={drawerData?.student ?? null}
-                enrollment={managingEnrollment ?? null}
-                availableCourses={drawerData?.availableCourses ?? []}
-                onClose={() => setShowCourseManager(false)}
-                onActionDone={refetchDrawerStudent}
             />
 
             <ConfirmModal

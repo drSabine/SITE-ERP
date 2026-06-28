@@ -1,5 +1,6 @@
 export { default as FilterBar } from './FilterBar';
 export { default as FilterSelect } from './FilterSelect';
+export { default as StudentReviewModal } from './StudentReviewModal';
 export { PagePanel } from '@/Components/ui';
 export { SegmentedTabs } from '@/Components/ui';
 export {
