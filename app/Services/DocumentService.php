@@ -15,9 +15,17 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentService
 {
-    /** Private disk — files are streamed through an authorized controller, never served directly. */
-    private const DISK = 'local';
+    /** Private storage — files are streamed through an authorized controller, never served directly. */
     private const DIRECTORY = 'documents';
+
+    /**
+     * Configurable disk: local dev stays on 'local'; production points DOCUMENTS_DISK at the
+     * Laravel Cloud 's3' bucket. See docs/notes/object-storage-guide.md.
+     */
+    private function disk(): string
+    {
+        return config('filesystems.documents_disk', 'local');
+    }
 
     /**
      * Paginated document list. Non-admins only ever see their own submissions.
@@ -66,10 +74,11 @@ class DocumentService
 
     /**
      * Pending queue used by the admin verification page.
+     * Supports category/submitter filtering and cascading sort (general → specific).
      */
-    public function pendingQueue(): LengthAwarePaginator
+    public function pendingQueue(array $filters = []): LengthAwarePaginator
     {
-        return Document::with([
+        $query = Document::with([
             'category'   => fn ($relation) => $relation->select('id', 'code', 'name'),
             'submitter'  => fn ($relation) => $relation->select('id', 'name', 'role'),
             'latestFile' => fn ($relation) => $relation->select(
@@ -82,10 +91,28 @@ class DocumentService
             ),
         ])
             ->select('id', 'title', 'description', 'submission_category_id', 'custom_category', 'submitted_by', 'status', 'deadline', 'created_at')
-            ->pending()
-            ->oldest()
-            ->paginate(10)
-            ->withQueryString();
+            ->pending();
+
+        if (! empty($filters['category'])) {
+            $query->where('submission_category_id', $filters['category']);
+        }
+
+        if (! empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->whereHas('submitter', fn ($relation) => $relation->where('name', 'like', "%{$search}%"));
+        }
+
+        // Cascading sort: most general (category) first, then more specific keys.
+        match ($filters['sort'] ?? 'category') {
+            'deadline' => $query->orderByRaw('deadline IS NULL, deadline asc')->oldest(),
+            'recent'   => $query->latest(),
+            default    => $query
+                ->orderBy(SubmissionCategory::select('name')->whereColumn('submission_categories.id', 'documents.submission_category_id'))
+                ->orderByRaw('documents.deadline IS NULL, documents.deadline asc')
+                ->orderBy('documents.created_at'),
+        };
+
+        return $query->paginate(10)->withQueryString();
     }
 
     /**
@@ -103,11 +130,23 @@ class DocumentService
             ->groupBy('status')
             ->pluck('total', 'status');
 
+        // Overdue = past deadline and not yet verified.
+        $overdueQuery = (clone $base)
+            ->whereNotNull('deadline')
+            ->where('deadline', '<', now())
+            ->whereIn('status', ['pending', 'rejected']);
+
+        $overduePerCategory = (clone $overdueQuery)
+            ->selectRaw('submission_category_id, count(*) as total')
+            ->groupBy('submission_category_id')
+            ->pluck('total', 'submission_category_id');
+
         $summary = [
             'total'    => (int) $counts->sum(),
             'pending'  => (int) ($counts['pending'] ?? 0),
             'verified' => (int) ($counts['verified'] ?? 0),
             'rejected' => (int) ($counts['rejected'] ?? 0),
+            'overdue'  => (int) $overdueQuery->count(),
         ];
 
         $perCategory = (clone $base)
@@ -119,7 +158,7 @@ class DocumentService
         $categories = SubmissionCategory::active()
             ->ordered()
             ->get(['id', 'code', 'name'])
-            ->map(function ($category) use ($perCategory) {
+            ->map(function ($category) use ($perCategory, $overduePerCategory) {
                 $rows = $perCategory->get($category->id, collect());
 
                 return [
@@ -130,6 +169,7 @@ class DocumentService
                     'pending'  => (int) ($rows->firstWhere('status', 'pending')->total ?? 0),
                     'verified' => (int) ($rows->firstWhere('status', 'verified')->total ?? 0),
                     'rejected' => (int) ($rows->firstWhere('status', 'rejected')->total ?? 0),
+                    'overdue'  => (int) ($overduePerCategory[$category->id] ?? 0),
                 ];
             });
 
@@ -234,16 +274,16 @@ class DocumentService
 
     public function download(DocumentFile $file): StreamedResponse
     {
-        abort_unless(Storage::disk(self::DISK)->exists($file->stored_path), 404);
+        abort_unless(Storage::disk($this->disk())->exists($file->stored_path), 404);
 
-        return Storage::disk(self::DISK)->download($file->stored_path, $file->original_name);
+        return Storage::disk($this->disk())->download($file->stored_path, $file->original_name);
     }
 
     public function delete(Document $document): void
     {
         DB::transaction(function () use ($document) {
             foreach ($document->files as $file) {
-                Storage::disk(self::DISK)->delete($file->stored_path);
+                Storage::disk($this->disk())->delete($file->stored_path);
             }
 
             // verification_records + uploaded_files cascade on FK delete
@@ -253,7 +293,7 @@ class DocumentService
 
     private function storeFile(Document $document, User $user, UploadedFile $file, int $version, ?string $note = null): DocumentFile
     {
-        $path = $file->store(self::DIRECTORY, self::DISK);
+        $path = $file->store(self::DIRECTORY, $this->disk());
 
         return $document->files()->create([
             'original_name' => $file->getClientOriginalName(),

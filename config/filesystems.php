@@ -17,6 +17,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Documents Disk
+    |--------------------------------------------------------------------------
+    |
+    | Disk used by DocumentService for accreditation document uploads. Local dev
+    | stays on 'local'; production sets DOCUMENTS_DISK=s3 (Laravel Cloud object
+    | storage). See docs/notes/object-storage-guide.md.
+    |
+    */
+
+    'documents_disk' => env('DOCUMENTS_DISK', 'local'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |

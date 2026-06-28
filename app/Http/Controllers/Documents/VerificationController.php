@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Documents;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Models\SubmissionCategory;
 use App\Services\ActivityLogService;
 use App\Services\DocumentService;
 use Illuminate\Http\RedirectResponse;
@@ -18,10 +19,24 @@ class VerificationController extends Controller
         private readonly ActivityLogService $activityLogs,
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $request->validate([
+            'category' => 'nullable|integer|exists:submission_categories,id',
+            'search'   => 'nullable|string|max:100',
+            'sort'     => 'nullable|in:category,deadline,recent',
+        ]);
+
+        $filters = [
+            'category' => $request->input('category'),
+            'search'   => trim((string) $request->input('search', '')),
+            'sort'     => $request->input('sort', 'category'),
+        ];
+
         return Inertia::render('Documents/Verify', [
-            'documents' => $this->documents->pendingQueue(),
+            'documents'  => $this->documents->pendingQueue($filters),
+            'categories' => SubmissionCategory::active()->ordered()->get(['id', 'code', 'name']),
+            'filters'    => $filters,
         ]);
     }
 
