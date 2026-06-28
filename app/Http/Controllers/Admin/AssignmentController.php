@@ -49,6 +49,8 @@ class AssignmentController extends Controller
         return Inertia::render('Admin/Assignments/Index', [
             'term' => $term,
             'selectedSchoolYear' => $schoolYear,
+            // Per-term assignment counts are small; return the full set so the page can group
+            // it by section or by teacher client-side instead of paginating a flat log.
             'assignments' => TeacherAssignment::where('academic_term_id', $term->id)
                 ->with([
                     'teacher' => fn ($query) => $query->select('id', 'name')->with(['userProfile:user_id,first_name,last_name']),
@@ -56,8 +58,7 @@ class AssignmentController extends Controller
                     'section:id,program_id,year_level,name',
                     'section.program:id,code,name',
                 ])
-                ->paginate(10)
-                ->withQueryString(),
+                ->get(),
             'teachers' => User::teachers()->active()
                 ->with(['userProfile:user_id,first_name,last_name'])
                 ->get(['id', 'name']),
@@ -115,6 +116,48 @@ class AssignmentController extends Controller
                 'section_id' => $data['section_id'],
                 'academic_term_id' => $data['academic_term_id'],
             ]
+        );
+
+        return back();
+    }
+
+    public function update(Request $request, TeacherAssignment $teacherAssignment): RedirectResponse
+    {
+        $data = $request->validate([
+            'teacher_id' => 'required|exists:users,id',
+            'course_id'  => 'required|exists:courses,id',
+        ]);
+
+        $teacher = User::findOrFail($data['teacher_id']);
+        abort_if($teacher->role !== 'teacher', 422, 'Selected user is not a teacher.');
+
+        $section = Section::with(['program:id,code'])->findOrFail($teacherAssignment->section_id);
+        $this->service->validateCourseFitsSection($section, (int) $data['course_id']);
+
+        $term = AcademicTerm::findOrFail($teacherAssignment->academic_term_id, ['id', 'semester']);
+        $course = Course::findOrFail($data['course_id'], ['id', 'semester_type']);
+        abort_if($course->semester_type !== $term->semester, 422, 'Selected subject does not belong to this academic term.');
+
+        $exists = TeacherAssignment::where('course_id', $data['course_id'])
+            ->where('section_id', $teacherAssignment->section_id)
+            ->where('academic_term_id', $teacherAssignment->academic_term_id)
+            ->where('id', '!=', $teacherAssignment->id)
+            ->exists();
+
+        abort_if($exists, 422, 'This section already has a teacher assigned for this subject in this term.');
+
+        $teacherAssignment->update([
+            'teacher_id' => $data['teacher_id'],
+            'course_id'  => $data['course_id'],
+        ]);
+
+        $this->activityLogs->record(
+            $request,
+            'updated',
+            'Teacher Assignments',
+            "Reassigned a section subject to {$teacher->name}.",
+            $teacherAssignment,
+            ['teacher_id' => $data['teacher_id'], 'course_id' => $data['course_id']]
         );
 
         return back();

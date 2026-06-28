@@ -48,6 +48,15 @@ function summarizeTeacherLoad(assignments) {
     });
 }
 
+function MonitorChip({ label, value, amber = false }) {
+    return (
+        <span className={`inline-flex items-center gap-1.5 border px-2.5 py-1 text-xs ${amber ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
+            <span className="font-semibold">{value}</span>
+            <span className="text-[10px] uppercase tracking-wide">{label}</span>
+        </span>
+    );
+}
+
 export default function GradingMonitorPage({
     assignments,
     filters,
@@ -125,9 +134,21 @@ export default function GradingMonitorPage({
         {
             key: 'progress',
             label: 'Progress',
+            widthClassName: 'w-44',
             render: (row) => {
                 const metrics = row.grading_metrics ?? {};
-                return `${metrics.graded_count ?? 0}/${metrics.total_students ?? 0} (${metrics.completion_rate ?? 0}%)`;
+                const rate = metrics.completion_rate ?? 0;
+                return (
+                    <div className="w-40">
+                        <div className="mb-1 flex items-center justify-between text-xs text-gray-500">
+                            <span>{metrics.graded_count ?? 0}/{metrics.total_students ?? 0}</span>
+                            <span className="font-semibold text-gray-700">{rate}%</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-gray-100">
+                            <div className="h-1.5 bg-emerald-600" style={{ width: `${rate}%` }} />
+                        </div>
+                    </div>
+                );
             },
         },
         {
@@ -203,36 +224,28 @@ export default function GradingMonitorPage({
 
                                 return (
                                     <section key={teacherGroup.teacherKey} className="border border-gray-200 bg-white">
-                                        <div className="flex flex-col gap-3 border-b border-gray-200 px-5 py-4 md:flex-row md:items-center md:justify-between">
-                                            <div>
-                                                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Teacher</p>
-                                                <h3 className="text-base font-semibold text-gray-900">{buildTeacherName(teacherGroup.teacher)}</h3>
+                                        <div className="border-b border-gray-200 px-5 py-4">
+                                            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                                <div>
+                                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Teacher</p>
+                                                    <h3 className="text-base font-semibold text-gray-900">{buildTeacherName(teacherGroup.teacher)}</h3>
+                                                </div>
+                                                <div className="w-full md:w-72">
+                                                    <div className="mb-1 flex items-center justify-between text-xs text-gray-500">
+                                                        <span>Graded</span>
+                                                        <span className="font-semibold text-gray-700">{summary.gradedCount}/{summary.totalStudents} ({completionRate}%)</span>
+                                                    </div>
+                                                    <div className="h-2 w-full bg-gray-100">
+                                                        <div className="h-2 bg-emerald-600" style={{ width: `${completionRate}%` }} />
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="grid grid-cols-3 gap-3 text-sm md:grid-cols-6">
-                                                <div>
-                                                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Subjects</p>
-                                                    <p className="font-semibold text-gray-900">{teacherGroup.assignments.length}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Students</p>
-                                                    <p className="font-semibold text-gray-900">{summary.totalStudents}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Graded</p>
-                                                    <p className="font-semibold text-gray-900">{completionRate}%</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Pending</p>
-                                                    <p className="font-semibold text-gray-900">{summary.pendingCount}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">INC</p>
-                                                    <p className={`font-semibold ${summary.incCount > 0 ? 'text-amber-600' : 'text-gray-900'}`}>{summary.incCount}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Dropped</p>
-                                                    <p className={`font-semibold ${summary.droppedCount > 0 ? 'text-gray-600' : 'text-gray-900'}`}>{summary.droppedCount}</p>
-                                                </div>
+                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                <MonitorChip label="Subjects" value={teacherGroup.assignments.length} />
+                                                <MonitorChip label="Students" value={summary.totalStudents} />
+                                                <MonitorChip label="Pending" value={summary.pendingCount} amber={summary.pendingCount > 0} />
+                                                <MonitorChip label="INC" value={summary.incCount} amber={summary.incCount > 0} />
+                                                <MonitorChip label="Dropped" value={summary.droppedCount} />
                                             </div>
                                         </div>
 

@@ -21,7 +21,16 @@ export default function StudentGradeTable({ students }) {
             key: 'grade',
             label: 'Grade',
             className: 'tabular-nums',
-            render: (studentRow) => gradeDisplay(studentRow),
+            render: (studentRow) => {
+                const value = gradeDisplay(studentRow);
+                const isInc = studentRow.status === 'inc';
+                const isFailed = studentRow.status === 'failed' || Number(studentRow.final_grade) === 5;
+                return (
+                    <span className={isInc ? 'font-semibold text-orange-600' : isFailed ? 'font-semibold text-red-600' : ''}>
+                        {value}
+                    </span>
+                );
+            },
         },
         {
             key: 'status',
