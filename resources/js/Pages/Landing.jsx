@@ -49,7 +49,7 @@ function Reveal({ children, className = '', delay = 0 }) {
     return (
         <div
             ref={elementRef}
-            className={`transition-all duration-700 ease-out motion-reduce:transition-none ${isVisible ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-6 scale-[0.98] opacity-0'} ${className}`}
+            className={`transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'} ${className}`}
             style={{ transitionDelay: `${delay}ms` }}
         >
             {children}
@@ -60,15 +60,17 @@ function Reveal({ children, className = '', delay = 0 }) {
 export default function Landing() {
     return (
         <div className="flex min-h-screen flex-col bg-white text-gray-900">
-            <Head title="St. Paul University Philippines — SITE" />
+            <Head title="St. Paul University Philippines · SITE">
+                <link rel="preload" as="image" href="/images/spup-bg-landing-page.jpg" />
+            </Head>
 
             {/* Hero */}
             <main className="flex-1">
                 <section className="relative overflow-hidden">
-                    <div className="landing-hero-bg absolute inset-0 bg-[url('/images/spup-bg-landing-page.jpg')] bg-cover bg-center" aria-hidden="true" />
+                    <div className="absolute inset-0 bg-emerald-950 bg-[url('/images/spup-bg-landing-page.jpg')] bg-cover bg-center" aria-hidden="true" />
                     <div className="absolute inset-0 bg-emerald-950/80" aria-hidden="true" />
                     <div className="relative z-10 mx-auto max-w-3xl px-6 py-20 text-center sm:py-28">
-                        <div className="landing-hero-item landing-seal mb-8 flex justify-center">
+                        <div className="landing-hero-item mb-8 flex justify-center">
                             <img
                                 src="/images/SPUP-final-logo.png"
                                 alt="SPUP Seal"
@@ -158,56 +160,25 @@ export default function Landing() {
             </footer>
 
             <style>{`
-                @keyframes landingFadeUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(16px) scale(0.98);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0) scale(1);
-                    }
-                }
-
-                @keyframes landingSealPop {
-                    from {
-                        opacity: 0;
-                        transform: scale(0.8) translateY(-8px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: scale(1) translateY(0);
-                    }
-                }
-
-                @keyframes landingBgZoom {
-                    from { transform: scale(1.08); }
-                    to { transform: scale(1); }
-                }
-
-                .landing-hero-bg {
-                    animation: landingBgZoom 6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+                @keyframes rise {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
                 }
 
                 .landing-hero-item {
                     opacity: 0;
-                    animation: landingFadeUp 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+                    animation: rise 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
                 }
 
-                .landing-hero-item.landing-seal {
-                    animation: landingSealPop 750ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-                }
-
-                .landing-hero-item:nth-of-type(1) { animation-delay: 80ms; }
-                .landing-hero-item:nth-of-type(2) { animation-delay: 220ms; }
-                .landing-hero-item:nth-of-type(3) { animation-delay: 300ms; }
-                .landing-hero-item:nth-of-type(4) { animation-delay: 380ms; }
-                .landing-hero-item:nth-of-type(5) { animation-delay: 460ms; }
-                .landing-hero-item:nth-of-type(6) { animation-delay: 540ms; }
+                .landing-hero-item:nth-of-type(1) { animation-delay: 60ms; }
+                .landing-hero-item:nth-of-type(2) { animation-delay: 140ms; }
+                .landing-hero-item:nth-of-type(3) { animation-delay: 220ms; }
+                .landing-hero-item:nth-of-type(4) { animation-delay: 300ms; }
+                .landing-hero-item:nth-of-type(5) { animation-delay: 380ms; }
+                .landing-hero-item:nth-of-type(6) { animation-delay: 460ms; }
 
                 @media (prefers-reduced-motion: reduce) {
-                    .landing-hero-item,
-                    .landing-hero-bg {
+                    .landing-hero-item {
                         opacity: 1;
                         animation: none;
                         transform: none;

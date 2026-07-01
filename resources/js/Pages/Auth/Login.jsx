@@ -4,6 +4,66 @@ import { BackIcon } from '@/Components/ui/Icons';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
+const FOOTER = 'Project created by BSIT-3B Major in Website Development as a requirement for ITE 125. S.Y 2025-2026.';
+
+const DEV_ACCOUNTS = [
+    { label: 'Admin',            email: 'marifelgrace.kummer@site.spup' },
+    { label: 'IT Coordinator',   email: 'rucelj.pugeda@site.spup' },
+    { label: 'Eng. Coordinator', email: 'cirilio.gazzingan@site.spup' },
+    { label: 'Teacher',          email: 'justinevince.tan@site.spup' },
+    { label: 'Student',          email: 'bsit.y1.01@site.spup' },
+];
+
+/**
+ * Floating, collapsible dev quick-login — pinned to the screen corner so it
+ * stays out of the real credentials card. Only mounts off-production.
+ */
+function DevLoginPanel({ onPick }) {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <div className="login-devpanel fixed bottom-4 right-4 z-30 flex flex-col items-end">
+            {open && (
+                <div className="login-devpop mb-2 w-56 border border-amber-300 bg-white p-3 shadow-xl">
+                    <div className="mb-2 flex items-center justify-between">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700">Dev Quick Login</p>
+                        <button
+                            type="button"
+                            onClick={() => setOpen(false)}
+                            className="text-gray-400 hover:text-gray-700"
+                            aria-label="Close dev login"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                    <div className="space-y-1.5">
+                        {DEV_ACCOUNTS.map(account => (
+                            <button
+                                key={account.email}
+                                type="button"
+                                onClick={() => onPick(account.email)}
+                                className="block w-full border border-amber-200 bg-white px-3 py-2 text-left text-xs font-semibold text-gray-700 shadow-sm transition-all hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-800 active:scale-[0.98]"
+                            >
+                                {account.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <button
+                type="button"
+                onClick={() => setOpen(value => !value)}
+                className="flex items-center gap-2 border border-amber-400 bg-amber-50 px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-amber-800 shadow-lg transition-colors hover:bg-amber-100"
+                aria-expanded={open}
+            >
+                <span className="inline-block h-2 w-2 bg-amber-400" aria-hidden="true" />
+                Dev Login
+            </button>
+        </div>
+    );
+}
+
 export default function Login({ status, appEnv }) {
     const [showForgotPassword, setShowForgotPassword] = useState(false);
 
@@ -13,15 +73,9 @@ export default function Login({ status, appEnv }) {
         remember: false,
     });
 
-    function quickFill(role) {
-        const credentials = {
-            admin:       { email: 'marifelgrace.kummer@site.spup', password: 'password' },
-            coordinator: { email: 'rucelj.pugeda@site.spup',       password: 'password' },
-            teacher:     { email: 'justinevince.tan@site.spup',    password: 'password' },
-            student:     { email: 'bsit.y1.01@site.spup',          password: 'password' },
-        };
-        setData('email', credentials[role].email);
-        setData('password', credentials[role].password);
+    function quickFill(email) {
+        setData('email', email);
+        setData('password', 'password');
     }
 
     function handleSubmit(event) {
@@ -30,80 +84,49 @@ export default function Login({ status, appEnv }) {
     }
 
     return (
-        <div className="flex min-h-screen">
-            <Head title="Log In" />
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12">
+            <Head title="Log In">
+                <link rel="preload" as="image" href="/images/spup-bg-landing-page.jpg" />
+            </Head>
 
-            <div className="relative hidden overflow-hidden lg:flex lg:w-2/5 flex-col items-center justify-center bg-[url('/images/spup-bg-landing-page.jpg')] bg-cover bg-center px-12 py-16">
-                <div className="absolute inset-0 bg-emerald-950/80" aria-hidden="true" />
+            {/* Shared scene with the landing hero: same photo + overlay for visual continuity.
+                The deep-emerald base color keeps the pre-load state matching the final tint
+                instead of flashing bright green over the page body. */}
+            <div className="absolute inset-0 bg-emerald-950 bg-[url('/images/spup-bg-landing-page.jpg')] bg-cover bg-center" aria-hidden="true" />
+            <div className="absolute inset-0 bg-emerald-950/80" aria-hidden="true" />
 
-                <Link
-                    href="/"
-                    className="absolute left-6 top-6 z-10 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-emerald-100 transition-colors hover:text-white"
-                >
-                    <BackIcon className="h-4 w-4" />
-                    Back to Site
-                </Link>
+            <Link
+                href="/"
+                className="login-fade absolute left-5 top-5 z-20 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-white/90 drop-shadow transition-colors hover:text-white"
+            >
+                <BackIcon className="h-4 w-4" />
+                Back to Site
+            </Link>
 
-                <div className="relative z-10 text-center">
-                    <img
-                        src="/images/SPUP-final-logo.png"
-                        alt="SPUP Seal"
-                        className="mx-auto h-28 w-28 object-contain drop-shadow-xl"
-                    />
-
-                    <h1
-                        className="mt-8 whitespace-nowrap text-2xl font-normal leading-snug text-white tracking-wide"
-                        style={{ fontFamily: "'OldEnglish', serif" }}
-                    >
-                        St. Paul University Philippines
-                    </h1>
-
-                    <p className="mt-6 text-xs font-bold uppercase tracking-widest text-emerald-300 leading-relaxed">
-                        School of Information Technology<br />and Engineering
-                    </p>
-                </div>
-            </div>
-
-            {/* ── Right panel: Login form ── */}
-            <div className="flex flex-1 flex-col items-center justify-center bg-gray-50 px-6 py-12 sm:px-12">
-
-                {/* Mobile-only back link + compact header */}
-                <Link
-                    href="/"
-                    className="mb-6 inline-flex items-center gap-1.5 self-start text-xs font-semibold uppercase tracking-widest text-emerald-700 lg:hidden"
-                >
-                    <BackIcon className="h-4 w-4" />
-                    Back to Site
-                </Link>
-
-                <div className="mb-8 flex items-center gap-3 lg:hidden">
-                    <img src="/images/SPUP-final-logo.png" alt="SPUP" className="h-12 w-12 object-contain" />
-                    <div className="leading-tight">
-                        <h1
-                            className="text-lg font-normal text-emerald-900"
-                            style={{ fontFamily: "'OldEnglish', serif" }}
-                        >
-                            St. Paul University Philippines
-                        </h1>
-                        <p className="mt-0.5 text-xs font-semibold text-emerald-700">
-                            School of Information Technology and Engineering
-                        </p>
+            {/* Centered credentials card — rises into the same scene */}
+            <div className="login-card relative z-10 w-full max-w-md">
+                <div className="border border-white/10 bg-white p-8 shadow-2xl shadow-black/40 sm:p-10">
+                    <div className="login-stagger flex justify-center" style={{ animationDelay: '220ms' }}>
+                        <img
+                            src="/images/SPUP-final-logo.png"
+                            alt="SPUP Seal"
+                            className="h-20 w-20 object-contain drop-shadow-md"
+                        />
                     </div>
-                </div>
 
-                <div className="w-full max-w-md border border-gray-200 bg-white p-8 sm:p-10 shadow-sm">
-                    <div className="mb-8">
-                        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Welcome back</h2>
-                        <p className="mt-1.5 text-sm text-gray-500">Sign in to your account to continue.</p>
+                    <div className="login-stagger mt-6 text-center" style={{ animationDelay: '300ms' }}>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-emerald-700">SITE · Account Access</p>
+                        <h1 className="mt-2 text-2xl font-bold tracking-tight text-gray-900">Welcome back</h1>
+                        <p className="mt-1.5 text-sm text-gray-500">Sign in to continue to the academic information system.</p>
                     </div>
 
                     {status && (
-                        <div className="mb-6 border-l-4 border-emerald-500 bg-emerald-50 p-4 text-sm text-emerald-800 shadow-sm">
+                        <div className="login-stagger mt-6 border-l-4 border-emerald-500 bg-emerald-50 p-4 text-sm text-emerald-800" style={{ animationDelay: '360ms' }}>
                             {status}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="login-stagger mt-8 space-y-5" style={{ animationDelay: '380ms' }}>
                         <div>
                             <InputLabel htmlFor="email" value="Email Address" />
                             <TextInput
@@ -155,42 +178,49 @@ export default function Login({ status, appEnv }) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full bg-emerald-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-60"
+                            className="w-full bg-emerald-700 px-4 py-3 text-sm font-semibold uppercase tracking-widest text-white shadow-sm transition-colors hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-60"
                         >
-                            {processing ? 'Signing in...' : 'Sign In'}
+                            {processing ? 'Signing in…' : 'Sign In'}
                         </button>
                     </form>
-
-                    {appEnv !== 'production' && (
-                        <div className="mt-8 border border-gray-200 bg-gray-50 p-5">
-                            <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                                Dev Quick Login
-                            </p>
-                            <div className="grid grid-cols-2 gap-2.5">
-                                {['admin', 'coordinator', 'teacher', 'student'].map(role => (
-                                    <button
-                                        key={role}
-                                        type="button"
-                                        onClick={() => quickFill(role)}
-                                        className="border border-gray-200 bg-white px-3 py-2 text-xs font-semibold capitalize text-gray-600 shadow-sm transition-all hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800 active:scale-[0.98]"
-                                    >
-                                        {role}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    <p className="mt-8 text-center text-xs text-gray-400">
-                        Project created by BSIT-3B Major in Website Development. S.Y 2025-2026.
-                    </p>
                 </div>
+
+                <p className="login-stagger mt-6 text-center text-xs text-white/70" style={{ animationDelay: '460ms' }}>
+                    {FOOTER}
+                </p>
             </div>
+
+            {appEnv !== 'production' && <DevLoginPanel onPick={quickFill} />}
 
             <ForgotPasswordModal
                 show={showForgotPassword}
                 onClose={() => setShowForgotPassword(false)}
             />
+
+            <style>{`
+                @keyframes rise {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+
+                .login-card { opacity: 0; animation: rise 600ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+                .login-fade { opacity: 0; animation: rise 500ms cubic-bezier(0.16, 1, 0.3, 1) 160ms both; }
+                .login-stagger { opacity: 0; animation: rise 600ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+                .login-devpanel { opacity: 0; animation: rise 500ms cubic-bezier(0.16, 1, 0.3, 1) 500ms both; }
+                .login-devpop { animation: rise 200ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+                @media (prefers-reduced-motion: reduce) {
+                    .login-card,
+                    .login-fade,
+                    .login-stagger,
+                    .login-devpanel,
+                    .login-devpop {
+                        opacity: 1;
+                        animation: none;
+                        transform: none;
+                    }
+                }
+            `}</style>
         </div>
     );
 }

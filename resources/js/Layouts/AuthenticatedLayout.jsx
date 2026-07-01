@@ -12,6 +12,7 @@ import {
     AssignmentsIcon,
     GradingMonitorIcon,
     GraduationIcon,
+    BoardExamIcon,
     GradesIcon,
     MyGradesIcon,
     DocumentsIcon,
@@ -20,12 +21,7 @@ import {
     ActivityLogsIcon,
 } from '@/Components/ui/Icons';
 
-const ROLE_LABEL = {
-    admin: 'Administrator',
-    coordinator: 'Program Coordinator',
-    teacher: 'Teacher',
-    student: 'Student',
-};
+const DEV_CREDIT = 'Developed by BSIT-3B Major in Website Development, a requirement for ITE 125. S.Y 2025-2026.';
 
 function buildNavSections(role, hasTeachingLoad, documentsPendingCount) {
     const sections = [
@@ -44,22 +40,27 @@ function buildNavSections(role, hasTeachingLoad, documentsPendingCount) {
                 { label: 'Programs', href: route('admin.programs.index'), match: '/admin/programs', Icon: ProgramsIcon },
                 { label: 'Teacher Assignment', href: route('admin.assignments.index'), match: '/admin/assignments', Icon: AssignmentsIcon },
                 { label: 'Grading Monitor', href: route('admin.grading-monitor.index'), match: '/admin/grading-monitor', Icon: GradingMonitorIcon },
+                { label: 'Board Exam Passers', href: route('board-exams.index'), match: '/board-exams', Icon: BoardExamIcon },
                 { label: 'Activity Logs', href: route('admin.activity-logs.index'), match: '/admin/activity-logs', Icon: ActivityLogsIcon },
             ],
         });
     }
 
     if (role === 'coordinator_it' || role === 'coordinator_engineering') {
-        sections.push({
-            title: 'Coordination',
-            items: [
-                { label: 'Students', href: route('coordinator.students.index'), match: '/coordinator/students', Icon: StudentsIcon },
-                { label: 'Evaluations', href: route('coordinator.enrollments.index'), match: '/coordinator/enrollments', Icon: EnrollmentsIcon },
-                { label: 'Section Assignment', href: route('coordinator.sections.index'), match: '/coordinator/sections', Icon: SectionsIcon },
-                { label: 'Grading Monitor', href: route('coordinator.grading-monitor.index'), match: '/coordinator/grading-monitor', Icon: GradingMonitorIcon },
-                { label: 'Graduation', href: route('coordinator.graduation.index'), match: '/coordinator/graduation', Icon: GraduationIcon },
-            ],
-        });
+        const coordinatorItems = [
+            { label: 'Students', href: route('coordinator.students.index'), match: '/coordinator/students', Icon: StudentsIcon },
+            { label: 'Evaluations', href: route('coordinator.enrollments.index'), match: '/coordinator/enrollments', Icon: EnrollmentsIcon },
+            { label: 'Section Assignment', href: route('coordinator.sections.index'), match: '/coordinator/sections', Icon: SectionsIcon },
+            { label: 'Grading Monitor', href: route('coordinator.grading-monitor.index'), match: '/coordinator/grading-monitor', Icon: GradingMonitorIcon },
+            { label: 'Graduation', href: route('coordinator.graduation.index'), match: '/coordinator/graduation', Icon: GraduationIcon },
+        ];
+
+        // Board-exam passers are engineering-only (the IT coordinator never sees this).
+        if (role === 'coordinator_engineering') {
+            coordinatorItems.push({ label: 'Board Exam Passers', href: route('board-exams.index'), match: '/board-exams', Icon: BoardExamIcon });
+        }
+
+        sections.push({ title: 'Coordination', items: coordinatorItems });
     }
 
     if (role === 'teacher' || hasTeachingLoad) {
@@ -242,6 +243,10 @@ export default function AuthenticatedLayout({ header, children }) {
                 <main className="flex-1">
                     {children}
                 </main>
+
+                <footer className="shrink-0 border-t border-gray-200 bg-white px-6 py-3 text-center print:hidden">
+                    <p className="text-[11px] tracking-wide text-gray-400">{DEV_CREDIT}</p>
+                </footer>
             </div>
 
             <ConfirmModal

@@ -54,9 +54,11 @@ No "Portal", no "System", no "AIS" appended to the department name.
 
 ## Login Page
 
-- **Desktop:** Split. Left `lg:w-2/5` = campus photo (`spup-bg-landing-page.jpg`) with `bg-emerald-950/80` overlay — same treatment as the landing hero — holding the seal, OldEnglish title (`emerald-300` dept line, not yellow), and a "Back to Site" link to `/` in the top-left corner. Right = `bg-gray-50` form.
-- **Mobile:** Stacked — "Back to Site" link, then a compact inline branding row (small logo + title), then the form.
-- **Dev quick-login panel:** `bg-amber-50 ring-amber-200`, 2×2 grid. Guard: `appEnv !== 'production'` (shared via `HandleInertiaRequests`).
+- **Layout:** Single centered card over a full-bleed campus photo (`spup-bg-landing-page.jpg`) + `bg-emerald-950/80` overlay — the *same scene as the landing hero* so the Sign In → Login transition reads as zooming into one place, not navigating away. No dual-panel split. Same on mobile and desktop (card just gets more padding room on larger screens).
+- **Card:** square white card (`border bg-white shadow-2xl`), seal at top, `SITE · Account Access` eyebrow, "Welcome back" heading, then the form. Credit line sits on the photo *below* the card in `text-white/70`.
+- **"Back to Site":** link to `/` pinned top-left over the photo.
+- **Motion (flow from landing):** one shared `rise` keyframe (fade + 10px lift, `cubic-bezier(0.16,1,0.3,1)`) — the card rises in, inner items stagger via `.login-stagger`. Same `rise` is used on the landing hero, so the two pages share one calm motion language (no ken-burns zoom, no spring/scale). All reset under `prefers-reduced-motion`.
+- **Dev quick-login:** collapsible floating panel pinned bottom-right (`DevLoginPanel`), **not** inside the credentials card. Toggle pill in amber; expands to a list of role buttons that fill the form. Guard: `appEnv !== 'production'`.
 - **Forgot password:** Advisory tip modal only — no email form. See `ForgotPasswordModal.jsx`.
 
 ---
@@ -79,6 +81,24 @@ Allowed exceptions:
 - No role badge — role is implicit from section titles
 - Nav section labels: `yellow-400 opacity-70`, 10px, uppercase, tracking-widest
 - Profile footer: `bg-emerald-950 border-t border-emerald-700` — name, email, Sign Out button (bordered, uppercase, tracking)
+
+---
+
+## Authenticated Shell Watermark
+
+`AuthenticatedLayout` renders a persistent authorship footer below `<main>` on every signed-in page (`DEV_CREDIT`): "Developed by BSIT-3B Major in Website Development, a requirement for ITE 125. S.Y 2025-2026." Styled subtly (`text-[11px] text-gray-400`, centered) and `print:hidden` so it never bleeds into printed grade sheets / PDFs.
+
+---
+
+## PDF Export / Printable Reports
+
+PDF export is **print-to-PDF via the browser** (`window.print()`), not a server PDF library — the app chrome (sidebar/header/footer) is already `print:hidden` in `AuthenticatedLayout`. Shared shell: `Components/Reports/ReportDocument.jsx` (`ReportDocument`, `ReportStats`, `ReportSection`, `ReportTable`) — branded masthead (SPUP logo + OldEnglish name + dept), emerald table headers, A4 `@media print` rules, and a "Save as PDF" toolbar that is `print:hidden`. Pass `autoPrint` to open the print dialog on load.
+
+Reports are **admin-only** (`admin.reports.*` routes, `Admin\ReportController`):
+- **Institutional Analytics** (`Pages/Admin/Reports/Analytics.jsx`) — total/enrolled students, current S.Y., evaluation trend, evaluation outcome, program population, graduates. Entry: "Export PDF" by the admin dashboard Analytics heading.
+- **Board Exam Passers** (`Pages/Admin/Reports/BoardExams.jsx`) — summary, per-intake trend, detailed records. Entry: "Export PDF" on the Board Exam Passers page (rendered only when `role === 'admin'`, even though the page itself is shared with the engineering coordinator).
+
+Charts are rendered as tables in reports (Recharts SVG doesn't paginate reliably on print).
 
 ---
 

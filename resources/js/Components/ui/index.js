@@ -12,7 +12,6 @@ export { default as StatusBadge } from './StatusBadge';
 export { default as ConfirmModal } from './ConfirmModal';
 export { default as Icons } from './Icons';
 export { default as InputField } from './InputField';
-export { default as DetailField } from './DetailField';
 export { default as DataTable } from './DataTable';
 export { default as CardHeader } from './CardHeader';
 export { default as Pagination } from './Pagination';
