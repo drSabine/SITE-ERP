@@ -171,7 +171,7 @@ export default function Evaluate({ term, students = [] }) {
                                                         <ul className="mt-2 space-y-0.5">
                                                             {recommendation.incCourses.map((course, index) => (
                                                                 <li key={index} className="text-xs text-amber-700">
-                                                                    <span className="font-mono font-semibold">{course.course_code}</span> — {course.title}
+                                                                    <span className="font-mono font-semibold">{course.course_code}</span> · {course.title}
                                                                 </li>
                                                             ))}
                                                         </ul>

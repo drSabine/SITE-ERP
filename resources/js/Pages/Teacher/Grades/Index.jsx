@@ -6,7 +6,7 @@ import { getSemesterLabel, getYearLabel } from '@/Components/Coordinator/Shared'
 
 export default function Index({ activeTerm, assignments = { data: [] } }) {
     const termDescription = activeTerm
-        ? `${getSemesterLabel(activeTerm.semester)} — Active Term`
+        ? `${getSemesterLabel(activeTerm.semester)} · Active Term`
         : 'No active academic term';
 
     const rows = assignments.data ?? [];

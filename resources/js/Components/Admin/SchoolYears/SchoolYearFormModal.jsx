@@ -75,7 +75,7 @@ export default function SchoolYearFormModal({ show, editTarget, onClose }) {
                     {!editTarget && (
                         <div className="border-t border-gray-100 pt-4">
                             <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
-                                Summer Term <span className="font-normal normal-case text-gray-400">(optional — dates can be set later)</span>
+                                Summer Term <span className="font-normal normal-case text-gray-400">(optional, dates can be set later)</span>
                             </p>
                             <div className="grid grid-cols-2 gap-4">
                                 <InputField

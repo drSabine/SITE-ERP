@@ -28,7 +28,7 @@ export default function TermDateModal({ show, term, onClose, onSaved }) {
         <Modal show={show} maxWidth="sm" onClose={onClose} afterLeave={reset}>
             <form onSubmit={handleSubmit} className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900">
-                    {term ? `${SEMESTER_LABELS[term.semester]} — Date Range` : 'Set Date Range'}
+                    {term ? `${SEMESTER_LABELS[term.semester]} · Date Range` : 'Set Date Range'}
                 </h3>
 
                 <div className="mt-4 grid grid-cols-2 gap-4">

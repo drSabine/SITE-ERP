@@ -82,7 +82,7 @@ export default function Index({ term, sections = [], programs }) {
                             {programKeys.map(code => (
                                 <div key={code}>
                                     <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-400">
-                                        {code} — {byProgram[code][0].program?.name}
+                                        {code} · {byProgram[code][0].program?.name}
                                     </h2>
                                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                         {byProgram[code].map(section => (
