@@ -59,6 +59,11 @@ class DashboardController extends Controller
             );
         }
 
+        // Board-exam (licensure) analytics — engineering coordinator and admin only.
+        if ($role === 'admin' || $role === 'coordinator_engineering') {
+            $props['boardExamAnalytics'] = $this->dashboardAnalyticsService->boardExamAnalytics();
+        }
+
         if (($role === 'teacher' || $hasTeachingLoad) && $activeTerm) {
             $assignments = TeacherAssignment::where('teacher_id', $user->id)
                 ->where('academic_term_id', $activeTerm->id)

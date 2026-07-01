@@ -5,6 +5,7 @@ export {
     buildStudentSections,
 } from './dashboardSections';
 export { default as CoordinatorIncAnalytics } from './CoordinatorIncAnalytics';
+export { default as BoardExamAnalytics } from './BoardExamAnalytics';
 export { default as StudentSummary } from './StudentSummary';
 export { default as TeacherTeachingPanel } from './TeacherTeachingPanel';
 export { default as GradebookCard } from './GradebookCard';

@@ -22,6 +22,7 @@ export { MdGridView        as SectionsIcon         } from 'react-icons/md'; // S
 export { MdAssignmentInd   as AssignmentsIcon      } from 'react-icons/md'; // Teacher Assignment
 export { MdMonitorHeart    as GradingMonitorIcon   } from 'react-icons/md';
 export { MdWorkspacePremium as GraduationIcon      } from 'react-icons/md';
+export { MdInsertChart     as BoardExamIcon       } from 'react-icons/md'; // Board exam analytics
 export { MdEditNote        as GradesIcon           } from 'react-icons/md'; // Teacher gradebook
 export { MdGrade           as MyGradesIcon         } from 'react-icons/md'; // Student grades
 export { MdFolderShared    as DocumentsIcon        } from 'react-icons/md';

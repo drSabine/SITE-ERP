@@ -24,22 +24,30 @@ export function buildAdminSections() {
                 { title: 'Courses', description: 'Manage the course catalog', href: route('admin.courses.index') },
                 { title: 'Teacher Assignment', description: 'Assign teachers to section subjects', href: route('admin.assignments.index') },
                 { title: 'Grading Monitor', description: 'Track teacher grading progress', href: route('admin.grading-monitor.index') },
+                { title: 'Board Exam Passers', description: 'Record engineering licensure passers and view analytics', href: route('board-exams.index') },
                 { title: 'Activity Logs', description: 'Review administrative and security activity', href: route('admin.activity-logs.index') },
             ],
         },
     ];
 }
 
-export function buildCoordinatorSections() {
+export function buildCoordinatorSections(role) {
+    const cards = [
+        { title: 'Students', description: 'View and manage student records', href: route('coordinator.students.index') },
+        { title: 'Section Assignment', description: 'Create sections and assign students', href: route('coordinator.sections.index') },
+        { title: 'Grading Monitor', description: 'Track teacher grading progress', href: route('coordinator.grading-monitor.index') },
+    ];
+
+    // Board-exam passers are engineering-only.
+    if (role === 'coordinator_engineering') {
+        cards.push({ title: 'Board Exam Passers', description: 'Record engineering licensure passers and view analytics', href: route('board-exams.index') });
+    }
+
     return [
         {
             title: 'Program Coordination',
             cols: 'grid-cols-2 sm:grid-cols-3',
-            cards: [
-                { title: 'Students', description: 'View and manage student records', href: route('coordinator.students.index') },
-                { title: 'Section Assignment', description: 'Create sections and assign students', href: route('coordinator.sections.index') },
-                { title: 'Grading Monitor', description: 'Track teacher grading progress', href: route('coordinator.grading-monitor.index') },
-            ],
+            cards,
         },
     ];
 }

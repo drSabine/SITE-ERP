@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\BoardExamResult;
 use App\Models\Program;
 use App\Models\SchoolYear;
 use App\Models\Student;
+use App\Services\BoardExamService;
 use Illuminate\Support\Facades\DB;
 
 class DashboardAnalyticsService
@@ -147,6 +149,72 @@ class DashboardAnalyticsService
             'totalInc'          => (int) $totalInc,
             'evaluatedStudents' => (int) $evaluatedStudents,
             'avgIncPerStudent'  => $evaluatedStudents > 0 ? round($totalInc / $evaluatedStudents, 2) : 0,
+        ];
+    }
+
+    /**
+     * Engineering board/licensure exam analytics for the dashboard.
+     * Scoped to engineering programs (the only programs that record board exams).
+     * Intakes are aggregated per year+month across scoped programs and returned
+     * chronologically so the bar/line trend reads oldest -> newest.
+     */
+    public function boardExamAnalytics(): array
+    {
+        $records = BoardExamResult::query()
+            ->whereIn('program_id', Program::whereIn('code', BoardExamService::ENGINEERING_CODES)->pluck('id'))
+            ->get();
+
+        $intakeTrend = $records
+            ->groupBy(fn ($result) => sprintf('%04d-%02d', $result->exam_year, $result->exam_month))
+            ->map(function ($group) {
+                $firstTakers    = (int) $group->sum('first_takers');
+                $firstPassers   = (int) $group->sum('first_taker_passers');
+                $retakers       = (int) $group->sum('retakers');
+                $retakerPassers = (int) $group->sum('retaker_passers');
+
+                $takers     = $firstTakers + $retakers;
+                $passers    = $firstPassers + $retakerPassers;
+                $didNotPass = $takers - $passers;
+                $first      = $group->first();
+
+                return [
+                    'year'           => $first->exam_year,
+                    'month'          => $first->exam_month,
+                    'label'          => substr(BoardExamService::MONTHS[$first->exam_month], 0, 3) . " {$first->exam_year}",
+                    'takers'         => $takers,
+                    'passers'        => $passers,
+                    'didNotPass'     => $didNotPass,
+                    'firstTakers'    => $firstTakers,
+                    'retakers'       => $retakers,
+                    'passRate'       => $takers > 0 ? round($passers / $takers * 100, 1) : 0,
+                    'firstTakerRate' => $firstTakers > 0 ? round($firstPassers / $firstTakers * 100, 1) : 0,
+                    'retakerRate'    => $retakers > 0 ? round($retakerPassers / $retakers * 100, 1) : 0,
+                    'pctFirstTakers' => $takers > 0 ? round($firstTakers / $takers * 100, 1) : 0,
+                    'pctRetakers'    => $takers > 0 ? round($retakers / $takers * 100, 1) : 0,
+                ];
+            })
+            ->sortBy(fn ($row) => sprintf('%04d%02d', $row['year'], $row['month']))
+            ->values()
+            ->all();
+
+        $totalTakers     = (int) $records->sum(fn ($result) => $result->total_takers);
+        $totalPassers    = (int) $records->sum(fn ($result) => $result->total_passers);
+        $totalFirst      = (int) $records->sum('first_takers');
+        $totalFirstPass  = (int) $records->sum('first_taker_passers');
+        $totalRetakers   = (int) $records->sum('retakers');
+        $totalRetakePass = (int) $records->sum('retaker_passers');
+
+        return [
+            'intakeTrend' => $intakeTrend,
+            'summary'     => [
+                'totalTakers'    => $totalTakers,
+                'totalPassers'   => $totalPassers,
+                'didNotPass'     => $totalTakers - $totalPassers,
+                'passRate'       => $totalTakers > 0 ? round($totalPassers / $totalTakers * 100, 1) : 0,
+                'firstTakerRate' => $totalFirst > 0 ? round($totalFirstPass / $totalFirst * 100, 1) : 0,
+                'retakerRate'    => $totalRetakers > 0 ? round($totalRetakePass / $totalRetakers * 100, 1) : 0,
+                'intakeCount'    => count($intakeTrend),
+            ],
         ];
     }
 
