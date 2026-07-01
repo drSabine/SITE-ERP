@@ -33,6 +33,11 @@ Sourced from `BSIT_Curriculum.xlsx`.
 | GE Ele 102 | Filipino sa Iba't Ibang Disiplina | 3 | 3 | 0 | — | GE Ele 101 |
 | ENGGMAT2 | Calculus 2 (IC) | 3 | 3 | 0 | — | ENGMAT 1 |
 | PHY1set | Physics for Engineers | 4 | 3 | 1 | — | ENGMAT 1 |
+
+### Summer
+
+| Course Code | Descriptive Title | Units | Lec | Lab | Co-REQ | Pre-REQ |
+|---|---|:---:|:---:|:---:|---|---|
 | ENGG101 | Engineering Drawings and Plans | 1 | 0 | 1 | — | — |
 | NST101 | National Service Training Program 1 | 3 | 3 | 0 | — | — |
 | PED102 | Movement Enhancement | 2 | 2 | 1 | — | — |
@@ -67,6 +72,11 @@ Sourced from `BSIT_Curriculum.xlsx`.
 | ENGG105 | Dynamics of Rigid Bodies | 2 | 2 | 0 | — | ENGGMAT3, ENGG104 |
 | ENGG106 | Mechanics of Deformable Bodies | 4 | 4 | 0 | — | ENGGMAT3, ENGG105 |
 | ENGG103 | Computer Aided Drafting | 1 | 0 | 1 | — | ENGG101 |
+
+### Summer
+
+| Course Code | Descriptive Title | Units | Lec | Lab | Co-REQ | Pre-REQ |
+|---|---|:---:|:---:|:---:|---|---|
 | ENGGMAT4 | Engineering Data Analysis | 3 | 3 | 0 | — | GEC101, ENGG107 |
 | NST102 | National Service Training Program 2 | 3 | 3 | 0 | — | NST101 |
 | CE102 | Building Systems Design | 3 | 3 | 0 | — | ENGG101, ENGG103 |
@@ -127,5 +137,14 @@ Sourced from `BSIT_Curriculum.xlsx`.
 | CE112 | Bridge Engineering | 3 | 3 | 0 | — | 4th Year Standing |
 | CE126 | Computer Software in Structural Analysis | 3 | 0 | 3 | — | 4th Year Standing |
 | CE127 | CE Project II | 3 | 2 | 1 | — | CE107 |
+
+---
+
+## Fifth Year
+
+### First Semester
+
+| Course Code | Descriptive Title | Units | Lec | Lab | Co-REQ | Pre-REQ |
+|---|---|:---:|:---:|:---:|---|---|
 | ENGG120 | Integrating Course I | 9 | 0 | 9 | — | Completed all academic req. |
 | CE115 | Integrating Course II | 9 | 0 | 9 | — | Completed all academic req. |

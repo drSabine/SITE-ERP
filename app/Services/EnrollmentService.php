@@ -16,6 +16,14 @@ class EnrollmentService
     private const SUMMER_MAX_UNITS   = 9;
 
     /**
+     * Programs whose published curriculum legitimately carries a heavier regular-semester
+     * load than the default cap: BSCpE's 1st year reaches 28 units, BSENSE's 3rd-year 2nd
+     * semester is 27. Keep in sync with getMaxUnits() in
+     * resources/js/Components/Coordinator/Shared/utils.js.
+     */
+    private const PROGRAM_REGULAR_MAX_UNITS = ['BSCpE' => 28, 'BSENSE' => 27];
+
+    /**
      * Enroll a student in an academic term.
      */
     public function enroll(Student $student, AcademicTerm $term, int $yearLevel): Enrollment
@@ -196,7 +204,7 @@ class EnrollmentService
 
     /**
      * Return prerequisite courses of $course that the student has not yet passed.
-     * Returns an array of human-readable strings: ["COURSE_CODE — Title", ...]
+     * Returns an array of human-readable strings: ["COURSE_CODE · Title", ...]
      * An empty array means all prerequisites are satisfied.
      */
     public function getUnmetPrerequisites(Enrollment $enrollment, Course $course): array
@@ -217,7 +225,7 @@ class EnrollmentService
 
         return $prerequisites
             ->filter(fn ($prereq) => ! in_array($prereq->id, $passedCourseIds))
-            ->map(fn ($prereq) => "{$prereq->course_code} — {$prereq->title}")
+            ->map(fn ($prereq) => "{$prereq->course_code} · {$prereq->title}")
             ->values()
             ->all();
     }
@@ -312,9 +320,13 @@ class EnrollmentService
     {
         $enrollment->loadMissing('academicTerm');
 
-        return $enrollment->academicTerm?->semester === 'summer'
-            ? self::SUMMER_MAX_UNITS
-            : self::REGULAR_MAX_UNITS;
+        if ($enrollment->academicTerm?->semester === 'summer') {
+            return self::SUMMER_MAX_UNITS;
+        }
+
+        $enrollment->loadMissing('program');
+
+        return self::PROGRAM_REGULAR_MAX_UNITS[$enrollment->program?->code] ?? self::REGULAR_MAX_UNITS;
     }
 
     private function currentUnits(Enrollment $enrollment): int

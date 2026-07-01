@@ -8,71 +8,55 @@ use Illuminate\Database\Seeder;
 
 class SchoolYearSeeder extends Seeder
 {
+    /**
+     * Chronological school years. The first three are finalized history (drive trend
+     * charts and per-student transcripts); 2025-2026 is the active year.
+     * Order matters: AcademicHistorySeeder maps a student's year level onto these by index.
+     */
+    private const SCHOOL_YEARS = [
+        '2022-2023' => ['start_date' => '2022-08-01', 'end_date' => '2023-05-31', 'active' => false],
+        '2023-2024' => ['start_date' => '2023-08-01', 'end_date' => '2024-05-31', 'active' => false],
+        '2024-2025' => ['start_date' => '2024-08-01', 'end_date' => '2025-05-31', 'active' => false],
+        '2025-2026' => ['start_date' => '2025-08-01', 'end_date' => '2026-05-31', 'active' => true],
+    ];
+
     public function run(): void
     {
-        $schoolYear = SchoolYear::updateOrCreate(
-            ['name' => '2025-2026'],
-            [
-                'start_date' => '2025-08-01',
-                'end_date' => '2026-05-31',
-                'is_active' => true,
-                'status' => 'active',
-            ]
-        );
+        foreach (self::SCHOOL_YEARS as $name => $data) {
+            $startYear = (int) substr($data['start_date'], 0, 4);
+            $endYear   = (int) substr($data['end_date'], 0, 4);
 
-        SchoolYear::where('id', '!=', $schoolYear->id)->update(['is_active' => false]);
-
-        $terms = [
-            [
-                'semester'   => 'first',
-                'start_date' => '2025-08-01',
-                'end_date'   => '2025-12-20',
-                'is_active'  => false,
-            ],
-            [
-                'semester'   => 'second',
-                'start_date' => '2026-01-05',
-                'end_date'   => '2026-05-31',
-                'is_active'  => true,
-            ],
-            [
-                'semester'   => 'summer',
-                'start_date' => null,
-                'end_date'   => null,
-                'is_active'  => false,
-            ],
-        ];
-
-        foreach ($terms as $termData) {
-            $schoolYear->academicTerms()->updateOrCreate(
-                ['semester' => $termData['semester']],
-                $termData
+            $schoolYear = SchoolYear::updateOrCreate(
+                ['name' => $name],
+                [
+                    'start_date' => $data['start_date'],
+                    'end_date'   => $data['end_date'],
+                    'is_active'  => $data['active'],
+                    'status'     => $data['active'] ? 'active' : 'finalized',
+                ]
             );
-        }
 
-        AcademicTerm::where('school_year_id', $schoolYear->id)
-            ->where('semester', '!=', 'second')
-            ->update(['is_active' => false]);
-
-        $this->ensureTermsForEverySchoolYear();
-    }
-
-    private function ensureTermsForEverySchoolYear(): void
-    {
-        SchoolYear::query()->get()->each(function (SchoolYear $schoolYear) {
-            $startYear = $schoolYear->start_date?->format('Y') ?? substr($schoolYear->name, 0, 4);
-            $endYear = $schoolYear->end_date?->format('Y') ?? substr($schoolYear->name, -4);
+            // The active year runs its 2nd semester; everything else is closed.
+            $activeSemester = $data['active'] ? 'second' : null;
 
             foreach ([
-                ['semester' => 'first', 'start_date' => "{$startYear}-08-01", 'end_date' => "{$startYear}-12-20"],
-                ['semester' => 'second', 'start_date' => "{$endYear}-01-05", 'end_date' => "{$endYear}-05-31"],
-                ['semester' => 'summer', 'start_date' => "{$endYear}-06-01", 'end_date' => "{$endYear}-07-31"],
+                ['semester' => 'first',  'start_date' => "{$startYear}-08-01", 'end_date' => "{$startYear}-12-20"],
+                ['semester' => 'second', 'start_date' => "{$endYear}-01-05",   'end_date' => "{$endYear}-05-31"],
+                ['semester' => 'summer', 'start_date' => "{$endYear}-06-01",   'end_date' => "{$endYear}-07-31"],
             ] as $termData) {
-                $schoolYear->academicTerms()->firstOrCreate(
+                $schoolYear->academicTerms()->updateOrCreate(
                     ['semester' => $termData['semester']],
-                    [...$termData, 'is_active' => false]
+                    [...$termData, 'is_active' => $termData['semester'] === $activeSemester]
                 );
             }
-        });
+        }
+
+        // Exactly one active school year + term across the whole table.
+        $active = SchoolYear::where('name', '2025-2026')->first();
+        SchoolYear::where('id', '!=', $active->id)->update(['is_active' => false]);
+        AcademicTerm::where('school_year_id', '!=', $active->id)->update(['is_active' => false]);
+        AcademicTerm::where('school_year_id', $active->id)
+            ->where('semester', '!=', 'second')
+            ->update(['is_active' => false]);
     }
 }

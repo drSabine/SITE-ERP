@@ -38,8 +38,14 @@ export const ENROLLMENT_STATUS_OPTIONS = [
 ];
 
 export const ACTIVE_COURSE_STATUSES = ['active', 'inc'];
-export function getMaxUnits(semester) {
-    return semester === 'summer' ? 9 : 26;
+
+// Programs whose published curriculum needs a heavier regular-semester cap.
+// Keep in sync with EnrollmentService::PROGRAM_REGULAR_MAX_UNITS (backend).
+const PROGRAM_REGULAR_MAX_UNITS = { BSCpE: 28, BSENSE: 27 };
+
+export function getMaxUnits(semester, programCode = null) {
+    if (semester === 'summer') return 9;
+    return PROGRAM_REGULAR_MAX_UNITS[programCode] ?? 26;
 }
 
 export function getYearLabel(yearLevel) {

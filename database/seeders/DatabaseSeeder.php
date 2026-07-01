@@ -12,16 +12,16 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            SchoolYearSeeder::class,
-            UserSeeder::class,
-            ProgramSeeder::class,
+            SchoolYearSeeder::class,          // 2022-2026 school years + terms (history + active)
+            ProgramSeeder::class,             // all degree programs (must exist before users/curriculum)
+            UserSeeder::class,                // staff + active students (bulk insert, archetype-tagged)
             CurriculumSeeder::class,
             SectionSeeder::class,
-            EnrollmentSeeder::class,         // active term enrollments (2nd semester 2025-2026)
+            AcademicHistorySeeder::class,     // full per-student transcripts + teaching loads
             SubmissionCategorySeeder::class,
-            ComprehensiveGradeSeeder::class, // past years + teacher assignments + grades
-            GraduateSeeder::class,           // alumni per past S.Y. (drives graduate analytics)
+            GraduateSeeder::class,            // alumni per past S.Y. (drives graduate analytics)
             GraduationCandidateSeeder::class, // ready-to-graduate students (visible candidates)
+            BoardExamResultSeeder::class,     // engineering licensure passers (board-exam analytics)
         ]);
     }
 }

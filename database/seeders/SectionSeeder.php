@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Course;
 use App\Models\Program;
 use App\Models\Section;
 use Illuminate\Database\Seeder;
@@ -10,25 +11,15 @@ class SectionSeeder extends Seeder
 {
     public function run(): void
     {
-        $bsit = Program::where('code', 'BSIT')->first();
-        $bsce = Program::where('code', 'BSCE')->first();
+        // Year levels are driven by each program's actual curriculum so five-year
+        // programs (BSCE, BSENSE) get 5th-year sections and four-year programs do not.
+        foreach (Program::where('is_active', true)->get() as $program) {
+            $maxYearLevel = (int) Course::where('program_id', $program->id)->max('year_level') ?: 4;
 
-        if ($bsit) {
-            foreach ([1, 2, 3, 4] as $yearLevel) {
-                foreach (['A', 'B'] as $sectionSuffix) {
+            foreach (range(1, $maxYearLevel) as $yearLevel) {
+                foreach (['A', 'B'] as $suffix) {
                     Section::updateOrCreate(
-                        ['program_id' => $bsit->id, 'year_level' => $yearLevel, 'name' => "BSIT-{$yearLevel}{$sectionSuffix}"],
-                        ['is_active' => true]
-                    );
-                }
-            }
-        }
-
-        if ($bsce) {
-            foreach ([1, 2, 3, 4, 5] as $yearLevel) {
-                foreach (['A', 'B'] as $sectionSuffix) {
-                    Section::updateOrCreate(
-                        ['program_id' => $bsce->id, 'year_level' => $yearLevel, 'name' => "BSCE-{$yearLevel}{$sectionSuffix}"],
+                        ['program_id' => $program->id, 'year_level' => $yearLevel, 'name' => "{$program->code}-{$yearLevel}{$suffix}"],
                         ['is_active' => true]
                     );
                 }

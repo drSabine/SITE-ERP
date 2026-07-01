@@ -99,7 +99,7 @@ export default function Index({ enrollment, availableCourses = [] }) {
     const student = enrollment.student;
     const isOpen = enrollment.status === 'enrolled';
     const semester = enrollment.academic_term?.semester;
-    const maxUnits = getMaxUnits(semester);
+    const maxUnits = getMaxUnits(semester, student?.program?.code);
 
     const enrollmentCourses = enrollment.enrollment_courses ?? [];
     const activeCourses = enrollmentCourses.filter(ec => ['active', 'inc'].includes(ec.status));
@@ -168,7 +168,7 @@ export default function Index({ enrollment, availableCourses = [] }) {
     function handleDrop(ec) {
         confirmAction({
             title: 'Drop Course',
-            message: <>Drop <strong>{ec.course?.course_code} — {ec.course?.title}</strong>? It can be restored later.</>,
+            message: <>Drop <strong>{ec.course?.course_code} · {ec.course?.title}</strong>? It can be restored later.</>,
             confirmLabel: 'Drop',
             key: `drop-${ec.id}`,
             run: opts => router.delete(route('coordinator.enrollment-courses.destroy', ec.id), reloadProps(opts)),
@@ -178,7 +178,7 @@ export default function Index({ enrollment, availableCourses = [] }) {
     function handleRemoveCredit(ec) {
         confirmAction({
             title: 'Remove Transfer Credit',
-            message: <>Remove the transfer credit for <strong>{ec.course?.course_code} — {ec.course?.title}</strong>?</>,
+            message: <>Remove the transfer credit for <strong>{ec.course?.course_code} · {ec.course?.title}</strong>?</>,
             confirmLabel: 'Remove',
             key: `remove-credit-${ec.id}`,
             run: opts => router.delete(route('coordinator.enrollment-courses.destroy', ec.id), reloadProps(opts)),
@@ -188,7 +188,7 @@ export default function Index({ enrollment, availableCourses = [] }) {
     function handleRestore(ec) {
         confirmAction({
             title: 'Restore Course',
-            message: <>Restore <strong>{ec.course?.course_code} — {ec.course?.title}</strong> to this enrollment?</>,
+            message: <>Restore <strong>{ec.course?.course_code} · {ec.course?.title}</strong> to this enrollment?</>,
             confirmLabel: 'Restore',
             key: `restore-${ec.id}`,
             run: opts => router.post(route('coordinator.enrollment-courses.restore', ec.id), {}, reloadProps(opts)),
@@ -336,7 +336,7 @@ export default function Index({ enrollment, availableCourses = [] }) {
                             </Panel>
 
                             {isOpen && (
-                                <Panel title="Credit a Course" hint="Transfer student — satisfies prerequisites without taking the course here.">
+                                <Panel title="Credit a Course" hint="Transfer student, satisfies prerequisites without taking the course here.">
                                     <CoursePicker
                                         courses={addableCourses}
                                         selectedId={creditForm.data.course_id}
