@@ -21,6 +21,12 @@
 
 > Add entries here whenever a non-obvious bug is fixed or a pattern causes repeated problems.
 
+## [Deploy seeded SQLite instead of MySQL — "no such function: FIELD"]
+- **Symptom:** Laravel Cloud deploy failed while seeding with `SQLSTATE[HY000]: General error: 1 no such function: FIELD` against `database/database.sqlite`, even though the environment uses MySQL.
+- **Root cause:** `config/database.php` shipped the Laravel 11 stock default `env('DB_CONNECTION', 'sqlite')`. When `DB_CONNECTION` isn't set in the deployed env, it falls back to **SQLite**, so migrations/seeding ran against a stray sqlite file. `FIELD()` is MySQL-only, so it exploded on SQLite — a symptom of running on the wrong driver, not a query bug.
+- **Fix:** changed the default to `env('DB_CONNECTION', 'mysql')` so an unset var can't silently fall back to SQLite. Also set `DB_CONNECTION=mysql` (+ DB creds) explicitly in the Laravel Cloud environment.
+- **Rule:** this app targets MySQL everywhere (WAMP locally, MySQL on Laravel Cloud). Never let the DB default resolve to SQLite. `FIELD(col, 'first','second','summer')` ordering is MySQL-specific — that's fine as long as the connection is always MySQL; if a SQLite environment is ever needed, make that ordering portable (SQL `CASE`) first.
+
 ## [Edit modal hydration can fail silently]
 - **Symptom:** edit modals open with blank fields or stale data even when a record was selected.
 - **Root cause:** the modal wrapper ignored `afterLeave`, and form hydration relied on brittle state replacement instead of an explicit full form payload on open.
