@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BoardExamController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\Coordinator;
@@ -71,6 +72,10 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     // Grading Monitor
     Route::get('grading-monitor', [Admin\GradingMonitorController::class, 'index'])->name('grading-monitor.index');
     Route::get('grading-monitor/{teacherAssignment}/students', [Admin\GradingMonitorController::class, 'students'])->name('grading-monitor.students');
+
+    // Printable analytics / board-exam reports (admin-only, print-to-PDF)
+    Route::get('reports/analytics', [Admin\ReportController::class, 'analytics'])->name('reports.analytics');
+    Route::get('reports/board-exams', [Admin\ReportController::class, 'boardExams'])->name('reports.board-exams');
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -116,6 +121,20 @@ Route::prefix('coordinator')->middleware(['auth', 'role:admin,coordinator_it,coo
     Route::get('graduation', [Coordinator\GraduationController::class, 'index'])->name('graduation.index');
     Route::post('graduation', [Coordinator\GraduationController::class, 'graduate'])->name('graduation.graduate');
 });
+
+// ─────────────────────────────────────────────────────────────
+// Board Exam Results (engineering licensure passers)
+// Admin and the engineering coordinator only — IT coordinator excluded.
+// ─────────────────────────────────────────────────────────────
+Route::prefix('board-exams')
+    ->middleware(['auth', 'role:admin,coordinator_engineering'])
+    ->name('board-exams.')
+    ->group(function () {
+        Route::get('/', [BoardExamController::class, 'index'])->name('index');
+        Route::post('/', [BoardExamController::class, 'store'])->name('store');
+        Route::put('{boardExamResult}', [BoardExamController::class, 'update'])->name('update');
+        Route::delete('{boardExamResult}', [BoardExamController::class, 'destroy'])->name('destroy');
+    });
 
 // ─────────────────────────────────────────────────────────────
 // Teacher routes

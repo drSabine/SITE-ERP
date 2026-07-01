@@ -1,10 +1,12 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
+import { DownloadIcon } from '@/Components/ui/Icons';
 import {
     buildAdminSections,
     buildCoordinatorSections,
     buildTeachingSections,
     buildStudentSections,
+    BoardExamAnalytics,
     CoordinatorIncAnalytics,
     EvaluationOutcomeTrend,
     GraduateTrendChart,
@@ -64,6 +66,7 @@ export default function Dashboard({
     studentCount,
     enrolledCount,
     analytics = {},
+    boardExamAnalytics = null,
     studentSummary = null,
     teaching = null,
 }) {
@@ -77,7 +80,7 @@ export default function Dashboard({
 
     const sections = [
         ...(role === 'admin'       ? buildAdminSections() : []),
-        ...(isCoordinator          ? buildCoordinatorSections() : []),
+        ...(isCoordinator          ? buildCoordinatorSections(role) : []),
         ...(showTeaching && !teaching ? buildTeachingSections({ hasActiveTerm }) : []),
         ...(role === 'student'     ? buildStudentSections() : []),
     ];
@@ -111,6 +114,15 @@ export default function Dashboard({
 
                         {role === 'admin' && (
                             <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-xs font-bold uppercase tracking-widest text-gray-400">Analytics</h2>
+                                    <Link
+                                        href={route('admin.reports.analytics')}
+                                        className="inline-flex items-center gap-1.5 border border-emerald-700 bg-emerald-700 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white shadow-sm transition-colors hover:bg-emerald-800"
+                                    >
+                                        <DownloadIcon className="h-4 w-4" /> Export PDF
+                                    </Link>
+                                </div>
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <SchoolYearEvaluationTrend data={analytics.schoolYearEvaluationTrend ?? []} />
                                     <ProgramDistributionChart data={analytics.programDistribution ?? []} />
@@ -121,6 +133,10 @@ export default function Dashboard({
                         )}
 
                         {isCoordinator && <CoordinatorIncAnalytics analytics={analytics} />}
+
+                        {(role === 'admin' || role === 'coordinator_engineering') && boardExamAnalytics && (
+                            <BoardExamAnalytics analytics={boardExamAnalytics} />
+                        )}
 
                         {showTeaching && teaching && <TeacherTeachingPanel teaching={teaching} />}
 
