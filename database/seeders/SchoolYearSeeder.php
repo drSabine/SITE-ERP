@@ -9,11 +9,13 @@ use Illuminate\Database\Seeder;
 class SchoolYearSeeder extends Seeder
 {
     /**
-     * Chronological school years. The first three are finalized history (drive trend
-     * charts and per-student transcripts); 2025-2026 is the active year.
-     * Order matters: AcademicHistorySeeder maps a student's year level onto these by index.
+     * Five school years — one per level of the deepest program (BSCE runs five years) —
+     * so every student, up to a 5th-year, has a complete year-1-to-current transcript and
+     * the graduation flow has real finished cohorts. Four are finalized history; 2025-2026
+     * is active. Order matters: AcademicHistorySeeder maps a student's year level by index.
      */
     private const SCHOOL_YEARS = [
+        '2021-2022' => ['start_date' => '2021-08-01', 'end_date' => '2022-05-31', 'active' => false],
         '2022-2023' => ['start_date' => '2022-08-01', 'end_date' => '2023-05-31', 'active' => false],
         '2023-2024' => ['start_date' => '2023-08-01', 'end_date' => '2024-05-31', 'active' => false],
         '2024-2025' => ['start_date' => '2024-08-01', 'end_date' => '2025-05-31', 'active' => false],

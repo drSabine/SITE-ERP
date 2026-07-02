@@ -22,6 +22,9 @@ use Illuminate\Support\Str;
  * (Y - L) years before the active one. Prior years are finalized; the active year's
  * 1st semester is completed and its 2nd semester is in progress.
  *
+ * There are five school years — one per level of the deepest program (BSCE, 5 years) —
+ * so every student, up to a 5th-year, gets a complete year-1-to-current transcript.
+ *
  * Accuracy guarantees:
  *  - Regular students pass every curriculum subject for every completed year.
  *  - INC / failed / dropped are only ever placed on LEAF general-education subjects

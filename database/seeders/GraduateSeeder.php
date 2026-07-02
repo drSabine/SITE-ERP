@@ -9,9 +9,10 @@ use Illuminate\Database\Seeder;
 
 class GraduateSeeder extends Seeder
 {
-    // Graduates per past school year. A dip in 2024-2025 makes the "needed to grow"
-    // (beat last year by 1) target visible on the admin chart.
+    // Graduates per finalized school year. The dip in 2024-2025 makes the "needed to
+    // grow" (beat last year by 1) target visible on the admin chart.
     private const PLAN = [
+        '2021-2022' => 42,
         '2022-2023' => 45,
         '2023-2024' => 50,
         '2024-2025' => 48,
