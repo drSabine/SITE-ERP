@@ -190,6 +190,7 @@ export default function Login({ status, appEnv }) {
                 </p>
             </div>
 
+            {/* Dev quick-login is local-only: never rendered on the deployed/production site. */}
             {appEnv !== 'production' && <DevLoginPanel onPick={quickFill} />}
 
             <ForgotPasswordModal
