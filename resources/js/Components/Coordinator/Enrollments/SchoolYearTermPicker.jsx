@@ -1,29 +1,21 @@
-import { FilterSelect, getSemesterLabel } from '@/Components/Coordinator/Shared';
+import { getSemesterLabel } from '@/Components/Coordinator/Shared';
 
 export default function SchoolYearTermPicker({
-    schoolYears,
     selectedSchoolYear,
     selectedTermId,
     terms,
-    onSchoolYearChange,
     onTermClick,
 }) {
     return (
         <div className="border-b border-gray-200 bg-gray-50 px-6 py-3">
-            <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        School Year
-                    </label>
-                    <FilterSelect value={selectedSchoolYear?.id ?? ''} onChange={onSchoolYearChange}>
-                        <option value="">Select school year...</option>
-                        {schoolYears.map(schoolYear => (
-                            <option key={schoolYear.id} value={schoolYear.id}>
-                                {schoolYear.name}
-                            </option>
-                        ))}
-                    </FilterSelect>
-                </div>
+            <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    School Year
+                </span>
+                <span className="text-sm font-semibold text-emerald-800">
+                    {selectedSchoolYear?.name ?? 'No active school year'}
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">· Active</span>
             </div>
 
             {terms.length > 0 && (

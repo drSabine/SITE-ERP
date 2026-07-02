@@ -40,12 +40,20 @@ class EnrollmentController extends Controller
 
         $scopedCodes = auth()->user()->coordinatorProgramCodes();
 
-        $schoolYears = SchoolYear::with([
+        // Evaluations are locked to the admin-set active school year — no cross-year browsing.
+        $activeSchoolYear = SchoolYear::active()->with([
             'academicTerms' => fn ($q) => $q->orderByRaw("FIELD(semester, 'first', 'second', 'summer')")->select('id', 'school_year_id', 'semester', 'is_active'),
-        ])->ordered()->get(['id', 'name']);
+        ])->first(['id', 'name']);
 
-        $activeTerm = AcademicTerm::active()->first();
-        $termId     = filled($filters['term_id'] ?? null) ? (int) $filters['term_id'] : $activeTerm?->id;
+        $activeTerm     = AcademicTerm::active()->first();
+        $activeSyTermIds = $activeSchoolYear ? $activeSchoolYear->academicTerms->pluck('id')->all() : [];
+
+        // Only accept a term_id that belongs to the active school year; otherwise default
+        // to the active term so a coordinator can never view another year's data.
+        $requestedTermId = filled($filters['term_id'] ?? null) ? (int) $filters['term_id'] : null;
+        $termId = ($requestedTermId && in_array($requestedTermId, $activeSyTermIds, true))
+            ? $requestedTermId
+            : $activeTerm?->id;
 
         $scopedProgramIds = $scopedCodes !== null
             ? Program::whereIn('code', $scopedCodes)->pluck('id')
@@ -136,7 +144,7 @@ class EnrollmentController extends Controller
                 'noSection' => $summaryTotal - $summarySectioned,
                 'withInc'   => $summaryWithInc,
             ],
-            'schoolYears'        => $schoolYears,
+            'activeSchoolYear'   => $activeSchoolYear,
             'programs'           => $programs,
             'sections'           => $sections,
             'selectedTermId'     => $termId,

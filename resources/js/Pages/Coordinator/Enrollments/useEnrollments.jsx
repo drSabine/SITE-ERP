@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { formatStudentName } from '@/Components/Coordinator/Shared';
 
-export function useEnrollments({ selectedTermId, schoolYears, filters = {} }) {
+export function useEnrollments({ selectedTermId, activeSchoolYear, filters = {} }) {
     const [search, setSearch]       = useState(filters.search ?? '');
     const [programId, setProgramId] = useState(filters.program_id ?? '');
     const [yearLevel, setYearLevel] = useState(filters.year_level ?? '');
@@ -11,23 +11,18 @@ export function useEnrollments({ selectedTermId, schoolYears, filters = {} }) {
     const [hasInc, setHasInc]       = useState(Boolean(filters.has_inc));
     const [confirm, setConfirm]     = useState(null);
 
-    const allTerms = schoolYears.flatMap(sy =>
-        (sy.academic_terms ?? []).map(term => ({ ...term, school_year: sy }))
-    );
-    const selectedTerm         = allTerms.find(term => term.id === selectedTermId);
-    const selectedSchoolYear   = selectedTerm?.school_year ?? null;
-    const termsForSelectedYear = selectedSchoolYear ? (selectedSchoolYear.academic_terms ?? []) : [];
+    // Evaluations are always scoped to the admin-set active school year; the coordinator
+    // can only switch between that year's terms.
+    const selectedSchoolYear   = activeSchoolYear ?? null;
+    const termsForSelectedYear = selectedSchoolYear?.academic_terms ?? [];
+    const selectedTerm         = termsForSelectedYear
+        .map(term => ({ ...term, school_year: selectedSchoolYear }))
+        .find(term => term.id === selectedTermId);
 
     function navigate(overrides = {}) {
         router.get(route('coordinator.enrollments.index'), {
             search, term_id: selectedTermId ?? '', program_id: programId, year_level: yearLevel, section_id: sectionId, status, has_inc: hasInc ? 1 : '', ...overrides,
         }, { preserveState: true, preserveScroll: true });
-    }
-
-    function handleSchoolYearChange(event) {
-        const sy = schoolYears.find(item => item.id === Number(event.target.value));
-        const firstTerm = sy?.academic_terms?.[0];
-        if (firstTerm) navigate({ term_id: firstTerm.id });
     }
 
     function handleTermTabClick(termId) { navigate({ term_id: termId }); }
@@ -96,8 +91,8 @@ export function useEnrollments({ selectedTermId, schoolYears, filters = {} }) {
         programId, yearLevel, sectionId, status,
         hasInc, handleIncFilter,
         confirm, setConfirm,
-        allTerms, selectedTerm, selectedSchoolYear, termsForSelectedYear,
-        handleSchoolYearChange, handleTermTabClick,
+        selectedTerm, selectedSchoolYear, termsForSelectedYear,
+        handleTermTabClick,
         handleProgramFilter, handleYearLevelFilter, handleSectionFilter, handleStatusFilter,
         manageCourseLoad,
         assignSection,

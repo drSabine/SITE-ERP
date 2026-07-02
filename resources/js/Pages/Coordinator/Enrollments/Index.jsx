@@ -15,18 +15,18 @@ function StatTile({ label, value, accent = 'text-gray-900' }) {
     );
 }
 
-export default function Index({ enrollments, summary = {}, schoolYears, programs, sections = [], selectedTermId, filters = {} }) {
+export default function Index({ enrollments, summary = {}, activeSchoolYear, programs, sections = [], selectedTermId, filters = {} }) {
     const {
         search, setSearch, handleSearchSubmit, handleSearchClear,
         programId, yearLevel, sectionId, status,
         hasInc, handleIncFilter,
         confirm, setConfirm,
         selectedTerm, selectedSchoolYear, termsForSelectedYear,
-        handleSchoolYearChange, handleTermTabClick,
+        handleTermTabClick,
         handleProgramFilter, handleYearLevelFilter, handleSectionFilter, handleStatusFilter,
         manageCourseLoad,
         requestDropEnrollment,
-    } = useEnrollments({ selectedTermId, schoolYears, filters });
+    } = useEnrollments({ selectedTermId, activeSchoolYear, filters });
 
     const [reviewStudentId, setReviewStudentId] = useState(null);
 
@@ -72,11 +72,9 @@ export default function Index({ enrollments, summary = {}, schoolYears, programs
                         }
                     >
                         <SchoolYearTermPicker
-                            schoolYears={schoolYears}
                             selectedSchoolYear={selectedSchoolYear}
                             selectedTermId={selectedTermId}
                             terms={termsForSelectedYear}
-                            onSchoolYearChange={handleSchoolYearChange}
                             onTermClick={handleTermTabClick}
                         />
                         <EnrollmentFilters
@@ -109,7 +107,7 @@ export default function Index({ enrollments, summary = {}, schoolYears, programs
 
                     {!selectedTermId ? (
                         <div className="border border-gray-200 bg-white px-6 py-16 text-center text-sm text-gray-400 shadow-sm">
-                            Select a school year and semester to view evaluations.
+                            No active academic term. An admin must activate a term to run evaluations.
                         </div>
                     ) : (
                         <>
